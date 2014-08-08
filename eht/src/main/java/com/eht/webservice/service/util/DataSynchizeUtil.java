@@ -98,29 +98,11 @@ public class DataSynchizeUtil {
 	 * @param log
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Map<String, Object> parseDeleteLog(SynchLogEntity log){
-		Serializable data = null;
 		Map<String, Object> map = new HashMap<String, Object>();
-		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
-		if (!log.getAction().equals(DataSynchAction.DELETE) && !log.getClassName().equals(DataType.DIRECTORYBLACK) && !log.getClassName().equals(DataType.NOTEBLACK)
-				&& !log.getClassName().equals(DataType.SUBJECTUSER)) {
-			Class c = DataCacheTool.getDataClass(log.getClassName());
-			data = synchLogService.getEntity(c, log.getClassPK());
-			String dataJson = JsonUtil.bean2json(data);
-			map = JsonUtil.getMap4Json(dataJson);
-		}
-		Object updateUserId = map.get("updateUserId");
-		Object updateTimeStamp = map.get("updateTimeStamp");
-		if(updateUserId == null || "".equals(updateUserId.toString())){
-			map.put("updateUserId", map.get("createUserId"));
-		}
-		if(updateTimeStamp == null || "".equals(updateTimeStamp.toString())){
-			map.put("updateTimeStamp", map.get("createTimeStamp"));
-		}
-		map.put("operation", log.getAction());
-		map.put("className", log.getClassName());
-		map.put("classPK", log.getClassPK());
+		
+		map.put("UUID", log.getClassPK());
+		map.put("operateUser", log.getOperateUser());
 		map.put("operateTime", log.getOperateTime());
 		map.put("synchTime", log.getSynchTime());
 		
@@ -185,13 +167,25 @@ public class DataSynchizeUtil {
 	 * @param log
 	 * @return
 	 */
-	public static Map<String, Object> convertLog(List<Map<String, Object>> list){
-		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
-		for(Map<String, Object> map : list){
-			int value = map.get("val") == null ? 0 : Integer.parseInt(map.get("val").toString());
+	public static String queryNextDataType(String clientId, String userId, long timeStamp, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
+		// 查询下一有同步日志的数据类型
+		int index = 0;
+		int count = 0;
+		String nextDataType = null;
+		// 当前数据类型，日志合并后只有一条日志需同步到客户端，在剩下的数据类型中查询是否有日志需同步
+		for(int i = 0; i < dataTypes.length; i++){
+			if(dataTypes[i].equals(currentDataType)){
+				index = i;
+			}
+			if(i > index){
+				count = synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, dataTypes[i]);
+				// 找到有同步日志的数据类型，类型返给客户端
+				if(count > 0){
+					nextDataType = dataTypes[i];
+					break;
+				}
+			}
 		}
-		
-		
-		return null;
+		return nextDataType;
 	}
 }

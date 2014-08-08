@@ -523,7 +523,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			List<Map<String, Object>> list = new ArrayList<Map<String,Object>>();
 			for(SynchLogEntity theLog : result){
 				if(theLog.getClassName().equals(dataClass)){
-					Map<String, Object> map = DataSynchizeUtil.parseLog(theLog);
+					Map<String, Object> map = DataSynchizeUtil.parseDeleteLog(theLog);
 					list.add(map);
 				}
 			}
@@ -535,25 +535,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if(!filterDelete){
 				ArrayUtils.reverse(dataTypes);
 			}
-			int index = 0;
-			int count = 0;
-			String nextDataType = null;
-			// 当前数据类型，日志合并后只有一条日志需同步到客户端，在剩下的数据类型中查询是否有日志需同步
-			for(int i = 0; i < dataTypes.length; i++){
-				if(dataTypes[i].equals(dataClass)){
-					index = i;
-				}
-				if(i > index){
-					count = synchLogService.countSynchLogsByTarget(clientId, user.getId(), timeStamp, dataTypes[i]);
-					// 找到有同步日志的数据类型，类型返给客户端
-					if(count > 0){
-						nextDataType = dataTypes[i];
-						break;
-					}
-				}
-			}
+			String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, dataClass, dataTypes, synchLogService);
 			// 设置response头
-			if(count > 0){
+			if(nextDataType != null){
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextDataType);
 			}else{
@@ -567,7 +551,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 			
 			String returnVal = JsonUtil.map2json(delMap);
-			logger.info(returnVal);
+			logger.info("删除日志返回：" + returnVal);
 			return returnVal;
 		}else{
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
@@ -585,6 +569,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/getlogs/{timeStamp}")
 	public String getSynchDataByStep(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
 		AccountEntity user = accountService.getUser4Session();
+		String[] dataTypes = DataCacheTool.getDatasSort();
 		if(dataClass.equals(DataType.FILE.toString())){
 			return DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
 		}
@@ -596,27 +581,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				SynchLogEntity theLog = result.get(0);
 				Map<String, Object> map = DataSynchizeUtil.parseLog(theLog);
 				
-				// 查询下一有同步日志的数据类型
-				String[] dataTypes = DataCacheTool.getDatasSort();
-				int index = 0;
-				int count = 0;
-				String nextDataType = null;
-				// 当前数据类型，日志合并后只有一条日志需同步到客户端，在剩下的数据类型中查询是否有日志需同步
-				for(int i = 0; i < dataTypes.length; i++){
-					if(dataTypes[i].equals(theLog.getClassName())){
-						index = i;
-					}
-					if(i > index){
-						count = synchLogService.countSynchLogsByTarget(clientId, user.getId(), timeStamp, dataTypes[i]);
-						// 找到有同步日志的数据类型，类型返给客户端
-						if(count > 0){
-							nextDataType = dataTypes[i];
-							break;
-						}
-					}
-				}
+				String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, theLog.getClassName(), dataTypes, synchLogService);
 				// 设置response头
-				if(count > 0){
+				if(nextDataType !=  null){
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextDataType);
 				}else{
@@ -642,7 +609,19 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				return JsonUtil.map2json(map);
 			}
 		}else{
-			return DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
+			//已经到了最后一个数据类型
+			if(dataClass.equals(dataTypes[dataTypes.length - 1])){
+				return DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
+			}else{
+				String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, dataClass, dataTypes, synchLogService);
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
+				
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextDataType);
+				return "";
+			}
 		}
 	}
 	
