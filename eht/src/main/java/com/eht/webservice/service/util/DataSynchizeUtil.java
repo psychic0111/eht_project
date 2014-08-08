@@ -169,16 +169,15 @@ public class DataSynchizeUtil {
 	 */
 	public static String queryNextDataType(String clientId, String userId, long timeStamp, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
 		// 查询下一有同步日志的数据类型
-		int index = 0;
-		int count = 0;
+		int index = -1;
 		String nextDataType = null;
 		// 当前数据类型，日志合并后只有一条日志需同步到客户端，在剩下的数据类型中查询是否有日志需同步
 		for(int i = 0; i < dataTypes.length; i++){
 			if(dataTypes[i].equals(currentDataType)){
 				index = i;
 			}
-			if(i > index){
-				count = synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, dataTypes[i]);
+			if(index != -1 && i > index){
+				int count = synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, dataTypes[i]);
 				// 找到有同步日志的数据类型，类型返给客户端
 				if(count > 0){
 					nextDataType = dataTypes[i];

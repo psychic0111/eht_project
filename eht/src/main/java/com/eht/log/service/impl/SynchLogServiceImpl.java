@@ -210,14 +210,12 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 				orgi = nextLog;
 				orgi.setAction(DataSynchAction.ADD.toString());
 			}
-		}
-		if(orgi.getAction().equals(DataSynchAction.UPDATE.toString())){
+		}else if(orgi.getAction().equals(DataSynchAction.UPDATE.toString())){
 			// U + D = D
 			if(nextLog.getAction().equals(DataSynchAction.DELETE.toString())){
 				orgi = nextLog;
 			}
-		}
-		if(orgi.getAction().equals(DataSynchAction.DELETE.toString())){
+		}else if(orgi.getAction().equals(DataSynchAction.DELETE.toString())){
 			// 数据已删除
 		}
 		//saveSynchedLog(orgi, clientId, userId);  //保存到同步完成日志表中
@@ -551,13 +549,13 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, String dataClass, boolean filterDelete) throws Exception {
 		String[] dataTypes = DataCacheTool.getDatasSort();
 		if(!filterDelete){
-			ArrayUtils.reverse(dataTypes);
+			dataTypes = DataCacheTool.getReverseDatasSort();
 		}
 		//dc.add(Restrictions.eq("clientId", SynchConstants.CLIENT_DEFAULT_ID));   // web页面操作产生的操作日志
 		List<String> idList = findSynchedLogIds(clientId, userId);
 		List<SynchLogEntity> logList = null;
 		
-		if(dataClass.equals(DataType.ALL.toString())){
+		if(dataClass.equals(DataType.ALL.toString()) || dataClass.equals(DataType.BATCHDATA.toString())){
 			for(int i = 0; i < dataTypes.length; i++){
 				DetachedCriteria dc = DetachedCriteria.forClass(SynchLogEntity.class);
 				dc.add(Restrictions.or(Restrictions.and(Restrictions.eq("targetUser", userId), Restrictions.neProperty("operateUser", "targetUser")), Restrictions.and(Restrictions.eq("operateUser", userId), Restrictions.ne("clientId", clientId))));
@@ -572,13 +570,18 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 				
 				if(subLogList != null && !subLogList.isEmpty()){
 					subLogList = filterSynchLogs(subLogList, filterDelete); // 过滤日志，例如先不处理删除操作的日志就先过滤掉
-					if(!filterDelete){
-						//删除操作的日志，一次全部合并返回
-						logList = mergeAllLogs(subLogList, clientId, userId);
-					}else{
-						logList = mergeLog(subLogList, clientId, userId);
+					if(subLogList != null && !subLogList.isEmpty()){
+						if(!filterDelete){
+							//删除操作的日志，一次合并一个数据类型下的数据，一起返回
+							logList = mergeAllLogs(subLogList, clientId, userId);
+						}else{
+							logList = mergeLog(subLogList, clientId, userId);
+						}
+						// 有日志数据返回
+						if(logList != null && !logList.isEmpty()){
+							break;
+						}
 					}
-					break;
 				}
 			}
 		}else {
@@ -594,10 +597,12 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 			List<SynchLogEntity> subLogList = findByDetached(dc);
 			if(subLogList != null && !subLogList.isEmpty()){
 				subLogList = filterSynchLogs(subLogList, filterDelete);   // 过滤日志，例如先不处理删除操作的日志就先过滤掉
-				if(!filterDelete){ //删除操作的日志，一次全部合并返回
-					logList = mergeAllLogs(subLogList, clientId, userId);
-				}else{  // 其它日志只返回指定条数
-					logList = mergeLog(subLogList, clientId, userId);
+				if(subLogList != null && !subLogList.isEmpty()){
+					if(!filterDelete){ //删除操作的日志，一次全部合并返回
+						logList = mergeAllLogs(subLogList, clientId, userId);
+					}else{  // 其它日志只返回指定条数
+						logList = mergeLog(subLogList, clientId, userId);
+					}
 				}
 			}
 		}
@@ -682,6 +687,10 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 			for(SynchLogEntity log : filterList) {
 				result = filterLogsByClassPK(logList, log.getClassName(), log.getClassPK(), filterDelete);
 			}
+		}else{
+			if(filterDelete){
+				return logList;
+			}
 		}
 		return result;
 	}
@@ -744,18 +753,19 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 		}
 		for(int i = 0; i < logList.size(); i++) {
 			SynchLogEntity orgi = logList.get(i);
+			String classPK = orgi.getClassPK();
 			saveSynchedLog(orgi, clientId, userId);
 			if(i < logList.size() - 1){
 				for(int k = i + 1; k < logList.size(); k++){
 					SynchLogEntity nextLog = logList.get(k);
 					//判断是否为同一数据日志
-					if(nextLog.getClassPK().equals(orgi.getClassPK())){
+					if(nextLog.getClassPK().equals(classPK)){
 						orgi = mergeLog(orgi, nextLog, clientId, userId);
 						saveSynchedLog(nextLog, clientId, userId);
 						i ++;  // 外层循环跳过 nextLog
 					}
 					// 下一数据日志了或已合并到最后
-					if(!nextLog.getClassPK().equals(orgi.getClassPK()) || k == logList.size() - 1) {
+					if(!nextLog.getClassPK().equals(classPK) || k == logList.size() - 1) {
 						if(orgi != null){
 							result.add(orgi);
 							break;

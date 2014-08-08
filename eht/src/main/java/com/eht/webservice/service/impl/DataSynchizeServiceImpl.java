@@ -74,6 +74,7 @@ import com.eht.template.entity.TemplateEntity;
 import com.eht.template.service.TemplateServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
+import com.eht.webservice.bean.BatchDataBean;
 import com.eht.webservice.service.DataSynchizeService;
 import com.eht.webservice.service.util.DataSynchizeUtil;
 
@@ -508,18 +509,19 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		
 		/*res.setHeader(HeaderName.ACTION.toString(), "DELETE");
 		res.setHeader(HeaderName.DATATYPE.toString(), "BatchData");
-		DATA="DataType:subject,data[{:1,operateTime:1,operateUser:},{}]"*/
+		DATA="data:DataType:subject,data[{id:1,operateTime:1,operateUser:},{}]*/
 		AccountEntity user = accountService.getUser4Session();
+		String[] dataTypes = DataCacheTool.getReverseDatasSort();
 		boolean filterDelete = false;  //留下删除操作日志,过滤掉其它
 		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, dataClass, filterDelete);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
-			if(dataClass.equals(DataType.ALL.toString())){
+			if(dataClass.equals(DataType.BATCHDATA.toString())){
 				SynchLogEntity theLog = result.get(0);
 				dataClass = theLog.getClassName();
 			}
 			
-			Map<String, Object> delMap = new HashMap<String, Object>();
+			BatchDataBean bean = new BatchDataBean();
 			List<Map<String, Object>> list = new ArrayList<Map<String,Object>>();
 			for(SynchLogEntity theLog : result){
 				if(theLog.getClassName().equals(dataClass)){
@@ -527,38 +529,75 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					list.add(map);
 				}
 			}
-			delMap.put(HeaderName.DATATYPE.toString(), dataClass);
-			delMap.put("data", list);
 			
 			// 查询下一有同步日志的数据类型
-			String[] dataTypes = DataCacheTool.getDatasSort();
-			if(!filterDelete){
-				ArrayUtils.reverse(dataTypes);
-			}
 			String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, dataClass, dataTypes, synchLogService);
 			// 设置response头
 			if(nextDataType != null){
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
-				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextDataType);
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
 			}else{
 				// count = 0, 剩下的数据类型中未找到需同步的日志
-				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.NEXT.toString());
-				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), dataClass);
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ALL.toString());
 			}
 			
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
 			res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 			
-			String returnVal = JsonUtil.map2json(delMap);
+			Map<String, String> delMap = new HashMap<String, String>();
+			delMap.put(HeaderName.DATATYPE.toString(), dataClass);
+			bean.setDataList(list);
+			bean.setDataType(delMap);
+			
+			String data = JsonUtil.bean2json(bean);
+			
+			delMap.put(HeaderName.DATATYPE.toString(), nextDataType);
+			String returnData = JsonUtil.map2json(delMap);  // 客户端再次请求需提交的数据类型
+			
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("data", data);
+			map.put("nextData", returnData);
+			
+			String returnVal = JsonUtil.map2json(map);
 			logger.info("删除日志返回：" + returnVal);
 			return returnVal;
 		}else{
-			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
-			res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
-			
-			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.FINISH.toString());
-			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+			//已经到了最后一个数据类型
+			if(dataClass.equals(dataTypes[dataTypes.length - 1])){
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ALL.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+			}else{
+				// 查询下一有同步日志的数据类型
+				String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, dataClass, dataTypes, synchLogService);
+				if(nextDataType != null){
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+					
+					Map<String, String> delMap = new HashMap<String, String>();
+					delMap.put(HeaderName.DATATYPE.toString(), nextDataType);
+					String returnData = JsonUtil.map2json(delMap);  // 客户端再次请求需提交的数据类型
+					
+					Map<String, String> map = new HashMap<String, String>();
+					map.put("data", "");
+					map.put("nextData", returnData);
+					return JsonUtil.map2json(map);
+				}else{
+					// nextDataType = null, 剩下的数据类型中未找到需同步的日志
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ALL.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+				}
+			}
 			
 			return "";
 		}
