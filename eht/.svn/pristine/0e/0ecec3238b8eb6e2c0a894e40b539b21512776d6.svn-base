@@ -1,0 +1,46 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
+ <link rel="stylesheet" type="text/css" href="${cssPath}/style.css" /> 
+<!-- Begin header-->
+<div class="header" style="width:100%;">
+  <div class="left1"><a href="${webRoot}/indexController/front/index.dht"> <img  src="<%=imgPath %>/logo.png"  height="40" /></a></div>
+  <div class="left1">
+  	 <input style="width:80px;margin-left:33px;margin-top:10px;float:left;" id="subject_manage" onclick="subjectManage()" class="Button1" type="button" value="专题管理" name="subject_manage"/>
+  </div>
+  <div class="right1">
+		<div id="dd" class="wrapper-dropdown-5" tabindex="1">
+  	        <img  src="<%=imgPath %>/Sline.png"  height="40" />
+  		    <img src="${webRoot}/${SESSION_USER_ATTRIBUTE.photo}" width="22" height="22" /> 
+  	        <a href="#"> ${SESSION_USER_ATTRIBUTE.userName}<img src="<%=imgPath %>/Sline.png"  height="40" /></a>
+			<ul class="dropdown" style="position:absolute; z-index: 10014">
+				<li><a href="${webRoot}/accountController/front/viewEditUser.dht"><i class="icon-user"></i>个人资料</a></li>
+				<li><a href="${webRoot}/center/logout.dht"><i class="icon-cog"></i>注销</a></li> 
+			</ul>
+		</div>
+  	 </div> 
+  	<script type="text/javascript"> 
+			function DropDown(el) {
+				this.dd = el;
+				this.initEvents();
+			}
+			DropDown.prototype = {
+				initEvents : function() {
+					var obj = this;
+		
+					obj.dd.on('click', function(event){
+						$(this).toggleClass('active');
+						event.stopPropagation();
+					});	
+				}
+			} 
+			$(function() { 
+				var dd = new DropDown( $('#dd') ); 
+				$(document).click(function() {
+					// all dropdowns
+					$('.wrapper-dropdown-5').removeClass('active');
+				});
+		
+			}); 
+</script>
+  <div class="clear"></div>
+</div>
+<!-- End header-->  

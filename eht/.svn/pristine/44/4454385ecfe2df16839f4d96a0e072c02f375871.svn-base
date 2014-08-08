@@ -1,0 +1,3 @@
+org.apache.commons.logging.simplelog.log.org.springframework.web=debug
+org.apache.commons.logging.simplelog.log.org.springframework.security=debug
+org.apache.commons.logging.simplelog.log.org.springframework.security.access.method.DelegatingMethodSecurityMetadataSource=info

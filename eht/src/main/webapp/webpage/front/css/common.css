@@ -1,0 +1,223 @@
+/* CSS Document */
+html{
+-webkit-text-size-adjust: none;
+margin:0;
+padding:0;
+font-size:12px;
+color:#333;
+height:100%;
+FONT-FAMILY:微软雅黑,  Arial, Helvetica, sans-serif;
+BACKGROUND-POSITION: left top;
+BACKGROUND-REPEAT: no-repeat;
+
+
+}
+body{
+-webkit-text-size-adjust: none;
+margin:0;
+padding:0;
+height:100%;
+line-height:150%;
+background-color:#ffffff;FONT-FAMILY:微软雅黑, Arial,Helvetica,sans-serif; text-align:left;}
+
+ul{margin:0;padding:0; list-style-type:none;}
+li{margin:0;padding:0; list-style-type:none;}
+dl{margin:0;padding:0; list-style-type:none;}
+dt{margin:0;padding:0; list-style-type:none;}
+dd{margin:0;padding:0; list-style-type:none;}
+
+
+IMG {
+	BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-RIGHT-WIDTH: 0px;
+	vertical-align:middle
+}
+
+
+
+.InputTxt1{ padding:0; height:26px; border:1px #dadada solid; background:url(../images/search.png) 0px -2px no-repeat; background-color:#FFF; padding-left:30px; }
+.InputTxt2{ padding:0; height:38px; border:1px #dadada solid; background: background-color:#FFF; padding-left:10px; }
+.InputTxt_tag{width:180px; height:28px; border:1px #dadada solid; background:url(../images/tree/tag.png) 5px 5px no-repeat; background-color:#FFF; padding-left:30px; }
+.InputTxt3{ padding:0; height:28px; border:1px #dadada solid; background:url(../images/pen.png) 3px 2px no-repeat; background-color:#FFF; padding-left:30px; }
+
+.Button1{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn1.png) bottom repeat-x; border:1px #3c85ba solid; color:#fff; background-color:#459fd3}
+.Button2{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn2.png) bottom repeat-x; border:1px #4ca15b solid; color:#fff; background-color:#6cb179}
+.Button3{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn3.png) bottom repeat-x; border:1px #c05343 solid; color:#fff; background-color:#d66351}
+.Button4{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn4.png) bottom repeat-x; border:1px #d5d5d5 solid; color:#333; background-color:#fff}
+.Button5{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn5.png) bottom repeat-x; border:1px #c9823c solid; color:#fff; background-color:#e39c51}
+.Button6{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn6.png) bottom repeat-x; border:1px #4a4a4a solid; color:#fff; background-color:#626262}
+.Button_other1{cursor:pointer; padding:0px 12px; margin:0; height:18px; color:#fff; background-color:#ed5466; border:none}
+
+textarea{border:1px #dadada solid;}
+
+
+
+A:link {
+	color:#33;
+	TEXT-DECORATION: none
+}
+A:visited {
+	color:#333;
+	TEXT-DECORATION: none
+}
+A:hover {
+	color:#fb5b04;
+	TEXT-DECORATION: none
+}
+A:active {
+	color:#333;
+	TEXT-DECORATION: none
+}
+
+
+
+A.link1:link{color:#0782c1;	TEXT-DECORATION:none}
+A.link1:visited {color:#0782c1;	TEXT-DECORATION: none}
+A.link1:hover {	color:#fb5b04;	TEXT-DECORATION: none}
+A.link1:active {color:#0782c1;	TEXT-DECORATION: none}
+
+A.link2:link{color:#002e68;	TEXT-DECORATION:none}
+A.link2:visited {color:#002e68;	TEXT-DECORATION: none}
+A.link2:hover {	color:#fb5b04;	TEXT-DECORATION: none}
+A.link2:active {color:#002e68;	TEXT-DECORATION: none}
+
+A.link3:link{color:#5d6f87;	TEXT-DECORATION:underline}
+A.link3:visited {color:#5d6f87;	TEXT-DECORATION: underline}
+A.link3:hover {	color:#5d6f87;	TEXT-DECORATION: none}
+A.link3:active {color:#5d6f87;	TEXT-DECORATION: underline}
+
+A.link4:link{color:#fff;	TEXT-DECORATION:none}
+A.link4:visited {color:#fff;	TEXT-DECORATION: none}
+A.link4:hover {	color:#fb5b04;	TEXT-DECORATION: none}
+A.link4:active {color:#fff;	TEXT-DECORATION: none}
+
+A.link5:link{color:#018aff;	TEXT-DECORATION:underline}
+A.link5:visited {color:#018aff;	TEXT-DECORATION: underline}
+A.link5:hover {	color:#fb5b04;	TEXT-DECORATION: none}
+A.link5:active {color:#018aff;	TEXT-DECORATION: underline}
+
+
+
+
+
+
+
+.clear{ clear:both}
+.left{float:left}
+.right{float:right}
+
+.pages {	
+	
+	padding-top:10px;
+	margin:5px 0px;
+	text-align:right;
+	color:#000;
+	
+}
+.pages a {
+	padding:3px 7px;
+	margin-right:6px;
+	border:1px #ededed solid;
+	color:#000
+}
+.pages a:hover {
+	border:1px #197fe7 solid;
+	color:#197fe7;
+	background-color:#f1f1f1;
+	TEXT-DECORATION: none
+}
+.pages_cur {
+	padding:2px 6px;
+	margin-right:6px;
+	background-color:#197fe7;
+	color:#fff
+}
+a.pages_cur:hover {
+	background-color:#197fe7;
+	border:1px 197fe7 solid
+}
+A.pages_cur:link {
+	color:#fff;
+	TEXT-DECORATION:none
+}
+A.pages_cur:visited {
+	color:#fff;
+	TEXT-DECORATION: none
+}
+A.pages_cur:hover {
+	color:#fff;
+	TEXT-DECORATION: none
+}
+A.pages_cur:active {
+	color:#fff;
+	TEXT-DECORATION: none
+}
+
+.tree{
+	width:300px;
+	padding:15px 10px; overflow-x:auto }
+.Directory .dotLink{	
+	padding-left:6px;
+	background:url(../images/tree/dot.png) repeat-y}
+.Directory .dotLinkEnd{	
+	padding-left:6px;
+	background:url(../images/tree/dot.png) no-repeat}
+.Directory .dotLink2{	
+	padding-left:12px;
+	background:url(../images/tree/dot.png) 8px 0px repeat-y}
+.Directory .dotLink3{	
+	padding-left:12px;
+	background:url(../images/tree/dot.png) 8px 0px no-repeat}
+
+
+
+.txt_color1{color:#002e68}
+.txt_color2{color:#f4140f}
+.txt_color3{color:#fb5b04}
+.txt_color4{color:#5e9b11}
+.txt_color5{color:#018aff}
+.txt_color6{color:#0672ae}
+
+
+.Font1{ font-size:10px; color:#999999}
+.Font2{ font-size:14px; color:#1d8ec7}
+
+.frame{
+	padding:8px;
+	border:1px #d2dce9 solid;
+	border-top:none;
+	}
+.tabMenus{
+	background:url(../images/bg_line2.png) bottom repeat-x}
+.tabMenus .cur{
+	float:left;
+	margin-right:2px;
+	border:1px #d2dce9 solid;
+	border-bottom:none;
+	padding:5px 10px;
+	color:#002e68;
+	font-size:14px;
+	background-color:#fff;
+	text-align:center}
+	
+.tabMenus .other{
+	float:left;
+	margin-right:2px;
+	border:1px #d2dce9 solid;
+	border-bottom:none;
+	padding:5px 10px;
+	color:#002e68;
+	font-size:14px;
+	background:url(../images/bg_title4.png) repeat-x;
+	text-align:center}
+
+.tabMenus .other a{
+	font-size:12px;
+	color:#333;}
+.tabMenus .other a:hover{
+	color:#fb5b04;}
+	
+.error{
+	font-size:14px;
+	color:red;
+}
+

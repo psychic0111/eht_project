@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:oauth2="http://www.springframework.org/schema/security/oauth2"
+	xmlns:sec="http://www.springframework.org/schema/security" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<mvc:annotation-driven />
+	<mvc:default-servlet-handler />
+
+	<bean id="tokenStore"
+		class="org.springframework.security.oauth2.provider.token.JdbcTokenStore">
+		<constructor-arg index="0" ref="dataSource_jeecg" />
+	</bean>
+
+	<bean id="tokenServices"
+		class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+		<property name="tokenStore" ref="tokenStore" />
+		<property name="supportRefreshToken" value="false" />
+	</bean>
+
+	<bean id="clientDetailsService" class="com.eht.auth.service.ClientServiceImpl">
+	</bean>
+
+	<bean id="oauth2ClientDetailsUserService" class="com.eht.auth.service.UserAuthServiceImpl">
+		<constructor-arg ref="clientDetailsService" />
+	</bean>
+
+	<bean id="oauth2AuthenticationEntryPoint"
+		class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint" />
+
+	<!-- <bean id="userAuthService" class="com.eht.auth.service.UserAuthServiceImpl">
+		<constructor-arg ref="clientDetailsService" />
+	</bean> -->
+	<sec:authentication-manager id="oauth2AuthenticationManager">
+		<sec:authentication-provider
+			user-service-ref="oauth2ClientDetailsUserService" />
+	</sec:authentication-manager>
+
+	<sec:authentication-manager alias="authenticationManager">
+		<sec:authentication-provider
+			user-service-ref="oauth2ClientDetailsUserService">
+			<sec:password-encoder hash="md5" />
+		</sec:authentication-provider>
+	</sec:authentication-manager>
+
+	<bean id="oauth2AccessDeniedHandler"
+		class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler" />
+
+	<bean id="oauthUserApprovalHandler"
+		class="org.springframework.security.oauth2.provider.approval.DefaultUserApprovalHandler">
+	</bean>
+
+	<oauth2:authorization-server
+		client-details-service-ref="clientDetailsService" token-services-ref="tokenServices"
+		user-approval-handler-ref="oauthUserApprovalHandler">
+		<oauth2:authorization-code />
+		<oauth2:implicit />
+		<oauth2:refresh-token />
+		<oauth2:client-credentials />
+		<oauth2:password />
+	</oauth2:authorization-server>
+
+	<bean id="oauth2AccessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter" />
+				<bean class="org.springframework.security.access.vote.RoleVoter" />
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="preAuthFilter"
+		class="com.eht.common.webinterceptor.UserAuthorizeFilter">
+		<property name="authenticationManager" ref="oauth2AuthenticationManager" />
+		<property name="userAuthService" ref="oauth2ClientDetailsUserService" />
+	</bean>
+
+	<bean id="clientPasswordTokenEndpointFilter"
+		class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+		<property name="authenticationManager" ref="oauth2AuthenticationManager" />
+		<property name="rememberMeServices" ref="rememberMeServices"/>  
+	</bean>
+
+	<bean id="mySuccessHandler"
+		class="com.eht.auth.service.MySavedRequestAwareAuthenticationSuccessHandler" />
+	<bean id="myFailureHandler"
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler" />
+	
+	<bean id="rememberMeServices" 
+            class="com.eht.auth.service.RememberMeServiceImpl"> 
+	    <property name="key" value="eht_token"/> 
+	    <property name="alwaysRemember" value="true"/> 
+	    <property name="cookieName" value="eht_token"/> 
+	    <property name="userDetailsService" ref="oauth2ClientDetailsUserService"/> 
+	    <property name="tokenRepository" ref="tokenRepository"/> 
+	</bean>
+	
+	<bean id="tokenRepository" 
+            class="org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl"> 
+    	<!-- <property name="createTableOnStartup" value="true"/>  -->
+    	<property name="dataSource" ref="dataSource_jeecg"/> 
+	</bean> 
+	
+	<!-- <oauth2:resource-server id="unityResourceServer" resource-id="unity-resource" 
+		token-services-ref="tokenServices"/> -->
+
+	<!-- <sec:http pattern="/oauth/token" create-session="stateless" authentication-manager-ref="oauth2AuthenticationManager"
+		entry-point-ref="oauth2AuthenticationEntryPoint">
+		<sec:intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY" />
+		<sec:anonymous enabled="false" />
+		<sec:http-basic entry-point-ref="oauth2AuthenticationEntryPoint" />
+		<sec:access-denied-handler ref="oauth2AccessDeniedHandler" />
+	</sec:http> -->
+	<sec:http pattern="*.jpg" security="none" />
+	<sec:http pattern="*.png" security="none" />
+	<sec:http pattern="*.gif" security="none" />
+	<sec:http pattern="*.css" security="none" />
+	<sec:http pattern="*.js" security="none" />
+	<sec:http pattern="*.dht" security="none" />
+	<sec:http pattern="*.jsp" security="none" />
+	<sec:http pattern="/service/v1/send/client/a/*" security="none" />
+
+	<sec:http entry-point-ref="restAuthenticationEntryPoint">
+		<sec:intercept-url pattern="/service/v1/**" access="ROLE_USER"/>
+		<!-- <sec:intercept-url pattern="" access="ROLE_ANONYMOUS"/> -->
+		<sec:form-login authentication-success-handler-ref="mySuccessHandler"
+			authentication-failure-handler-ref="myFailureHandler"
+			login-processing-url="/login.do" password-parameter="password"
+			username-parameter="userName"/>
+		<sec:remember-me services-ref="rememberMeServices" key="eht_token" />
+		<!-- <sec:custom-filter ref="rememberMeFilter" after="REMEMBER_ME_FILTER"/>-->
+		<sec:custom-filter ref="preAuthFilter" position="PRE_AUTH_FILTER"/>
+	</sec:http>
+
+</beans>

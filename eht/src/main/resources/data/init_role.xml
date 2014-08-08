@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list>
+	<com.eht.role.entity.Role>
+		<id>add7596ea054402dace15fcb71a737bb</id>
+		<roleName>USER</roleName>
+		<description>用户</description>
+		<roleType>1</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+	<com.eht.role.entity.Role>
+		<id>add7596ea054402dace15fcb71a737aa</id>
+		<roleName>OWNER</roleName>
+		<description>所有者</description>
+		<roleType>1</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+	<com.eht.role.entity.Role>
+		<id>bd57b343e4054e5e80b366bf4c6d6842</id>
+		<roleName>ADMIN</roleName>
+		<description>超级管理员</description>
+		<roleType>2</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+	<com.eht.role.entity.Role>
+		<id>ddccebff396148bcaf8b1441ea844e8e</id>
+		<roleName>EDITOR</roleName>
+		<description>编辑</description>
+		<roleType>2</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+	<com.eht.role.entity.Role>
+		<id>db6d95953739445a9de78b4e5bb39032</id>
+		<roleName>AUTHOR</roleName>
+		<description>作者</description>
+		<roleType>2</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+	<com.eht.role.entity.Role>
+		<id>e14a36c1461d4802929edfb8d0a39785</id>
+		<roleName>READER</roleName>
+		<description>读者</description>
+		<roleType>2</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+	<com.eht.role.entity.Role>
+		<id>8affa54c5003492e841b1e024d26d96e</id>
+		<roleName>GUEST</roleName>
+		<description>访客</description>
+		<roleType>2</roleType>
+		<deleted>0</deleted>
+		<createTime>2014-04-03 08:37:46.33 UTC</createTime>
+	</com.eht.role.entity.Role>
+</list>

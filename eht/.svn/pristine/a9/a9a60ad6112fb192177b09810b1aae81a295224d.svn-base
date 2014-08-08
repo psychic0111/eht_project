@@ -1,0 +1,15 @@
+#MySQL
+hibernate.dialect=org.hibernate.dialect.MySQLDialect
+validationQuery.sqlserver=SELECT 1
+jdbc.url.jeecg=jdbc:mysql://127.0.0.1:3306/eht?useUnicode=true&characterEncoding=UTF-8
+#jdbc.url.jeecg=jdbc:mysql://w.rdc.sae.sina.com.cn:3307/eht2014?useUnicode=true&characterEncoding=UTF-8
+jdbc.username.jeecg=root
+#jdbc.username.jeecg=w2l151olyo
+jdbc.password.jeecg=123456
+#jdbc.password.jeecg=4h2l003jlkz3432jxw1wjzijil3llh25xji05zyl
+jdbc.dbType=mysql
+
+hibernate.hbm2ddl.auto=update
+
+#cookie.sharedomain=.yongdzin.com
+cookie.sharedomain=eht2014.sinaapp.com

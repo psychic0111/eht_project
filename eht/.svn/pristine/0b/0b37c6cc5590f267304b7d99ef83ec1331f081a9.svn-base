@@ -1,0 +1,12 @@
+#MySQL
+hibernate.dialect=org.hibernate.dialect.MySQLDialect
+validationQuery.sqlserver=SELECT 1
+jdbc.url.jeecg=jdbc:mysql://192.168.1.118:3306/eht?useUnicode=true&characterEncoding=UTF-8
+jdbc.username.jeecg=root
+jdbc.password.jeecg=123456
+jdbc.dbType=mysql
+
+hibernate.hbm2ddl.auto=update
+
+#cookie.sharedomain=.yongdzin.com
+cookie.sharedomain=127.0.0.1

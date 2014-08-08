@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resourceactionmapping>
+	<!-- 功能权限 -->
+	<module-resource>
+		<module-name>DirectoryManage</module-name>
+		<permissions>
+			<supports>
+			</supports>
+			
+			<!-- 各角色初始权限 -->
+			<roledefaults roleName="USER">
+			</roledefaults>
+			
+			<roledefaults roleName="READER">
+			</roledefaults>
+			
+			<roledefaults roleName="AUTHOR">
+			</roledefaults>
+			
+			<roledefaults roleName="EDITOR">
+			</roledefaults>
+			
+			<roledefaults roleName="ADMIN">
+			</roledefaults>
+			<!-- 访客初始权限 
+			<guestdefaults>
+			
+			</guestdefaults>
+			-->
+			<!-- 访客初始不允许拥有权限 -->
+			<guestunsupported>
+			</guestunsupported>
+		</permissions>
+	</module-resource>
+	
+	<!-- 实体级别权限 -->
+	<entity-resource>
+		<entity-name>com.eht.subject.entity.DirectoryEntity</entity-name>
+		<moduleref>
+			<modulename>DirectoryManage</modulename>
+		</moduleref>
+		<permissions>
+			<supports>
+				<actionkey>UPDATE</actionkey>
+				<actionkey>DELETE</actionkey>
+			</supports>
+			<groupdefaults />
+			<guestdefaults />
+			<guestunsupported>
+			</guestunsupported>
+		</permissions>
+	</entity-resource>
+</resourceactionmapping>

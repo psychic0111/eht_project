@@ -1,0 +1,523 @@
+package com.eht.note.service.impl;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.beanutils.ConvertUtils;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
+import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
+import org.jeecgframework.core.util.StringUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.eht.comment.service.CommentServiceI;
+import com.eht.common.constant.Constants;
+import com.eht.common.constant.SynchConstants;
+import com.eht.common.page.PageResult;
+import com.eht.common.util.CollectionUtil;
+import com.eht.group.entity.Group;
+import com.eht.group.entity.GroupUser;
+import com.eht.group.service.GroupService;
+import com.eht.log.annotation.RecordOperate;
+import com.eht.note.entity.NoteEntity;
+import com.eht.note.entity.NoteUserEntity;
+import com.eht.note.entity.NoteVersionEntity;
+import com.eht.note.service.AttachmentServiceI;
+import com.eht.note.service.NoteServiceI;
+import com.eht.resource.entity.ClassName;
+import com.eht.resource.service.ResourceActionService;
+import com.eht.subject.entity.DirectoryEntity;
+import com.eht.subject.entity.SubjectEntity;
+import com.eht.subject.service.DirectoryServiceI;
+import com.eht.user.entity.AccountEntity;
+import com.eht.user.service.AccountServiceI;
+
+@Service("noteService")
+@Transactional
+public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
+
+	@Autowired
+	private AccountServiceI accountService;
+
+	@Autowired
+	private ResourceActionService resourceActionService;
+
+	@Autowired
+	private GroupService groupService;
+
+	@Autowired
+	private DirectoryServiceI directoryService;
+
+	@Autowired
+	private AttachmentServiceI attachmentService;
+	
+	@Autowired
+	private CommentServiceI commentService;
+	
+	@Override
+	public List<NoteEntity> findNotesByIds(String[] ids) { 
+		String query = "from NoteEntity n where id=-1 ";
+		if(ids!=null&&ids.length>0){
+			for(String id:ids){
+				query += " or n.id = '"+id+"' "; 
+			}
+		}
+		List<NoteEntity> list = findByQueryString(query);
+		return list;
+	}
+	
+	@Override
+	public List<AccountEntity> getShareEmail() {
+		List<AccountEntity> accounts = new ArrayList<AccountEntity>();
+		AccountEntity account = accountService.getUser4Session();
+
+		String query = "select u.* from  eht_user u ,(select DISTINCT(r1.userid)userid  from eht_user_role r1 ,eht_user_role r2 " + " where r2.groupid = r1.groupid and r2.userid='" + account.getId() + "' and " + " r1.userid!='" + account.getId()
+				+ "') og where og.userid=u.id ";
+		accounts = this.commonDao.findListbySql(query, AccountEntity.class);
+		return accounts;
+	}
+	
+	@Override
+	public List<AccountEntity> getShareEmail(String searchField) {
+		List<AccountEntity> accounts = new ArrayList<AccountEntity>();
+		AccountEntity account = accountService.getUser4Session();
+
+		String query = "select u.* from  eht_user u ,(select DISTINCT(r1.userid)userid  from eht_user_role r1 ,eht_user_role r2 " + " where r2.groupid = r1.groupid and r2.userid='" + account.getId() + "' and " + " r1.userid!='" + account.getId()
+				+ "') og where og.userid=u.id and (u.email like '" + searchField + "%' or u.username like '" + searchField + "%')  limit 5";
+		accounts = this.commonDao.findListbySql(query, AccountEntity.class);
+		return accounts;
+	}
+
+	@Override
+	public List<AccountEntity> getShareEmailbyPage(String searchField, int start, int end) {
+		List<AccountEntity> accounts = new ArrayList<AccountEntity>();
+		AccountEntity account = accountService.getUser4Session();
+
+		String query = "select u.* from  eht_user u ,(select DISTINCT(r1.userid)userid  from eht_user_role r1 ,eht_user_role r2 " + " where r2.groupid = r1.groupid and r2.userid='" + account.getId() + "' and " + " r1.userid!='" + account.getId()
+				+ "') og where og.userid=u.id and u.email like '" + searchField + "%'  limit " + start + "," + end;
+		accounts = this.commonDao.findListbySql(query, AccountEntity.class);
+		return accounts;
+	}
+
+	@Override
+	@RecordOperate(dataClass = "NOTE", action = SynchConstants.DATA_OPERATE_ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "createTime")
+	public Serializable addNote(NoteEntity note) {
+		save(note);
+		noteRead(note.getId(), note.getCreateUser());
+		
+		ClassName c = resourceActionService.findResourceByName(NoteEntity.class.getName());
+		if (c == null) {
+			c = new ClassName();
+			c.setClassName(NoteEntity.class.getName());
+			resourceActionService.addResource(c);
+		}
+		long parentGroupId = 0L;
+		if(!StringUtil.isEmpty(note.getSubjectId())){
+			Group group = groupService.findGroup(SubjectEntity.class.getName(), note.getSubjectId());
+			parentGroupId = group.getGroupId();
+		}
+		Group group = groupService.addGroup(c.getClassNameId(), note.getId(), note.getTitle(), note.getId(), parentGroupId);
+		return group.getGroupId();
+	}
+
+	@Override
+	@RecordOperate(dataClass = "NOTE", action = SynchConstants.DATA_OPERATE_UPDATE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
+	public void updateNote(NoteEntity note, boolean updateContent) {
+		if (!updateContent) {
+			NoteEntity oldNote = getNote(note.getId());
+			note.setContent(oldNote.getContent());
+		}
+		updateEntitie(note);
+	}
+
+	@Override
+	@RecordOperate(dataClass = "NOTE", action = SynchConstants.DATA_OPERATE_DELETE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
+	public void markDelNote(NoteEntity note) {
+		note.setDeleted(Constants.DATA_DELETED);
+		updateEntitie(note);
+	}
+
+	@Override
+	public void deleteNote(NoteEntity note) {
+		attachmentService.deleteAttachment(note.getId());
+		commentService.deleteComments(note.getId());
+		delete(note);
+		Group g = groupService.findGroup(NoteEntity.class.getName(), note.getId());
+		if (g != null) {
+			groupService.removeGUByGroupId(g.getGroupId());
+			groupService.deleteGroup(g);
+		}
+	}
+
+	@Override
+	public void deleteNote(Serializable id) {
+		deleteNote(getNote(id));
+	}
+
+	public void deleteNoteByDir(Serializable dirId){
+		Object[] param = new Object[]{dirId};
+		super.executeHql("delete from AttachmentEntity  where noteId in (select id from NoteEntity n where n.dirId = ? ) ", param);
+		super.executeHql("delete from CommentEntity c  where noteId in (select id from NoteEntity n where n.dirId = ? ) ", param);
+		super.executeHql("delete from GroupUser where GroupId in (select g.id from Group g ,NoteEntity n  where  g.classPk = n.id and  n.dirId = ?) ",param);
+		super.executeHql("delete from Group g where classPk in(select id from NoteEntity n where n.dirId = ? )",param);
+		super.executeHql("delete from NoteEntity where dirId = ? ",param);
+	}
+
+	
+	@Override
+	public NoteEntity getNote(Serializable id) {
+		return get(NoteEntity.class, id);
+	}
+
+	@Override
+	public List<NoteEntity> findNotesByDir(String dirId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class);
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("dirId", dirId));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public List<NoteEntity> findNotesBySubject(String subjectId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class);
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("subjectId", subjectId));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public boolean noteIsRead(String noteId, String userId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteUserEntity.class);
+		dc.add(Restrictions.eq("noteId", noteId));
+		dc.add(Restrictions.eq("userId", userId));
+		List<NoteEntity> list = findByDetached(dc);
+		if (CollectionUtil.isValidateCollection(list)) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean noteRead(String noteId, String userId) {
+		NoteUserEntity noteUser = new NoteUserEntity();
+		noteUser.setNoteId(noteId);
+		noteUser.setUserId(userId);
+		save(noteUser);
+		return false;
+	}
+
+	@Override
+	public long countNoReadNoteBySubject(String subjectId, String userName) {
+		String sql = "SELECT count(*) FROM eht_note WHERE subjectId=? and id in(SELECT noteid from eht_note_user WHERE userid=?)";
+		long count = getCountForJdbcParam(sql, new String[] {subjectId, userName});
+		return count;
+	}
+
+	@Override
+	public long countNoReadNoteByDir(String dirId, String userName) {
+		String sql = "SELECT count(*) FROM eht_note WHERE dirId=? and id in(SELECT noteid from eht_note_user WHERE userid=?)";
+		long count = getCountForJdbcParam(sql, new String[] {dirId, userName});
+		return count;
+	}
+
+	@Override
+	public List<NoteEntity> findNotesByParams(String userId,String subjectId, String dirId, String title, String tagId, String orderField) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("note.createUser", userId));
+		if (!StringUtil.isEmpty(title)) {
+			dc.add(Restrictions.or( Restrictions.like("note.title", title, MatchMode.ANYWHERE),Restrictions.like("note.content", title, MatchMode.ANYWHERE)));
+		}
+		
+		if (!StringUtil.isEmpty(subjectId)) {
+			dc.add(Restrictions.eq("note.subjectId", subjectId));
+		}
+		if (!StringUtil.isEmpty(dirId)) {
+			String[] ids = dirId.split(",");
+			if (ids[0].equals("*")) { // 专题下的条目（不属于某个目录下）
+				if (ids.length > 2) {
+					dc.add(Restrictions.or(Property.forName("note.dirId").isNull(), Property.forName("note.dirId").in(ids)));
+				} else if (ids.length == 2) {
+					dc.add(Restrictions.or(Property.forName("note.dirId").isNull(), Property.forName("note.dirId").eq(ids[1])));
+				}
+			} else {
+				if (ids.length > 1) {
+					dc.add(Restrictions.in("dirId", ids));
+				} else if (ids.length == 1) {
+					dc.add(Restrictions.eq("dirId", ids[0]));
+				}
+			}
+		}
+
+		if (!StringUtil.isEmpty(tagId)) {
+			String[] ids = tagId.split(",");
+			if (ids.length > 1) {
+				dc.add(Restrictions.in("tagId", ids));
+			} else if (ids.length == 1) {
+				dc.add(Restrictions.eq("tagId", ids[0]));
+			}
+		}
+
+		dc.addOrder(Order.desc(orderField));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public List<NoteEntity> findNotesInRecycleByParams(String userId, String subjectId, String dirId, String title, String tagId, String orderField) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		if (!StringUtil.isEmpty(title)) {
+			dc.add(Restrictions.like("note.title", title, MatchMode.ANYWHERE));
+		}
+		
+		//点击回收站节点，查询专题下所有已删除条目
+		if (!StringUtil.isEmpty(subjectId)) {
+			Criterion criterionSub = null;
+			String[] subjectIds = subjectId.split(",");
+			if (subjectIds.length > 1) {
+				criterionSub = Restrictions.and(Restrictions.in("note.subjectId", subjectIds), Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+			} else {
+				criterionSub = Restrictions.and(Restrictions.eq("note.subjectId", subjectIds[0]), Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+			}
+			Criterion criterionDir = null;
+			if (!StringUtil.isEmpty(dirId)) {
+				String[] ids = dirId.split(",");
+				if (ids.length > 1) {
+					criterionDir = Property.forName("note.dirId").in(ids);
+				} else if (ids.length == 1) {
+					criterionDir = Property.forName("note.dirId").eq(ids[0]);
+				}
+			}
+			if(criterionDir != null){
+				dc.add(Restrictions.or(criterionSub, criterionDir));
+			}else{
+				dc.add(criterionSub);
+			}
+		} else { // 专题ID为空，查询点击目录下所有已删除条目
+			if (!StringUtil.isEmpty(dirId)) {
+				String[] ids = dirId.split(",");
+				Criterion criterionDir = null;
+				if(ids[0].equals("recycle_personal")){  // 点击个人回收站节点
+					criterionDir =  Restrictions.and(Restrictions.eq("note.createUser", userId), Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+					dc.createCriteria("subjectEntity", "s", JoinType.INNER_JOIN);
+					dc.add(Restrictions.eq("s.subjectType", 1));
+				}else{
+					criterionDir = Restrictions.and(Restrictions.in("note.dirId", ids), Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+				}
+				dc.add(criterionDir);
+			}
+		}
+
+		if (!StringUtil.isEmpty(tagId)) {
+			String[] ids = tagId.split(",");
+			if (ids.length > 1) {
+				dc.add(Restrictions.in("note.tagId", ids));
+			} else {
+				dc.add(Restrictions.eq("note.tagId", ids[0]));
+			}
+		}
+
+		dc.addOrder(Order.desc(orderField));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public boolean inNoteBlackList(String userId, String noteId) {
+		Group group = groupService.findGroup(NoteEntity.class.getName(), noteId);
+		GroupUser gu = groupService.findGroupUser(group.getGroupId(), userId);
+		return gu != null;
+	}
+
+	@Override
+	@RecordOperate(dataClass = {"NOTE", "NOTEBLACK"}, action = {SynchConstants.DATA_OPERATE_DELETE, SynchConstants.DATA_OPERATE_ADD}, keyIndex = {1, 1}, targetUser = {0, 0}, timeStamp = {"", ""}, keyMethod = {"", ""})
+	public void blacklistedUser(String userId, String noteId) {
+		Group group = groupService.findGroup(NoteEntity.class.getName(), noteId);
+		// 将用户放入group-user关系表
+		groupService.addGroupUser(group.getGroupId(), userId);
+	}
+
+	@Override
+	@RecordOperate(dataClass = {"NOTE", "NOTEBLACK"}, action = {SynchConstants.DATA_OPERATE_ADD, SynchConstants.DATA_OPERATE_DELETE}, keyIndex = {1, 1}, targetUser = {0, 0}, timeStamp = {"", ""}, keyMethod = {"", ""})
+	public void removeUser4blacklist(String userId, String noteId) {
+		Group group = groupService.findGroup(NoteEntity.class.getName(), noteId);
+		groupService.removeGroupUser(group.getGroupId(), userId);
+	}
+
+	@Override
+	public void getHistoryNote(String nodeId, PageResult pageResult) {
+		if (pageResult == null) {
+			pageResult = new PageResult();
+		}
+		pageResult.setPageSize(10);
+		DetachedCriteria count = DetachedCriteria.forClass(NoteVersionEntity.class);
+		count.add(Restrictions.eq("noteid", nodeId));
+		Long total = (Long) count.getExecutableCriteria(getSession()).setProjection(Projections.rowCount()).uniqueResult();
+		pageResult.setTotal(total);
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteVersionEntity.class);
+		dc.add(Restrictions.eq("noteid", nodeId));
+		dc.addOrder(Order.desc("version"));
+		int firstRow = (pageResult.getPageNo() - 1) * pageResult.getPageSize();
+		pageResult.setRows(pageList(dc, firstRow, pageResult.getPageSize()));
+	}
+
+	@Override
+	public String shapeNote(String nodeId, String userid) {
+		NoteVersionEntity noteVersionEntity = getEntity(NoteVersionEntity.class, nodeId);
+		NoteEntity noteEntity = getEntity(NoteEntity.class, noteVersionEntity.getNoteid());
+		noteEntity.setContent(noteVersionEntity.getContent());
+		noteEntity.setUpdateTime(new Date());
+		noteEntity.setUpdateUser(userid);
+		updateNote(noteEntity, true);
+		return noteVersionEntity.getContent();
+	}
+	
+	public void saveNoteHistory(NoteVersionEntity noteHistory){
+		save(noteHistory);
+	}
+	
+	public void saveNoteHistory(NoteEntity note, String createUserId){
+		NoteVersionEntity noteHistory = new NoteVersionEntity();
+		noteHistory.setContent(note.getContent());
+		noteHistory.setCreatetime(new Date());
+		noteHistory.setCreateuser(createUserId);
+		noteHistory.setNoteid(note.getId());
+		int n = super.singleResult("select (count(version) + 1) from NoteVersionEntity where noteid='"+ note.getId() +"'");
+		noteHistory.setVersion(n + 1);
+		saveNoteHistory(noteHistory);
+	}
+	
+	@Override
+	public List<NoteEntity> findDeletedNotes(String userId, int subjectType) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		dc.createCriteria("subjectEntity", "s", JoinType.INNER_JOIN);
+
+		dc.add(Restrictions.eq("s.subjectType", subjectType));
+		dc.add(Restrictions.eq("note.createUser", userId));
+		dc.add(Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public List<NoteEntity> findDeletedNotesBySubjectId(String userId, String subjectId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		dc.add(Restrictions.eq("note.subjectId", subjectId));
+		dc.add(Restrictions.eq("note.createUser", userId));
+		dc.add(Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public List<NoteEntity> findDeletedNotesByDirId(String userId, String dirId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		dc.add(Restrictions.eq("note.dirId", dirId));
+		dc.add(Restrictions.eq("note.createUser", userId));
+		dc.add(Restrictions.eq("note.deleted", Constants.DATA_DELETED));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+	@Override
+	public DirectoryEntity restoreNote(NoteEntity note,List <String>list) {
+		if (note.getDeleted() == Constants.DATA_DELETED) {
+			markNoteUnDeleted(note);
+		}
+		String dirId = note.getDirId();
+		if (!StringUtil.isEmpty(dirId)) {
+			DirectoryEntity dir = directoryService.getDirectory(dirId);
+			dir.setUpdateTime(note.getUpdateTime());
+			dir.setUpdateUser(note.getUpdateUser());
+			return	directoryService.restoreDirectory(dir, list,false);
+		}
+		return null;
+	}
+
+	@RecordOperate(dataClass = "NOTE", action = SynchConstants.DATA_OPERATE_ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
+	public void markNoteUnDeleted(NoteEntity note) {
+		note.setDeleted(Constants.DATA_NOT_DELETED);
+		updateEntitie(note);
+	}
+
+	@Override
+	public String getNoteResidential(DirectoryEntity directoryEntity, SubjectEntity subject) {
+		if(directoryEntity==null){
+			String type="";
+			if(subject.getSubjectType()==1){
+				type="个人专题";
+			}else{
+				type="多人专题";
+			}
+			return type+"/"+subject.getSubjectName()+"/";
+		}else{
+			String pid=directoryEntity.getParentId();
+			if(pid == null || pid.equals("")){
+				return getNoteResidential(null,subject)+directoryEntity.getDirName()+"/";
+			}else{
+				DirectoryEntity	directory =directoryService.getDirectory(pid);
+				return getNoteResidential(directory,subject)+directoryEntity.getDirName()+"/";
+			}
+		}
+	}
+
+	@Override
+	public List<NoteEntity> findNotesBySubject(String subjectId, String userId) {
+		String query="select d.* from eht_note d where  d.subjectId='"+subjectId+"' and d.deleted="+Constants.DATA_NOT_DELETED+"  and d.id not in(select p.classpk from eht_group p , eht_group_user u where u.userid='"+userId +"' and  u.groupid=p.groupid )";
+		return  this.commonDao.findListbySql(query, NoteEntity.class);
+	}
+
+	@Override
+	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String title, String tagId, String orderField) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		if (!StringUtil.isEmpty(title)) {
+			dc.add(Restrictions.or( Restrictions.like("note.title", title, MatchMode.ANYWHERE),Restrictions.like("note.content", title, MatchMode.ANYWHERE)));
+		}
+		dc.add(Restrictions.eq("note.subjectId", subjectId));
+		
+		if (!StringUtil.isEmpty(dirId)) {
+			String[] ids = dirId.split(",");
+			if (ids.length > 1) {
+				dc.add(Restrictions.in("dirId", ids));
+			} else if (ids.length == 1) {
+				dc.add(Restrictions.eq("dirId", ids[0]));
+			}
+		}
+
+		if (!StringUtil.isEmpty(tagId)) {
+			String[] ids = tagId.split(",");
+			if(ids.length>0){
+				if(ids[0].startsWith("tag_subject_")){
+					if(ids.length>1){
+						String[] newIds = new String[ids.length-1];
+						System.arraycopy(ids, 1, newIds, 0, ids.length-1);
+					}else{
+						ids = new String[]{};
+					}
+				}
+			}
+			if (ids.length > 1) {
+				dc.add(Restrictions.in("tagId", ids));
+			} else if (ids.length == 1) {
+				dc.add(Restrictions.eq("tagId", ids[0]));
+			}
+		}
+
+		dc.addOrder(Order.desc(orderField));
+		List<NoteEntity> list = findByDetached(dc);
+		return list;
+	}
+
+}

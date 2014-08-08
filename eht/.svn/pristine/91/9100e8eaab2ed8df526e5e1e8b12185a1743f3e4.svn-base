@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resourceactionmapping>
+	<!-- 功能权限 -->
+	<module-resource>
+		<module-name>SubjectManage</module-name>
+		<permissions>
+			<supports>
+				<actionkey>ACCESS</actionkey>
+				<actionkey>ADD</actionkey>
+				<actionkey>ADD_DIRECTORY</actionkey>
+				<actionkey>UPDATE_DIRECTORY</actionkey>
+				<actionkey>DELETE_DIRECTORY</actionkey>
+				<actionkey>ADD_NOTE</actionkey>
+				<actionkey>UPDATE_NOTE</actionkey>
+				<actionkey>DELETE_NOTE</actionkey>
+				<actionkey>ASSIGN_MEMBER</actionkey>
+				<actionkey>DELETE_SUBJECT</actionkey>
+			</supports>
+			
+			<!-- 各角色初始权限 -->
+			<roledefaults roleName="USER">
+				<actionkey>ADD</actionkey>
+			</roledefaults>
+			
+			<roledefaults roleName="READER">
+				<actionkey>ACCESS</actionkey>
+			</roledefaults>
+			
+			<roledefaults roleName="AUTHOR">
+				<actionkey>ACCESS</actionkey>
+				<actionkey>ADD_NOTE</actionkey>
+			</roledefaults>
+			
+			<roledefaults roleName="EDITOR">
+				<actionkey>ACCESS</actionkey>
+				<actionkey>ADD_NOTE</actionkey>
+				<actionkey>UPDATE_NOTE</actionkey>
+				<actionkey>DELETE_NOTE</actionkey>
+			</roledefaults>
+			
+			<roledefaults roleName="ADMIN">
+				<actionkey>ACCESS</actionkey>
+				<actionkey>ADD_NOTE</actionkey>
+				<actionkey>UPDATE_NOTE</actionkey>
+				<actionkey>DELETE_NOTE</actionkey>
+				<actionkey>ADD_DIRECTORY</actionkey>
+				<actionkey>UPDATE_DIRECTORY</actionkey>
+				<actionkey>DELETE_DIRECTORY</actionkey>
+				<actionkey>ASSIGN_MEMBER</actionkey>
+			</roledefaults>
+			
+			<roledefaults roleName="OWNER">
+				<actionkey>ACCESS</actionkey>
+				<actionkey>ADD_NOTE</actionkey>
+				<actionkey>UPDATE_NOTE</actionkey>
+				<actionkey>DELETE_NOTE</actionkey>
+				<actionkey>ADD_DIRECTORY</actionkey>
+				<actionkey>UPDATE_DIRECTORY</actionkey>
+				<actionkey>DELETE_DIRECTORY</actionkey>
+				<actionkey>ASSIGN_MEMBER</actionkey>
+				<actionkey>DELETE_SUBJECT</actionkey>
+			</roledefaults>
+			<!-- 访客初始权限 
+			<guestdefaults>
+			
+			</guestdefaults>
+			-->
+			<!-- 访客初始不允许拥有权限 -->
+			<guestunsupported>
+			</guestunsupported>
+		</permissions>
+	</module-resource>
+	
+	<!-- 实体级别权限 -->
+	<entity-resource>
+		<entity-name>com.eht.subject.entity.SubjectEntity</entity-name>
+		<moduleref>
+			<modulename>SubjectManage</modulename>
+		</moduleref>
+		<permissions>
+			<supports>
+				<actionkey>UPDATE</actionkey>
+				<actionkey>VIEW</actionkey>
+				<actionkey>DELETE</actionkey>
+			</supports>
+			<groupdefaults />
+			<guestdefaults />
+			<guestunsupported>
+			</guestunsupported>
+		</permissions>
+	</entity-resource>
+</resourceactionmapping>
