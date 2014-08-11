@@ -516,7 +516,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, dataClass, filterDelete);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
-			if(dataClass.equals(DataType.BATCHDATA.toString())){
+			if(dataClass.equals(DataType.ALL.toString()) || dataClass.equals(DataType.BATCHDATA.toString())){
 				SynchLogEntity theLog = result.get(0);
 				dataClass = theLog.getClassName();
 			}

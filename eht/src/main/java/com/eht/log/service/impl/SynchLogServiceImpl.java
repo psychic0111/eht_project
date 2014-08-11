@@ -711,6 +711,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 				break;
 			}
 			SynchLogEntity orgi = logList.get(i);
+			String classPK = orgi.getClassPK();
 			if(!findedLog){
 				saveSynchedLog(orgi, clientId, userId);
 			}else{
@@ -721,7 +722,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 				for(int k = i + 1; k < logList.size(); k++){
 					SynchLogEntity nextLog = logList.get(k);
 					//判断是否为同一数据日志
-					if(nextLog.getClassPK().equals(orgi.getClassPK())){
+					if(nextLog.getClassPK().equals(classPK)){
 						orgi = mergeLog(orgi, nextLog, clientId, userId);
 						if(!findedLog){
 							saveSynchedLog(nextLog, clientId, userId);
@@ -729,7 +730,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 						i ++;  // 外层循环跳过 nextLog
 					}
 					// 下一数据日志了或已合并到最后
-					if(!nextLog.getClassPK().equals(orgi.getClassPK()) || k == logList.size() - 1) {
+					if(!nextLog.getClassPK().equals(classPK) || k == logList.size() - 1) {
 						if(orgi != null && result.size() <= SynchConstants.RETURN_CLIENT_MAX_COUNT){
 							result.add(orgi);
 							findedLog = true;  //已经找到要返回客户端的日志
@@ -819,7 +820,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 		List<SynchLogEntity> list = new ArrayList<SynchLogEntity>();
 		if(remove){
 			for(SynchLogEntity log : logList){
-				if(!log.getClassName().equals(className) && !log.getClassPK().equals(classPk)){
+				if(!log.getClassName().equals(className) || !log.getClassPK().equals(classPk)){
 					list.add(log);
 				}
 			}
