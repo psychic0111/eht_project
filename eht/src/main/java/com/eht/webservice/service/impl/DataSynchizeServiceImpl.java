@@ -538,8 +538,10 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
 			}else{
 				// count = 0, 剩下的数据类型中未找到需同步的日志
-				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
-				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ALL.toString());
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
+				nextDataType = dataTypes[0];
 			}
 			
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
@@ -687,7 +689,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Override
 	@POST
 	@Path("/checkcfg")
-	public String synchBegin(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId){
+	public String synchBegin(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @Context HttpServletResponse res){
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+		//res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
+		
 		return DataSynchAction.SUCCESS.toString();
 	}
 	

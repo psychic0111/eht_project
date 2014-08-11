@@ -513,7 +513,13 @@ public interface DataSynchizeService {
 	@GET
 	@Path("/get/subjectdata/{subjectId}/{clientId}/{userId}/{timeStamp}")
 	public String getSubjectRelatedLogs(@PathParam("subjectId") String subjectId, @PathParam("clientId") String clientId, @PathParam("userId") String userId, @PathParam("timeStamp") long timeStamp, @Context HttpServletResponse res);
-
-	public String synchBegin(String clientId);
+	
+	/**
+	 * 客户端同步开始-- 检查配置信息
+	 * @param clientId
+	 * @param res
+	 * @return
+	 */
+	public String synchBegin(String clientId, HttpServletResponse res);
 
 }

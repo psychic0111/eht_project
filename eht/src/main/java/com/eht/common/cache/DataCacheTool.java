@@ -30,7 +30,7 @@ public class DataCacheTool {
 	/**
 	 * 客户端获取同步数据类型的顺序 -- 添加、修改
 	 */
-	private static String[] datasSort = new String[] {"SUBJECT", "DIRECTORY", "TAG", "NOTE", "ATTACHMENT", "COMMENT", "MESSAGE"};
+	private static String[] datasSort = new String[] {"SUBJECT", "DIRECTORY", "TAG", "NOTE", "ATTACHMENT", "COMMENT"};
 	
 	/**
 	 * 客户端获取同步数据类型的顺序 -- 删除
