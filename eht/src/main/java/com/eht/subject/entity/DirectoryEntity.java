@@ -76,6 +76,9 @@ public class DirectoryEntity implements java.io.Serializable {
 	/**修改者,接口使用*/
 	private java.lang.String updateUserId;
 	
+	/**目录名称生成mht用*/
+	private java.lang.String dirNameTitle;
+	
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -349,4 +352,15 @@ public class DirectoryEntity implements java.io.Serializable {
 			this.updateTime = new Date(this.updateTimeStamp);
 		}
 	}
+    
+	@Transient
+	public java.lang.String getDirNameTitle() {
+		return dirNameTitle;
+	}
+
+	public void setDirNameTitle(java.lang.String dirNameTitle) {
+		this.dirNameTitle = dirNameTitle;
+	}
+	
+	
 }

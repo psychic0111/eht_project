@@ -499,7 +499,9 @@ function zTreeaddHoverDom(treeId, treeNode) {
 		if(treeNode.id.indexOf('tag_subject')!=-1&&treeNode.level==2){
 			return;
 		}
-		if ($("#diyBtn_"+treeNode.id).length>0) return;
+		if ($("#diyBtn_"+treeNode.id).length>0) {
+			$("#diyBtn_"+treeNode.id).remove();
+		};
 		var params = {'id':treeNode.id};
 		AT.post(webRoot+"/tagController/front/showcount.dht",params,function(data){
 			var aObj = $("#" + treeNode.tId + '_a');

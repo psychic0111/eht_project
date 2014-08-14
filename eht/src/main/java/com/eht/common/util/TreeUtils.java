@@ -97,7 +97,7 @@ public class TreeUtils {
 			Object parentValueObj = ReflectionUtils.invokeGetterMethod(object, parentField);
 			String parentValue = parentValueObj==null? null : parentValueObj.toString(); 
 			
-			if(StringUtils.isNotBlank(idValue) && StringUtils.isNotBlank(textValue)) {//原对象对应的 id 和 text 对应的属性的值不为空才是有效的值
+			if(idValue!=null && textValue!=null) {//原对象对应的 id 和 text 对应的属性的值不为空才是有效的值
 				ReflectionUtils.setFieldValue(treeData, "id", idValue+"");
 				ReflectionUtils.setFieldValue(treeData, "name", textValue);
 			}

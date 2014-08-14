@@ -1,7 +1,10 @@
 package com.eht.common.util;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Stack;
-
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
 import org.htmlparser.PrototypicalNodeFactory;
@@ -16,6 +19,10 @@ import org.jeecgframework.core.util.StringUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+
+import sun.misc.BASE64Encoder;
+
+import com.eht.subject.entity.MhtImg;
 
 public class HtmlParser {
 
@@ -228,38 +235,104 @@ public class HtmlParser {
 		}
 	}
 
-	static  public String repleceHtmlImg(String content,String replece){
-	Document doc = Jsoup.parseBodyFragment(content);
-	Elements imgs = doc.select("img");
-	for(int i=0;i<imgs.size();i++){
-	String url=imgs.get(i).attr("src");
-	url=url.replaceAll(replece, "");
-	imgs.get(i).attr("src", url);
-	}
+	static public String repleceHtmlImg(String content, String replece) {
+		Document doc = Jsoup.parseBodyFragment(content);
+		Elements imgs = doc.select("img");
+		for (int i = 0; i < imgs.size(); i++) {
+			String url = imgs.get(i).attr("src");
+			url = url.replaceAll(replece, "");
+			imgs.get(i).attr("src", url);
+		}
 		return doc.html();
 	}
 	
+	static public String repleceHtmlImg(String content, List <MhtImg> list,String webpath) {
+		Document doc = Jsoup.parseBodyFragment(content);
+		Elements imgs = doc.select("img");
+		for (int i = 0; i < imgs.size(); i++) {
+			String url = imgs.get(i).attr("src");
+			if(url==null||url.equals("")){
+				continue;
+			}
+			if(url.startsWith("http://")){
+				imgs.get(i).attr("src", "3D\""+url);
+				
+			}else{
+				String base64=null;
+				String path=url.replaceAll("../../", "");
+				try {
+					 base64= GetImageStr(webpath+path);
+				} catch (IOException e) {
+					continue;
+				}
+				String kzm=path.substring(path.lastIndexOf(".")+1);
+				String uuid=UUIDGenerator.uuid()+"."+kzm;
+				imgs.get(i).attr("src", "3D\"export.files/"+uuid);
+				MhtImg mht=new MhtImg();
+				mht.setUuid(uuid);
+				mht.setBase64(base64);
+				mht.setKzm(kzm);
+				list.add(mht);
+			}
+		}
+		return doc.select("body").get(0).html().replaceAll("\"3D&quot;", "3D\"");
+	}
+	
+	public static String GetImageStr(String imgFile) throws IOException  
+    {//将图片文件转化为字节数组字符串，并对其进行Base64编码处理  
+      
+        InputStream in = null;  
+        byte[] data = null;  
+        //读取图片字节数组  
+        try   
+        {  
+            in = new FileInputStream(imgFile);          
+            data = new byte[in.available()];  
+            in.read(data);  
+            
+        }   
+        catch (IOException e)   
+        {  
+            throw new IOException();
+        }finally{
+        	if(in!=null){
+        		in.close();
+        	}
+        } 
+        //对字节数组Base64编码  
+        BASE64Encoder encoder = new BASE64Encoder();  
+        return encoder.encode(data);//返回Base64编码过的字节数组字符串  
+    }  
+	
+	
 	public static void main(String[] args) {
 
-		String content =
+		String content ="<html> <head></head> <body s='11'>"+
 				"123" +
 				"<div>" +
 				"	陈光标纽约街头送钱" +
-				"	<img imgId=\"img1\" src=\"/71761403848376295.jpg\">" +
-				"	<img imgId=\"img1\" src=\"/71761403848376295.jpg\">" +
+				"<img title=\"Chrysanthemum.jpg\" src=\"../../notes/ebd4ea5593e048a280bb1bc1d789e2c6/e774aa5ae70e4ba994ae90afa9f17d94/files/img/74171407307085658.jpg\">"+
+				"	<IMG imgId=\"img1\" src=\"71761403848376295.jpg\">" +
+				"	<img  src=\"http://www.baidu.com/img/bdlogo.png\">" +
 				"</div>" +
-				"456";
-		
-		Document doc = Jsoup.parseBodyFragment(content);
+				"456"+" </body></html>";
+		Document doc =Jsoup.parse(content);
+		//Document doc = Jsoup.parseBodyFragment(content);
 		Elements imgs = doc.select("img");
 		for(int i=0;i<imgs.size();i++){
 		String url=imgs.get(i).attr("src");
-		imgs.get(i).attr("src", "11");
+			
+		System.out.println(url);
+		imgs.get(i).attr("src", "3D\"http://www.baidu.com/img/bdlogo.png");
 		}
-		System.out.println(doc.html());
+		System.out.println(doc.select("body").get(0).html());
+		System.out.println(doc.select("body").get(0).html().replaceAll("\"3D&quot;", "3D\""));
 		//System.out.println(doc.text());
 
+//String l="../../notes/ebd4ea5593e048a280bb1bc1d789e2c6/e774aa5ae70e4ba994ae90afa9f17d94/files/img/74171407307085658.jpg";
 
+//System.out.println(l.lastIndexOf("."));
+//;
 //		HtmlParser hu = new HtmlParser(content);
 //		String str;
 //		try {

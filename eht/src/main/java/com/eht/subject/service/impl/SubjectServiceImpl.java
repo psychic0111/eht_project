@@ -21,12 +21,9 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-
 import javax.servlet.http.HttpServletRequest;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.TextAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -76,6 +73,7 @@ import com.eht.role.service.RoleService;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
+import com.eht.subject.entity.SubjectMht;
 import com.eht.subject.service.DirectoryServiceI;
 import com.eht.subject.service.InviteMememberServiceI;
 import com.eht.subject.service.SubjectServiceI;
@@ -121,6 +119,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	private TemplateServiceI TemplateServiceI;
 
 	@Override
+	
 	@RecordOperate(dataClass = DataType.SUBJECT, action = DataSynchAction.ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "createTime")
 	public Serializable addSubject(SubjectEntity subject) {
 		subject.setStatus(Constants.ENABLED);
@@ -337,7 +336,6 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
-	//@RecordOperate(dataClass = DataType.SUBJECT, action = DataAction.ADD, keyIndex = 0, targetUser = 1)
 	@RecordOperate(dataClass = { DataType.SUBJECT, DataType.SUBJECTUSER }, action = {
 			DataSynchAction.ADD, DataSynchAction.ADD }, keyIndex = {
 			0, 0 }, targetUser = { 1, -1 }, timeStamp = { "", "" }, keyMethod = {
@@ -350,11 +348,11 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
-	//@RecordOperate(dataClass = "SUBJECT", action = SynchConstants.DATA_OPERATE_DELETE, keyIndex = 0, targetUser = 1)
 	@RecordOperate(dataClass = { DataType.SUBJECT, DataType.SUBJECTUSER }, action = {
 			DataSynchAction.DELETE,
 			DataSynchAction.DELETE }, keyIndex = { 0, 0 }, targetUser = {
 			1, -1 }, timeStamp = { "", "" }, keyMethod = { "", "" })
+	
 	public void removeSubjectMember(String subjectId, String userId) {
 		Group group = groupService.findGroup(SubjectEntity.class.getName(),
 				subjectId);
@@ -520,16 +518,30 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		}
 
 	}
-
+	
 	@Override
-	public void showCatalogueSubject(SubjectEntity SubjectEntity,
-			AccountEntity user, XWPFDocument doc) {
-		List<DirectoryEntity> directoryList = directoryService
-				.findDirsBySubject(SubjectEntity.getId(), user.getId());
-		List<NoteEntity> noteEntitylist = noteService.findNotesBySubject(
-				SubjectEntity.getId(), user.getId());
+	public void showCatalogueSubject(SubjectEntity SubjectEntity,AccountEntity user, XWPFDocument doc) {
+		
+	}
+	
+	//===============================================导出mht开始
+	public SubjectMht  SubjectforMht(String subjectid,AccountEntity user){
+		SubjectEntity subjectEntity = get(SubjectEntity.class, subjectid);
+		SubjectMht mht=new SubjectMht();
+		subjectEntity.setSubjectNameTitle(subjectEntity.getSubjectName()+"报告");
+		List<DirectoryEntity> directoryList = directoryService.findDirsBySubject(subjectid, user.getId());
+		List<NoteEntity> noteEntitylist =noteService.findNotesBySubject(subjectid, user.getId());
+		List<NoteEntity> subjectNoteslist=getSubjectNotes( subjectEntity, noteEntitylist);
+		List<DirectoryEntity> sortList=	getSubjectDirSort( subjectEntity, directoryList, noteEntitylist);
+		mht.setSortList(sortList);
+		mht.setSubjectEntity(subjectEntity);
+		mht.setSubjectNoteslist(subjectNoteslist);
+		return mht;
+	}
+	//让专题对章节进行排序 比如 1.1   1.2  1.3
+	private List<DirectoryEntity>  getSubjectDirSort(SubjectEntity SubjectEntity,List<DirectoryEntity> directoryList,List<NoteEntity> noteEntitylist){
+		List<DirectoryEntity> sortList= new ArrayList<DirectoryEntity>();
 		List<DirectoryEntity> rootDirectoryList = new ArrayList<DirectoryEntity>();
-		getSujectNoteWord(SubjectEntity, noteEntitylist, doc);
 		for (DirectoryEntity directoryEntity : directoryList) {
 			if (directoryEntity.getPId().equals(SubjectEntity.getId())) {
 				rootDirectoryList.add(directoryEntity);
@@ -537,133 +549,59 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		}
 		int title = 1;
 		for (DirectoryEntity directoryEntity : rootDirectoryList) {
-			if (directoryEntity.getDirName().equals(
-					Constants.SUBJECT_DOCUMENT_DIRNAME)) {
-				showDirectoryNote(directoryEntity, directoryList,
-						noteEntitylist, doc, title + "", true);
-			} else {
-				showDirectoryNote(directoryEntity, directoryList,
-						noteEntitylist, doc, title + "", false);
+			if (directoryEntity.getDirName().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)){ 
+				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+"",true,sortList);
+			}else{
+				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+"",false,sortList);
 			}
 			title++;
 		}
+		return sortList;
 	}
-
-	private void showDirectoryNote(DirectoryEntity directoryEntity,
-			List<DirectoryEntity> directoryList,
-			List<NoteEntity> noteEntitylist, XWPFDocument doc, String title,
-			boolean iswendang) {
+	
+private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEntity> directoryList,List<NoteEntity> noteEntitylist, 
+		String title,boolean iswendang,List<DirectoryEntity> sortList) {
 		if (iswendang) {
-			getDirectoryNote(directoryEntity, doc, title);
+			directoryEntity.setDirNameTitle(title+" "+directoryEntity.getDirName());
+			List<AttachmentEntity> list = attachmentServiceI.findAttachmentByDir(directoryEntity.getId());
+			directoryEntity.setAttachmentEntitylist(list);
 		} else {
-			getDirectoryNote(directoryEntity, noteEntitylist, doc, title);
+			directoryEntity.setDirNameTitle(title+" "+directoryEntity.getDirName());
+			List<NoteEntity> noteEntityList = new ArrayList<NoteEntity>();
+			for (NoteEntity noteEntity : noteEntitylist) {
+				if (directoryEntity.getId().equals(noteEntity.getDirId())) {
+					List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL,null);
+					noteEntity.setAttachmentEntitylist(lists);
+					noteEntityList.add(noteEntity);
+				}
+			}
+			directoryEntity.setNoteEntitylist(noteEntityList);
 		}
+		sortList.add(directoryEntity);
 		int cout = 1;
 		for (DirectoryEntity directory : directoryList) {
 			if (directoryEntity.getId().equals(directory.getPId())) {
-				showDirectoryNote(directory, directoryList, noteEntitylist,
-						doc, title + "." + (cout++), iswendang);
+				setDirectorySort(directory, directoryList, noteEntitylist,
+						title + "." + (cout++), iswendang,sortList);
 			}
 		}
 	}
-
-	private void getDirectoryNote(DirectoryEntity directoryEntity,
-			XWPFDocument doc, String title) {
-		List<AttachmentEntity> list = attachmentServiceI
-				.findAttachmentByDir(directoryEntity.getId());
-		XWPFParagraph p2 = doc.createParagraph();
-		p2.setWordWrap(true);
-		XWPFRun r2 = p2.createRun();
-		r2.setTextPosition(10);
-		r2.setFontSize(15);
-		r2.setText(title + directoryEntity.getDirName());
-		for (AttachmentEntity attachmentEntity : list) {
-			XWPFParagraph p5 = doc.createParagraph();
-			p5.setWordWrap(true);
-			XWPFRun r5 = p5.createRun();
-			r5.setTextPosition(13);
-			r5.setText(attachmentEntity.getFileName());
-			r5.addCarriageReturn();
-		}
-
-	}
-
-	private void getDirectoryNote(DirectoryEntity directoryEntity,
-			List<NoteEntity> noteEntitylist, XWPFDocument doc, String title) {
-		XWPFParagraph p2 = doc.createParagraph();
-		p2.setWordWrap(true);
-		XWPFRun r2 = p2.createRun();
-		r2.setTextPosition(10);
-		r2.setFontSize(15);
-		r2.setText(title + directoryEntity.getDirName());
+	
+	
+	
+	//取得专题下的条目 因为有的条目不属于某个目录
+	private List<NoteEntity>  getSubjectNotes(SubjectEntity SubjectEntity,List<NoteEntity> noteEntitylist){
+		List<NoteEntity> list=new ArrayList<NoteEntity>();
 		for (NoteEntity noteEntity : noteEntitylist) {
-			if (directoryEntity.getId().equals(noteEntity.getDirId())) {
-				XWPFParagraph p3 = doc.createParagraph();
-				p3.setWordWrap(true);
-				XWPFRun r3 = p3.createRun();
-				r3.setTextPosition(13);
-				r3.setText(noteEntity.getTitle());
-				r3.addCarriageReturn();
-				XWPFParagraph p4 = doc.createParagraph();
-				p4.setWordWrap(true);
-				XWPFRun r4 = p4.createRun();
-				r4.setTextPosition(13);
-				r4.setText(noteEntity.getContent());
-				r4.addCarriageReturn();
-				List<AttachmentEntity> lists = attachmentServiceI
-						.findAttachmentByNote(noteEntity.getId(),
-								Constants.FILE_TYPE_NORMAL);
-				if (lists.size() > 0) {
-					for (AttachmentEntity attachmentEntity : lists) {
-						XWPFParagraph p5 = doc.createParagraph();
-						p5.setWordWrap(true);
-						XWPFRun r5 = p5.createRun();
-						r5.setTextPosition(13);
-						r5.setText(attachmentEntity.getFileName());
-						r5.addCarriageReturn();
-					}
-				}
-			}
-
-		}
-	}
-
-	// 取得专题下的条目
-	private void getSujectNoteWord(SubjectEntity SubjectEntity,
-			List<NoteEntity> noteEntitylist, XWPFDocument doc) {
-		XWPFParagraph p1 = doc.createParagraph();
-		// 设置字体对齐方式
-		p1.setAlignment(ParagraphAlignment.CENTER);
-		p1.setVerticalAlignment(TextAlignment.TOP);
-		// 第一页要使用p1所定义的属性
-		XWPFRun r1 = p1.createRun();
-		// 设置字体是否加粗
-		r1.setBold(true);
-		r1.setFontSize(20);
-		// 设置使用何种字体
-		r1.setFontFamily("Courier");
-		// 设置上下两行之间的间距
-		r1.setTextPosition(200);
-		r1.setText(SubjectEntity.getSubjectName() + "报告");
-		for (NoteEntity noteEntity : noteEntitylist) {
-			if (noteEntity.getDirId() == null
-					|| noteEntity.getDirId().equals("")) {
-				XWPFParagraph p3 = doc.createParagraph();
-				p3.setWordWrap(true);
-				XWPFRun r3 = p3.createRun();
-				r3.setTextPosition(13);
-				r3.setText(noteEntity.getTitle());
-				r3.addCarriageReturn();
-				XWPFParagraph p4 = doc.createParagraph();
-				p4.setWordWrap(true);
-				XWPFRun r4 = p4.createRun();
-				r4.setTextPosition(13);
-				r4.setText(noteEntity.getContent());
-				r4.addCarriageReturn();
+			if (noteEntity.getDirId() == null|| noteEntity.getDirId().equals("")){
+				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL,null);
+				noteEntity.setAttachmentEntitylist(lists);
+				list.add(noteEntity);
 			}
 		}
+		return list;
 	}
-
+//===============================================导出mht结束
 	@Override
 	public void showCatalogueSubject(SubjectEntity SubjectEntity,
 			AccountEntity user, StringBuffer sb) {
@@ -732,7 +670,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 				sb.append("</tr>");
 				List<AttachmentEntity> lists = attachmentServiceI
 						.findAttachmentByNote(noteEntity.getId(),
-								Constants.FILE_TYPE_NORMAL);
+								Constants.FILE_TYPE_NORMAL,null);
 				if (lists.size() > 0) {
 					String pathContent = AppContextUtils.getContextPath();
 					sb.append("<tr><td>");
@@ -797,6 +735,21 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 				sb.append(noteEntity.getContent());
 				sb.append("</td>");
 				sb.append("</tr>");
+				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL,null);
+				if (lists.size() > 0) {
+					String pathContent = AppContextUtils.getContextPath();
+					sb.append("<tr><td>");
+					for (AttachmentEntity attachmentEntity : lists) {
+						sb.append("<a href='"
+								+ pathContent
+								+ "/noteController/front/downloadNodeAttach.dht?id="
+								+ attachmentEntity.getId()
+								+ "' target='_blank' class='link1b'>"
+								+ attachmentEntity.getFileName()
+								+ "</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+					}
+					sb.append("</td></tr>");
+				}
 			}
 		}
 	}
@@ -978,7 +931,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 			}
 			List<AttachmentEntity> list = attachmentServiceI
 					.findAttachmentByNote(noteEntity.getId(),
-							Constants.FILE_TYPE_NORMAL);
+							Constants.FILE_TYPE_NORMAL,null);
 			createAttachmentXml(root, list, zos, cotextpath);
 		}
 	}
@@ -1401,4 +1354,5 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		}
 
 	}
+
 }

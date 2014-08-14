@@ -36,7 +36,8 @@
 	                <tr>
 	                  <td width="100">用户名：</td>
 	                  <td>
-	                    <input class="InputTxt2" id="userName"  style=" width:40%; height:28px; " type="text" name="userName" autocomplete="off" />
+	                    <input class="InputTxt2" id="userName"  style=" width:40%; height:28px; " onblur="repeat(this);" type="text" name="userName" autocomplete="off" />
+	                    
 	                    </td>
 	                </tr>
 	                <tr>
@@ -50,6 +51,7 @@
 	                    <input type="text" class="InputTxt2"  id="code" name="code"    style="width:100px; height:28px;" autocomplete="off" />
 	                    <a href="javascript:getVerifiCode()" class="link3">看不清换一个</a>
 	                    <img id="verifi_code" onclick="getVerifiCode();" class="img_link" src="${webRoot}/getVerifiCode.dht" title="看不清换一个" align="absmiddle" />
+	               </td>
 	                </tr>
 	                <tr>
 	                  <td>&nbsp;</td>
@@ -79,6 +81,29 @@
 <!-- End footer-->
 
 <script type="text/javascript">  
+
+   function repeat(obj){
+	   var name= obj.value;
+	   if(name==''){
+	   $("#by").remove();
+	   }else{
+  		 var params = {'username':name};  
+    		AT.post("${webRoot}/center/checkUserStats.dht",params,function(data){
+    		if(data=='false'){
+    		$("#by").remove();
+    		var link='${webRoot}/center/repeat.dht?username='+escape(name);
+    		var by='<input id="by" class="Button1" type="button" onclick="window.location.href=\''+link+'\'" value="账号未激活,重发邮件" style="display:inline" />';
+    		$(obj).after(by); 
+    		}else{
+    		$("#by").remove();
+    		}
+			},false);
+   
+   }
+  		
+   //window.location.href='${webRoot}/center/repeat.dht?username='+escape(obj);
+	}
+	
 	$().ready(function() {
 		$("#regForm").validate({
 	 	   rules:{

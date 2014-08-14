@@ -1,9 +1,11 @@
 package com.eht.common.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -18,6 +20,8 @@ import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipOutputStream;
 
 public final class FileToolkit {
 	/**
@@ -60,6 +64,57 @@ public final class FileToolkit {
 		}
 	}
 
+	/**
+	 * 从流里复制文件
+	 * 
+	 * @param in
+	 * @param desc
+	 * @param closeStream
+	 */
+	public static void copyFileFromStreamToZIP(InputStream in, File desc, boolean closeStream, String fileName) {
+		byte[] cache = new byte[10240];
+		int len = 0;
+		BufferedOutputStream bos = null;
+		BufferedInputStream bis = null;
+		ZipOutputStream zos = null;
+		FileOutputStream outstream = null;
+		try {
+			outstream = new FileOutputStream(desc);
+
+			bos = new BufferedOutputStream(outstream, 10240);
+			bis = new BufferedInputStream(in, 10240);
+
+			zos = new ZipOutputStream(bos);
+			ZipEntry entry = new ZipEntry(fileName);
+			zos.putNextEntry(entry);
+			while ((len = bis.read(cache)) > 0) {
+				zos.write(cache, 0, len);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+
+				if (zos != null) {
+					zos.closeEntry();
+					zos.close();
+				}
+				if (in != null)
+					in.close();
+				if (outstream != null)
+					outstream.close();
+				if (bis != null)
+					bis.close();
+				if (bos != null)
+					bos.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	/**
 	 * 复制文件或者目录,复制前后文件完全一样。
 	 * 

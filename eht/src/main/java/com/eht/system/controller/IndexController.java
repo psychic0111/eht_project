@@ -3,9 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.util.JSONHelper;
@@ -16,12 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-
 import com.eht.common.constant.Constants;
 import com.eht.common.util.JsonUtil;
 import com.eht.common.util.TreeUtils;
 import com.eht.message.service.MessageServiceI;
-import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.NoteServiceI;
 import com.eht.resource.service.ResourceActionService;
 import com.eht.resource.service.ResourcePermissionService;

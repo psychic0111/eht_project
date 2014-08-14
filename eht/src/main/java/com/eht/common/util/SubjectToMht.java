@@ -1,16 +1,26 @@
 package com.eht.common.util;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
+import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
+import com.eht.subject.entity.DirectoryEntity;
+import com.eht.subject.entity.MhtImg;
 import com.eht.subject.entity.SubjectEntity;
-
+import com.eht.subject.entity.SubjectMht;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
@@ -18,20 +28,85 @@ public class SubjectToMht {
 
 	
 	
-	public static String subjectToMht(String templatePath, Map<String, Object> map)throws Exception{
+	public static String subjectToMht(String templatePath, Map<String, Object> map,Writer out)throws Exception{
 	  Template template = null;
 	  Configuration freeMarkerConfig = null;
 	  String htmlText= null;
 	    try {
 	      freeMarkerConfig = new Configuration();
 	      freeMarkerConfig.setDirectoryForTemplateLoading(new File(getFilePath()));
+	      freeMarkerConfig.setOutputEncoding("UTF-8");
 		  template = freeMarkerConfig.getTemplate(getFileName(templatePath),new Locale("Zh_cn"), "UTF-8");
-		   htmlText = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
+		   //htmlText = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
+		   
+		  File file = new File("E:\\test2.mht");    //要写入的文件
+          BufferedWriter writer = null;
+             if (!file.exists())
+                  file.createNewFile();
+
+           writer = new BufferedWriter(new FileWriter (file));
+            //  writer.write(htmlText);
+           
+           //System.out.println(template.getEncoding());
+          //System.out.println(freeMarkerConfig.getOutputEncoding());
+		 template.process(map, out);
+		 writer.close();
 	    } catch (Exception e) {
 	      throw new Exception();
 	    }
 		return htmlText;
    }
+	
+	public static void subjectToMht(SubjectMht subjectMht, HttpServletRequest request) {
+		SubjectEntity subjectEntity=  subjectMht.getSubjectEntity();
+		subjectEntity.setSubjectNameTitle(StringUtil.encode2HtmlUnicode(subjectEntity.getSubjectNameTitle()));//转码
+		
+		String webpath = request.getSession().getServletContext().getRealPath("/");
+		List<NoteEntity> list = subjectMht.getSubjectNoteslist();
+		for (NoteEntity noteEntity : list) {
+			String content = noteEntity.getContent();
+			List<MhtImg> listImg = new ArrayList<MhtImg>();
+			String contentMht=HtmlParser.repleceHtmlImg(content, listImg, webpath);
+			noteEntity.setContentMht(StringUtil.encode2HtmlUnicode(contentMht));
+			subjectMht.addMhtImg(listImg);
+			noteEntity.setTitleMht(StringUtil.encode2HtmlUnicode(noteEntity.getTitle()));
+			List<AttachmentEntity> attachmentlist=noteEntity.getAttachmentEntitylist();
+			if(attachmentlist!=null){
+				for (AttachmentEntity attachmentEntity : attachmentlist) {
+					attachmentEntity.setFileNameMht(StringUtil.encode2HtmlUnicode(attachmentEntity.getFileName()));
+				}
+			}
+		}
+		List<DirectoryEntity> listk = subjectMht.getSortList();
+		for (DirectoryEntity directoryEntity : listk) {
+			directoryEntity.setDirNameTitle(StringUtil.encode2HtmlUnicode(directoryEntity.getDirNameTitle()));
+			List<AttachmentEntity>  attrList=directoryEntity.getAttachmentEntitylist();
+			if(attrList!=null){
+				for (AttachmentEntity attachmentEntity : attrList) {
+					attachmentEntity.setFileNameMht(StringUtil.encode2HtmlUnicode(attachmentEntity.getFileName()));
+				}
+			}
+			List<NoteEntity> dirnotelist=directoryEntity.getNoteEntitylist();
+			if(dirnotelist!=null){
+			for (NoteEntity noteEntity : dirnotelist) {
+				String content = noteEntity.getContent();
+				List<MhtImg> listImg = new ArrayList<MhtImg>();
+				noteEntity.setTitleMht(StringUtil.encode2HtmlUnicode(noteEntity.getTitle()));
+				String contentMht=HtmlParser.repleceHtmlImg(content, listImg, webpath);
+				noteEntity.setContentMht(StringUtil.encode2HtmlUnicode(contentMht));
+				subjectMht.addMhtImg(listImg);
+				List<AttachmentEntity> attachmentlist=noteEntity.getAttachmentEntitylist();
+				if(attachmentlist!=null){
+					for (AttachmentEntity attachmentEntity : attachmentlist) {
+						attachmentEntity.setFileNameMht(StringUtil.encode2HtmlUnicode(attachmentEntity.getFileName()));
+					}
+				}
+			}
+			}
+		}
+
+	}
+	
 	
 	private static String getFileName(String path) {
 		path = path.replace("\\", "/");
@@ -104,29 +179,31 @@ public class SubjectToMht {
 		return realPath;
 	}
 	public static void main(String[] args) {
-		Map map=new HashMap<String, Object>();
-		SubjectEntity sub=new SubjectEntity();
-		sub.setSubjectName("于浩");
-		map.put("subject", sub);
-		List list=new ArrayList();
-		NoteEntity note1=	new NoteEntity();
-		note1.setTitle("新建文件夹1");
-		note1.setContent("YU242424444");
-		list.add(note1);
-		NoteEntity note2=	new NoteEntity();
-		note2.setTitle("新建文件夹2");
-		note2.setContent("YU242424444");
-		list.add(note2);
-		NoteEntity note3=	new NoteEntity();
-		note3.setTitle("新建文件夹3");
-		note3.setContent("YU242424444");
-		list.add(note3);
-		map.put("rootNoteList", list);
-		try {
-		String k=	SubjectToMht.subjectToMht("wordtempalte/word.ftl", map);
-		System.out.println(k);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		Map map=new HashMap<String, Object>();
+//		SubjectEntity sub=new SubjectEntity();
+//		sub.setSubjectName("于浩");
+//		map.put("subject", sub);
+//		List list=new ArrayList();
+//		NoteEntity note1=	new NoteEntity();
+//		note1.setTitle("新建文件夹1");
+//		note1.setContent("YU242424444");
+//		list.add(note1);
+//		NoteEntity note2=	new NoteEntity();
+//		note2.setTitle("新建文件夹2");
+//		note2.setContent("YU242424444");
+//		list.add(note2);
+//		NoteEntity note3=	new NoteEntity();
+//		note3.setTitle("新建文件夹3");
+//		note3.setContent("YU242424444");
+//		list.add(note3);
+//		map.put("rootnotelist", list);
+//		//List imgbaselist=new ArrayList();
+//		//map.put("imgbaselist", imgbaselist);
+//		try {
+//		//String k=	SubjectToMht.subjectToMht("wordtempalte/word.ftl", map);
+//		System.out.println(k);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 }

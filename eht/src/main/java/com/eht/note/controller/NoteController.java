@@ -154,7 +154,7 @@ public class NoteController extends BaseController {
 		String json = "[";
 		List<AttachmentEntity> dataList = new ArrayList<AttachmentEntity>();
 		if (noteid != null && !noteid.isEmpty()) {
-			dataList = attachmentService.findAttachmentByNote(noteid, Constants.FILE_TYPE_NORMAL);
+			dataList = attachmentService.findAttachmentByNote(noteid, Constants.FILE_TYPE_NORMAL,"all");
 			// 取当前专题判断是否多人
 		}
 		if (dataList.size() > 0) {
@@ -201,20 +201,20 @@ public class NoteController extends BaseController {
 				MultipartFile mf = entity.getValue();// 获取上传文件对象
 				String fileName = mf.getOriginalFilename();// 获取文件名
 				String extend = FileUtils.getExtend(fileName);// 获取文件扩展名
+				String fileZipName = FileUtils.getFilePrefix(fileName)+".zip";//压缩后名
 				// 判断类型
 				if (".exe.com.bat.sh".indexOf(extend) >= 0) {
 					json = "{success:false,msg:'您不能上传后缀为.exe .com .bat .sh的文件！'}";
 				} else {
-					List l = attachmentService.findAttachmentByFileName(fileName);
+					List l = attachmentService.findAttachmentByFileName(fileName,noteid);
 					if (l.size() > 0) {
 						SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");// 设置日期格式
 						df.format(new Date());
 						fileName = FileUtils.getFilePrefix(fileName);
-						fileName += "_重复文件_" + df.format(new Date()).toString() + "_" + "." + extend;
+						fileName += "_重复文件_" + df.format(new Date()).toString() + "_."+ extend;
 					}
-
 					File file = new File(realPath);
-					String savePath = realPath + "\\" + fileName;// 文件保存全路径
+					String savePath = realPath + "\\" + fileZipName;// 文件保存全路径
 					File savefile = new File(savePath);
 
 					// 判断是否已存在
@@ -222,8 +222,8 @@ public class NoteController extends BaseController {
 						file.mkdirs();// 创建根目录
 					}
 					// FileCopyUtils.copy(mf.getBytes(), savefile);
-					FileToolkit.copyFileFromStream(mf.getInputStream(), savefile, true);
-
+					//FileToolkit.copyFileFromStream(mf.getInputStream(), savefile, true);
+					FileToolkit.copyFileFromStreamToZIP(mf.getInputStream(), savefile, true,fileName);
 					// 根据md5查询是否
 					// String md5 = MD5FileUtil.getFileMD5String(savefile);
 					String md5 = null;
@@ -268,14 +268,15 @@ public class NoteController extends BaseController {
 		response.setContentType("text/html;charset=UTF-8");
 		String attachmentId = request.getParameter("id");
 		AttachmentEntity attachment = attachmentService.getAttachment(attachmentId);
+		String fileName =  FileUtils.getFilePrefix(attachment.getFileName())+".zip";
 		try {
-			File file = new File(attachment.getFilePath() + File.separator + attachment.getFileName());
+			File file = new File(attachment.getFilePath() + File.separator + fileName);
 			FileInputStream fis = new FileInputStream(file);
 			int length = fis.available();
 			byte[] b = new byte[length];
 			fis.read(b);
 
-			response.setHeader("Content-Disposition", "attachment; filename=\"" + java.net.URLEncoder.encode(attachment.getFileName(), "UTF-8") + "\"");
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + java.net.URLEncoder.encode(fileName, "UTF-8") + "\"");
 			response.addHeader("Content-Length", "" + length);
 			OutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
 			outputStream.write(b);
@@ -283,7 +284,7 @@ public class NoteController extends BaseController {
 			outputStream.close();
 			fis.close();
 		} catch (Exception e) {
-			response.getWriter().write("您请求的 《" + attachment.getFileName() + "》 文件已不存在！");
+			response.getWriter().write("您请求的 《" + java.net.URLEncoder.encode(fileName, "UTF-8") + "》 文件已不存在！");
 		}
 	}
 
@@ -682,18 +683,57 @@ public class NoteController extends BaseController {
 		if (!noteService.noteIsRead(id, user.getId())) {
 			noteService.noteRead(id, user.getId());
 		}
-		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL);
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,"current");
 		note.setAttachmentEntitylist(attaList);
 
 		String residential = noteService.getNoteResidential(note.getDirectoryEntity(), note.getSubjectEntity()); // 还是个人专题
 		Map<String, Object> map = new HashMap<String, Object>();
 		Map<String, String> actionMap = resourcePermissionService.findSubjectPermissionsByUser(user.getId(), note.getSubjectId(), note.getId());
+		//是否有更多
+		String isMore = "false";
+		if(attaList.size()>7){
+			isMore="true";
+			attaList.remove(attaList.size()-1);
+		}
+		
 		map.put("type", note.getSubjectEntity().getSubjectType() + "");
 		map.put("note", note);
 		map.put("version", note.getVersion());
 		map.put("action", actionMap);
 		map.put("attaList", attaList);
 		map.put("residential", residential);
+		map.put("isMore", isMore);
+		return JsonUtil.map2json(map);
+
+	}
+
+	/**
+	 * 根据ID查询条目并返回
+	 * searchtype  （all所有，current前7条
+	 * @param id
+	 * @return
+	 */
+	@RequestMapping(value = "/front/loadAttachment.dht", produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody
+	String loadAttachment(String id,String searchtype, HttpServletRequest request) {
+		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		NoteEntity note = noteService.getNote(id); 
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,searchtype);
+		note.setAttachmentEntitylist(attaList);
+		Map<String, Object> map = new HashMap<String, Object>();
+		//是否有更多
+		String isMore = "false";
+		//查询附件，默认前七条。
+		if(attaList.size()>7&&!searchtype.equals("all")){
+			isMore="true";
+			attaList.remove(attaList.size()-1);
+		}
+		//显示附件  【更多】按钮。
+		if(searchtype!=null&&searchtype.equals("all")&&attaList.size()>0){
+			isMore="true";
+		}
+		map.put("attaList", attaList);
+		map.put("isMore", isMore);
 		return JsonUtil.map2json(map);
 
 	}

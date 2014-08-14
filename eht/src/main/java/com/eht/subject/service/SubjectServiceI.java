@@ -8,8 +8,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jeecgframework.core.common.service.CommonService;
+
+import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
+import com.eht.subject.entity.SubjectMht;
 import com.eht.user.entity.AccountEntity;
 
 public interface SubjectServiceI extends CommonService{
@@ -127,6 +130,13 @@ public interface SubjectServiceI extends CommonService{
 	 * @return
 	 */
     public void showCatalogueSubject(SubjectEntity SubjectEntity,AccountEntity user,XWPFDocument doc);
+    
+    /**
+	 * 为专题生成MHT做准备
+	 * @return
+	 */
+    public SubjectMht  SubjectforMht(String subjectId,AccountEntity user);
+    
     
     /**
 	 * 查看专题生成大纲

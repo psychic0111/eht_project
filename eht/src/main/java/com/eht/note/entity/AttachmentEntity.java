@@ -95,6 +95,9 @@ public class AttachmentEntity extends BaseSubjectModel implements java.io.Serial
 	/**修改者,接口使用*/
 	private java.lang.String updateUserId;
 	private  String tempFilePath;
+	
+	
+	private java.lang.String fileNameMht;
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -427,6 +430,15 @@ public class AttachmentEntity extends BaseSubjectModel implements java.io.Serial
 			return null;
 		}
 		
+	}
+	
+	@Transient
+	public java.lang.String getFileNameMht() {
+		return fileNameMht;
+	}
+
+	public void setFileNameMht(java.lang.String fileNameMht) {
+		this.fileNameMht = fileNameMht;
 	}
 		
 }

@@ -32,6 +32,8 @@ import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
+import com.eht.common.enumeration.DataSynchAction;
+import com.eht.common.enumeration.DataType;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.SubjectServiceI;

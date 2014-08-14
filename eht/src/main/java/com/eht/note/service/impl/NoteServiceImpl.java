@@ -542,7 +542,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			savefile.mkdirs();
 		}
 		savefile = new File(savePath.append(note.getId()).append(".html").toString());
-		String pcontet=HtmlParser.repleceHtmlImg(note.getContent(), "../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
+		String pcontet=HtmlParser.repleceHtmlImg(note.getContent(), "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
 		FileCopyUtils.copy(pcontet.getBytes(), savefile); 
 	}
 

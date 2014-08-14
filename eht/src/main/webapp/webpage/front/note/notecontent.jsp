@@ -24,6 +24,8 @@
 <style>
 <!--
 li.over {background-color: #bcd4ec;}   
+/* 上传附件不换行 */
+#attTemp1 div{display:inline;border:1px double red}
 -->
 </style> 
 <script type="text/javascript"> 
@@ -57,10 +59,10 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
 		<input type="hidden" id="noteForm_createuser" value="${createUserId }"/> 
       <div class="function" id="_more">
         <div class="left1">
-          <input class="Button2" style="width:82px;display:none;" onclick="addNewNote()" type="button" name="note_new" id="note_new" value="+ 新建条目" />
+          <input class="Button2" type="button" name="note_new" id="note_new"  onclick="addNewNote()" value="+ 新建条目" style="width:82px;display:none;"/>
           <input class="Button1" type="button" name="saveNote_btn" id="saveNote_btn" onclick="saveNote()" value="保存" style="display:none;"/>
           <input class="Button4" type="button" name="note_edit" id="note_edit" onclick="enableEditNote()" value="编辑条目" style="display:none;"/>
-          <input style="display:none;" class="Button2" type="button" name="restoreNote_btn" id="restoreNote_btn" onclick="restoreNote()" value="还原" />
+          <input class="Button2" type="button" name="restoreNote_btn" id="restoreNote_btn" onclick="restoreNote()" value="还原" style="display:none;"/>
           <input class="Button4" type="button" name="note_share" id="note_share" onclick="shareNote()" value="分享" style="display:none;"/>
           <input class="Button4" type="button" name="note_blacklist" id="note_blacklist" onclick="noteblacklist()" value="黑名单"  style="display:none;"/>
         </div>
@@ -85,14 +87,14 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
           <div class="clear"></div>
         </div>
         <div class="Edit">
-          <div style="font-size:12px;text-decoration:none;position:relative; color: rgb(0, 99, 220);"padding-right: 5px>
+          <div style="font-size:12px;text-decoration:none;position:relative;z-index:1500;"padding-right: 5px>
 		       <div class="Edit_others" style="padding: 7px">
 			        标签：<span>
 			       	  <img src="${imgPath}/97162.gif.png" id="selectTag" onclick="selectTagTree()"  style="cursor:pointer;width:18px" title="添加标签"  />
 			          <span id="tagSelectNode" ></span>
 			       </span>
 		        </div>
-			    <div id="tagSelectContent" hidefocus="true" class="menuContent" style="background:#FFFFFF;font-size:13px;border: 1px solid rgb(190, 190, 190);display:none; position: absolute;z-index:1001">
+			    <div id="tagSelectContent" hidefocus="true" class="menuContent" style="background:#FFFFFF;font-size:13px;border: 1px solid rgb(190, 190, 190);display:none; position: absolute;z-index:1501">
 					<ul id="tagSelectTree"  hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002"></ul>
 						<div class="rightMenu" id="tagSelectTreeRightMenu">
 				        		<ul id="tagSelectTreeRightMenu_ul_tag">
@@ -105,14 +107,18 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
           </div>
         </div>
          <div class="title1" style="padding-bottom: 1px;padding: 7px">
-         <div id="attTemp" style="display:none"><div id="attachment" style="line-height:16px;height:20px;"></div></div>
-   	  	   <div class="left" style="font-size:12px;color: rgb(0, 99, 220);padding-right: 15px">
-	   	  	   	附件：
+         <div id="attTemp" style="position: relative;z-index:1100">
+         		附件：<div id="attachment" style="line-height: 16px; height: 0px; display: block;" title="添加附件"></div>
+   	  	   		<div id="attachmentListDiv" style="position: absolute;top:0px;left:65px"></div>
+   	  	   		<div id="attaMore" style="position: absolute;top:0px;left:89%;color: rgb(153, 153, 153);cursor: pointer;display: none;float: right;font-size: 12px;line-height: 20px;text-align: right;width: 40px;"  onclick="showButtonMore(this)">更多</div>
+   		 </div>
+   	  	   <%-- <div class="left" style="font-size:12px;color: rgb(0, 99, 220);padding-right: 15px">
+	   	  	   
 	   	  	    <span><img src="${imgPath}/97162.gif.png" id="selectAta" onclick="showuploadwindow()"  style="cursor:pointer;width:18px" title="添加附件"  /></span>
-   	  	   </div>
-   	  	   <div id="attachmentListDiv"></div>
+   	  	   </div> --%>
    	  	   <div class="clear"></div>
         </div>
+        <div id="attMoreDIV" class="Edit_input" style="display: block;padding-left:10px"></div>
         <div class="Edit_input">
           <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;display:none;"></script>
         </div>
@@ -177,7 +183,8 @@ $(document).ready(function() {
 	var downloadPath = webRoot+"/noteController/front/downloadNodeAttach.dht";
 	var upLoadPath =webRoot+"/noteController/front/uploadNodeAttach.dht";
 	var basePath = uploadifyPath;
-	var multiUpload=new MultiUpload("attachmentListDiv","filename",downloadPath,upLoadPath,'<%=frontPath%>',$('#sessionId').val());//附件上传
+	var upfileButton = " <a href='javascript:void(0);;' style='border:1px solid #fff;z-index:0'>添加附件 </a>";
+	var multiUpload=new MultiUpload("attachmentListDiv","filename",downloadPath,upLoadPath,'<%=frontPath%>',$('#sessionId').val(),upfileButton);//附件上传
   	  if($('#noteForm_id').val()==null||$('#noteForm_id').val()==''){
       	$('#attachment').hide();
   	 }

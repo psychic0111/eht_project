@@ -150,10 +150,10 @@ function AnalyticEmotion(s,context) {
 			$('#emotions .page').html('');
 			cat_current = category;
 			for(var i = page * 72; i < (page + 1) * 72 && i < emotions[category].length; ++i){
-				$('#emotions .container').append($('<a href="javascript:void(0);" title="' + emotions[category][i].name + '"><img src="' +context+ emotions[category][i].icon + '" alt="' + emotions[category][i].name + '" width="22" height="22" /></a>'));
+				$('#emotions .container').append($('<a href="javascript:void(0);" alt="' + emotions[category][i].name + '" title="' + emotions[category][i].name + '"><img src="' +context+ emotions[category][i].icon + '" alt="' + emotions[category][i].name + '" width="22" height="22" /></a>'));
 			}
 			$('#emotions .container a').click(function(){
-				target.insertText($(this).attr('title'));
+				target.insertText($(this).attr('alt'));
 				$('#emotions').remove();
 			});
 			for(var i = 1; i < emotions[category].length / 72 + 1; ++i){

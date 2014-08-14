@@ -34,7 +34,7 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 	 var upLoadPath ="${webRoot}/noteController/front/uploadNodeAttach.dht";
 	 var initPath ="${webRoot}/subjectController/front/initDirAtta.dht";
 	 var checkPath ="${webRoot}/subjectController/front/checkPathAtta.dht";
-	 var basePath = "${uploadifyPath}";
+	 var basePath = "${uploadifyPath}"; 
 	 $(document).ready(function() {
 			$(function() {
 				$("#attachment").uploadify({

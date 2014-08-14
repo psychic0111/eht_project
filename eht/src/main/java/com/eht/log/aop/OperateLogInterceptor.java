@@ -120,7 +120,14 @@ public class OperateLogInterceptor {
 			if (StringUtil.isEmpty(methodName)) {
 				primaryKey = args[index].toString();
 			} else {
-				primaryKey = (String) ReflectionUtils.invokeMethod(paramEntity, methodName, null, null);
+				 Object pk= ReflectionUtils.invokeMethod(paramEntity, methodName, null, null);
+				 //yuhao 修改  
+				 if(pk instanceof java.lang.String){
+					 primaryKey = (String) pk;
+				 }else{
+					 primaryKey =  pk+"";
+				 }
+				
 			}
 			log.setClassPK(primaryKey);
 			

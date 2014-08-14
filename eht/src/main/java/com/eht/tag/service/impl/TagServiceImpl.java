@@ -139,10 +139,17 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	}
 
 	@Override
-	public String findCoutNoteforTags(String account) {
+	public long findCoutNoteforTags(String tagId) {
 		String hql="select count(*) from  NoteEntity n where   n.tagId=?";
-		Long count=(Long) findHql(hql,new Object[]{account}).get(0);
-		return count+"";
+		Long count=(Long) findHql(hql,new Object[]{tagId}).get(0);
+		DetachedCriteria dc = DetachedCriteria.forClass(TagEntity.class);
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("parentId", tagId));
+		List<TagEntity> list = findByDetached(dc);
+		for (TagEntity tagEntity : list) {
+			count+=findCoutNoteforTags(tagEntity.getId());
+		}
+		return count;
 	}
 	
 	

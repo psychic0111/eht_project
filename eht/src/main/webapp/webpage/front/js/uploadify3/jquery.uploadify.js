@@ -214,10 +214,10 @@ Released under the MIT License <http://www.opensource.org/licenses/mit-license.p
 					// Wrap the instance
 					var $wrapper = $('<div />', {
 						'id'    : settings.id,
-						'class' : 'uploadify',
+						'class' : 'uploadify '+settings.buttonClassOut,
 						'css'   : {
 									'height'   : settings.height + 'px',
-									'width'    : settings.width + 'px'
+									'width'    : settings.width + 'px' 
 								  }
 					});
 					$('#' + swfuploadify.movieName).wrap($wrapper);
@@ -256,7 +256,8 @@ Released under the MIT License <http://www.opensource.org/licenses/mit-license.p
 					if (!settings.queueID) {
 						var $queue = $('<div />', {
 							'id'    : settings.id + '-queue',
-							'class' : 'uploadify-queue'
+							'class' : 'uploadify-queue',
+							'style' : 'position:absolute;z-index:1600;'
 						});
 						$wrapper.after($queue);
 						swfuploadify.settings.queueID      = settings.id + '-queue';

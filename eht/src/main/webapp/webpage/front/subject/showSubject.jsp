@@ -3,7 +3,7 @@
 <%@include file="/context/mytags.jsp"%>
 <script type="text/javascript">
 function toExportWordSubject(obj){
-	window.location.href= "${webRoot}/subjectController/front/exportSujectWord.dht?id="+obj;
+	window.location.href= "${webRoot}/subjectController/front/exportSujectmht.dht?id="+obj;
 		//AT.load("iframepage",url,iframeHeight);	
 	}
 </script>

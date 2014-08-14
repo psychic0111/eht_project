@@ -23,6 +23,7 @@ function findTopParentNode(node){
 //deleted =true 搜索回收站的条目，否则搜索正在使用中的条目
 //unloadfirst true,不加载第一条条目
 function searchNotes(deleted,unloadfirst){
+	clearAttaMore();
 	showLoading_search(); 
 	if(deleted){
 		deleted = 1;
@@ -245,11 +246,9 @@ function viewNoteclickDo(id){
 //查看一条note
 function viewNote(id,ishiden){
 	showLoading_edit();
-	if (id == null || id == '')
-		return;
-	
-	AT.post(webRoot+"/noteController/front/loadNote.dht?id=" + id, null,
-			function(data) {
+	clearAttaMore();
+	if (id == null || id == '')return;
+	AT.post(webRoot+"/noteController/front/loadNote.dht?id=" + id, null,function(data) {
 				var note = data['note'];
 				var act = data['action'];
 				var attaList = data['attaList'];//附件
@@ -262,7 +261,14 @@ function viewNote(id,ishiden){
 				$("#noteForm_tagId").val(note.tagId);
 				$("#noteForm_createuser").val(note.createUserId);
 				viewNotePageAndButton();
-				
+
+				//是否显示【更多】
+				var isMore = data['isMore'];
+				if(isMore=="true"){
+					$("#attaMore").show();
+				}else{
+					$("#attaMore").hide();
+				}
 				if (data['type'] == '1') {
 					$("#note_blacklist").hide();
 					$("#note_edit").show();
@@ -323,25 +329,62 @@ function viewNote(id,ishiden){
 	});
 	setTimeout('hideLoading_edit()',1000);
 }
+//附件【更多】按钮
+function showButtonMore(o){
+	if($(o).html()=="更多"){
+		$("#attMoreDIV").fadeIn(1000);
+		loadAttachment("all");
+		$(o).html("收起");
+	}else{
+		$("#attMoreDIV").fadeOut(100);
+		$(o).html("更多");
+	}
+}
+ 
+//查看一条note
+function loadAttachment(searchtype){
+	if(searchtype==null){
+		searchtype = "all";
+	}
+	var id = $("#noteForm_id").val();
+	AT.post(webRoot+"/noteController/front/loadAttachment.dht?id=" + id + "&searchtype="+searchtype, null,function(data) {
+				var attaList = data['attaList'];//附件
+				var isMore = data['isMore'];
+				if(isMore=="true"){
+					$("#attaMore").show();
+				}else{ 
+					$("#attaMore").hide();
+				}
+				noteAttachment(attaList,searchtype);  
+	},false); 
+}
 
-//获取当前note的附件
-function noteAttachment(attaList){
-	$("#currAttachment1").html("");
+//获取当前note的附件（searchType:current前7条     searchType：all 所有）
+function noteAttachment(attaList,searchType){
+	var temp = $("#currAttachment1");
+	if(searchType!=null&&searchType=="all"){
+		temp = $("#attMoreDIV");
+	}
+	temp.html("");
 	var text = "";
+	var isShow = "none";
+	if($("#saveNote_btn").css("display")!="none"){
+		isShow= "";
+	};
 	if(attaList){
 		$.each(attaList, function(i, attachment) { //遍历对象数组，index是数组的索引号，objVal是遍历的一个对象。
-			var attaStr = attachment.fileName!=null&&attachment.fileName.length>8?attachment.fileName.substring(0,7)+'...':attachment.fileName;
+			var attaStr = attachment.fileName!=null&&attachment.fileName.length>5?attachment.fileName.substring(0,4)+'...':attachment.fileName;
 			text+=
 				'<span style="display: inline-block;margin-right:10px;" title="'+attachment.fileName+'">'+
 				'<input type="hidden" value="'+attachment.id+'" name="filename">'+
 				"<span onclick='downloadByid(\""+attachment.id+"\")'><a href='javascript:;' style='color: #1F8919;'>"+attaStr+"</a>&nbsp;</span>"+
 				'<span onclick="removeCurrAttachment(this)" attaid="'+attachment.id+'">'+
-				'<img src="'+window.imgPath +'/34aL_046.png" >'+
+				'<img style="width:12px;display:'+isShow+'" src="'+window.imgPath +'/34aL_046.png" >'+
 				'</span>'+
 		 		'</span>';
             }); 
 	}
-	$("#currAttachment1").html(text);
+	temp.html(text);
 }
 
 //拼接标签位置
@@ -371,6 +414,12 @@ function befornewNote(){
 	//设置位置
 	$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));
 }
+function clearAttaMore(){
+	//初始化附件【更多】按钮 
+	$("#attaMore").html("更多");
+	$("#attMoreDIV").html("");
+	$("#attMoreDIV").hide();
+}
 
 //条目只读时候页面显示和按钮状态
 function viewNotePageAndButton(){
@@ -382,16 +431,17 @@ function viewNotePageAndButton(){
 	
 	$("#note_edit").attr("class", "Button4");//编辑条目按钮可以使用
 	$("#note_edit").val("编辑条目");
-	
-	
+
 	//显示评论
 	$("#comments_div").show();
 	//隐藏标签功能
 	$("#selectTag").hide();
 	//隐藏附件功能
 	$("#selectAta").hide();
+	//隐藏附件删除按钮
+	$("div#new_edit [src$='34aL_046.png']").hide();
 	//隐藏上传附件功能
-	$("#attachment").hide();
+	$("#attachment").hide();  
 	//没有条目不显示分享按钮
 	if($("#noteForm_id").val()==""){
 		$("#note_share").hide();
@@ -469,6 +519,8 @@ function editNotePageAndButton(){
 	}
 	$("#selectTag").show();
 	$("#selectAta").show();
+	//显示删除按钮
+	$("div#new_edit [src$='34aL_046.png']").show();
 	$("#attachment").show();
 	if($("#topNodeId").val()=='-1'){
 		$("#note_share").show();
@@ -482,6 +534,15 @@ function editNotePageAndButton(){
 	$("#note_edit").show();
 	
 	$("#comments_div").hide();
+}
+//显示附件删除按钮（）
+function attaDeletebuttonShow(){
+	
+}
+
+//显示附件删除按钮（隐藏）
+function attaDeletebuttonHiden(){
+	
 }
 
 function recurParentName(node,subjectName){
@@ -572,6 +633,9 @@ function addNewNotedo() {
 				$("#note_new").val("- 撤消条目");
 				$("#note_edit").val("编辑条目");
 				$("#note_share").hide();
+				
+				clearAttaMore();
+				$("#attaMore").hide();
 			}
 		},false);
 	} else {

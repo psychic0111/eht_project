@@ -81,6 +81,9 @@ public class SendMailUtil
 		// hotmail
 		hostMap.put("smtp.hotmail", "smtp.live.com");
 
+		hostMap.put("smtp.mail", "smtp.cstnet.cn");
+		
+
 		// gmail
 		hostMap.put("smtp.gmail", "smtp.gmail.com");
 		hostMap.put("smtp.port.gmail", "465");

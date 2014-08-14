@@ -11,10 +11,10 @@ public interface AttachmentServiceI extends CommonService{
 
 	/**
 	 * 根据文件名获取实体
-	 * @param subjectId
+	 * @param 
 	 * @return
 	 */
-	public List<AttachmentEntity> findAttachmentByFileName(String fileName);
+	public List<AttachmentEntity> findAttachmentByFileName(String fileName,String noteid);
 	/**
 	 * 目录下上传文件总数总数,包括专题中条目中的附件
 	 * @param subjectId
@@ -90,7 +90,7 @@ public interface AttachmentServiceI extends CommonService{
 	 * @param noteId
 	 * @return
 	 */
-	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType);
+	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType,String searchType);
 	
 	/**
 	 * 查询目录附件

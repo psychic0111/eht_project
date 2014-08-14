@@ -2,6 +2,7 @@ package com.eht.subject.controller;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
+import com.eht.common.util.SubjectToMht;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
@@ -47,6 +49,7 @@ import com.eht.role.service.RoleService;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
+import com.eht.subject.entity.SubjectMht;
 import com.eht.subject.service.DirectoryServiceI;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.template.entity.TemplateEntity;
@@ -455,6 +458,7 @@ public class SubjectController extends BaseController {
 				try {
 					subjectService.acceptInviteMember(inviteMememberEntity, accountEntity);
 				} catch (Exception e) {
+					e.printStackTrace();
 					mv.addObject("msg", "邀请失败");
 				}
 
@@ -542,16 +546,29 @@ public class SubjectController extends BaseController {
 	 */
 	@RequestMapping("/front/exportSujectmht.dht")
 	public ModelAndView exportSujectmht(HttpServletRequest request, HttpServletResponse response) {
-		response.setContentType("application/msword;charset=utf-8");
+		response.setContentType("application/octet-stream;charset=utf-8");
 		response.setHeader("Content-Disposition", "attachment; filename=export.mht");
-		OutputStream out = null;
+		Writer out = null;
 		try {
-			out = response.getOutputStream();
-			SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, request.getParameter("id"));
-			//AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-			//XWPFDocument doc = new XWPFDocument();
-			//subjectService.showCatalogueSubject(subjectEntity, user, doc);
-			//doc.write(out);
+			out = response.getWriter();
+			AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+			String path = request.getContextPath();
+			String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path+"/noteController/front/downloadNodeAttach.dht?id=";
+			SubjectMht  mht=subjectService.SubjectforMht(request.getParameter("id"),user);
+			SubjectToMht.subjectToMht(mht, request);
+			Map map=new HashMap<String, Object>();
+			map.put("subject", mht.getSubjectEntity());
+			map.put("subjectNoteslist", mht.getSubjectNoteslist());
+			map.put("subjectdirlist", mht.getSortList());
+			map.put("subjectImglist", mht.getList());
+			map.put("basePath", basePath);
+			try {
+			SubjectToMht.subjectToMht("wordtempalte/word.ftl", map,out);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			out.flush();
 		} catch (IOException e) {
 			e.printStackTrace();

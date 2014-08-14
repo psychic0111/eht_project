@@ -79,7 +79,7 @@ public class UserInterceptor implements HandlerInterceptor {
 			    	session = ClientManager.getInstance().getSession(request.getParameter("jsessionid"));
 			    }
 				 // 从session 里面获取用户名的信息  
-			    System.out.println("sessionID======================================" + request.getParameter("jsessionid"));
+			    //System.out.println("sessionID======================================" + request.getParameter("jsessionid"));
 				Object obj = session.getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 				
 				// 判断如果没有取到用户信息，就跳转到登陆页面，提示用户进行登陆  

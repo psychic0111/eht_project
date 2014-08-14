@@ -59,5 +59,5 @@ public interface TagServiceI extends CommonService{
 	 * 查询标签下有多少条目
 	 * @return
 	 */
-	public  String findCoutNoteforTags(String account);
+	public  long findCoutNoteforTags(String tagId);
 }

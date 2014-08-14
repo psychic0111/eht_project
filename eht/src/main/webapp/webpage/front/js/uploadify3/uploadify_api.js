@@ -156,13 +156,16 @@ function uploadBtnClick(btnId){
  * inputPathName : 设置保存文件路径的inputName　
  * relativePath  : 相对于uploadfiles目录的路径
  * basePath : 基本路径
+ * upfileButton: 上传按钮
  */
-function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,sessionId){
+function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,sessionId,upfileButton){
 	var mupload=this;
-	var filecode;
 	var btnId="btn"+(new Date()).getTime();
+	if(upfileButton==null){
+		upfileButton = " <a href='javascript:void(0);' style='border:1px solid #fff;z-index:0'>添加附件 </a>";
+	}
 	var container=$("#"+elId),
-		uploadBtn=$(" <a href='javascript:void(0);;' style='border:1px solid #fff;z-index:0'>添加附件 </a>");
+		uploadBtn=$(upfileButton);
 		uploadBtn.attr("id",btnId);
 	    fileList=$("<div id='currAttachment1' style='padding-left:1px'></div>");
 		container.empty();
@@ -186,15 +189,13 @@ function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,session
 		}
 	});
 	this.addFile=function(filename,filecode,downloadPath){
-		alert("push");
 		var fileItem=$("<span style='display: inline-block;margin-right:20px;'></span>");
-
-		var attaStr = fileName!=null&&fileName.length>8?fileName.substring(0,7)+'...123321':fileName;
+		var attaStr = fileName!=null&&fileName.length>8?fileName.substring(0,7)+'...':fileName;
 		fileItem.append(
 			"<input type='hidden' name='"+inputFileName+"' value='"+filecode+"' />"+
 			"<span onclick='downloadByid(\""+filecode+"\")'  title='"+fileName+"'><a href='javascript:;' style='color: #1F8919;'>"+attaStr+"</a>&nbsp;</span>"
 		);
-		var delBtn=$("<span onclick='removeCurrAttachment(this)'  attaid='"+filecode+"'><img src='"+imgPath+"/34aL_046.png' ></span>").click(function(){
+		var delBtn=$("<span onclick='removeCurrAttachment(this)'   attaid='"+filecode+"'><img style='display:none' src='"+imgPath+"/34aL_046.png' ></span>").click(function(){
 			fileItem.remove();
 		});
 		fileItem.append(delBtn);
@@ -206,10 +207,13 @@ function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,session
 
 function nBindUploadBtn(btnId,options,config){
 	$("#"+btnId).uploadify({
-		height        : 20,
+		height        : 18,
 		swf           : options.basePath+'/js/uploadify3/uploadify.swf',
-		width         : 50,
-		buttonText    : '上传文件',
+		width         : 18,
+		buttonClassOut   : "outButtonDiv",
+		buttonText    : '',
+		buttonClass   : "upload-sa",
+		buttonImage	  :  options.basePath+'/js/uploadify3/button_1.png',
 		uploader      : options.uploadPath,
 		queueSizeLimit: 10,
 		onSelect:function(file){
@@ -234,16 +238,17 @@ function nBindUploadBtn(btnId,options,config){
 			}
 			var sessionId=options.sessionId;
 			var noteid=$('#noteForm_id').val();
-			var formData={"noteid":noteid,"jsessionid":sessionId};
-			var url=options.uploadPath+"?noteid="+noteid+"&jsessionid="+sessionId;
+			var dirId=$('#noteForm_dirId').val();
+			//var formData={"noteid":noteid,"jsessionid":sessionId};
+			var url=options.uploadPath+"?noteid="+noteid+"&jsessionid="+sessionId+"&dirId="+dirId;
 			$("#"+btnId).uploadify("settings","uploader",url,true);
-			 $(".edui-editor").hide();
 		},
 		onUploadComplete:function(file){
-			var noteid=$('#noteForm_id').val();
+			//var noteid=$('#noteForm_id').val();
 		},
 		onQueueComplete:function(){
-			 $(".edui-editor").show();
+			loadAttachment("current");
+			loadAttachment("all");
 		}
 		
 	});

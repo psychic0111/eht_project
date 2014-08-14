@@ -76,8 +76,12 @@ public class SubjectEntity extends BaseSubjectModel implements java.io.Serializa
 	
 	/**创建人,接口使用*/
 	private java.lang.String createUserId;
+	
 	/**修改者,接口使用*/
 	private java.lang.String updateUserId;
+	
+	/**专题名称生成mht用*/
+	private java.lang.String subjectNameTitle;
 	
 	@Transient
 	public java.lang.String getCreateUserId() {
@@ -364,6 +368,15 @@ public class SubjectEntity extends BaseSubjectModel implements java.io.Serializa
 	@Override
 	public String findOwnSubjectId() {
 		return this.id;
+	}
+	
+    @Transient
+	public java.lang.String getSubjectNameTitle() {
+		return subjectNameTitle;
+	}
+
+	public void setSubjectNameTitle(java.lang.String subjectNameTitle) {
+		this.subjectNameTitle = subjectNameTitle;
 	}
 	
 }

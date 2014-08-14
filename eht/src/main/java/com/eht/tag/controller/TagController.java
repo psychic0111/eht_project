@@ -1,7 +1,6 @@
 package com.eht.tag.controller;
 
 import java.util.Date;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
@@ -16,7 +15,6 @@ import org.jeecgframework.core.common.model.json.AjaxJson;
 import org.jeecgframework.core.common.model.json.DataGrid;
 import org.jeecgframework.core.constant.Globals;
 import org.jeecgframework.core.util.JSONHelper;
-import org.jeecgframework.core.util.ResourceUtil;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.tag.core.easyui.TagUtil;
 import org.jeecgframework.web.system.service.SystemService;
@@ -168,7 +166,7 @@ public class TagController extends BaseController {
 	@RequestMapping(value="/front/showcount.dht", produces={"application/json;charset=UTF-8"})
 	public @ResponseBody String  showcount(HttpServletRequest req) {
 		String id=req.getParameter("id");
-		return tagService.findCoutNoteforTags(id);
+		return tagService.findCoutNoteforTags(id)+"";
 	}
 	
 }

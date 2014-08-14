@@ -6,12 +6,9 @@ import java.util.List;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
-import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
-import org.hibernate.transform.ResultTransformer;
-import org.hibernate.transform.Transformers;
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.core.util.oConvertUtils;
@@ -91,7 +88,7 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 
 	@Override
-	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType) {
+	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType,String searchType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("noteId", noteId));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
@@ -99,7 +96,15 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 		if(fileType != null && fileType > 0){
 			dc.add(Restrictions.eq("fileType", fileType));
 		}
-		List<AttachmentEntity> list = findByDetached(dc);
+		dc.addOrder(Order.desc("createTimeStamp"));
+		List<AttachmentEntity> list = null;
+		if(searchType!=null&&searchType.equals("current")){
+			//取前几条
+			list = pageList(dc,0,8);
+		}else{
+			//取后其它条 
+			list = pageList(dc,8,1000);
+		}
 		return list;
 	}
 	
@@ -152,9 +157,10 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 		return list;
 	}
 	@Override
-	public List<AttachmentEntity> findAttachmentByFileName(String fileName) {
+	public List<AttachmentEntity> findAttachmentByFileName(String fileName,String noteid) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("fileName", fileName));
+		dc.add(Restrictions.eq("noteId", noteid));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_COMPLETED));
 		List<AttachmentEntity> list = findByDetached(dc);

@@ -20,7 +20,7 @@ var config = {
 		className:'autoSelected'
 	};
 var html = '<div id="autoTalkBox"style="z-index:-2000;top:$top$px;left:$left$px;width:$width$px;height:$height$px;z-index:1;position:absolute;scroll-top:$SCTOP$px;overflow:hidden;overflow-y:auto;visibility:hidden;word-break:break-all;word-wrap:break-word;*letter-spacing:0.6px;"><span id="autoTalkText"></span></div><div id="recipientsTips" class="recipients-tips"><ul id="autoTipsUserList"></ul></div>';
-var listHTML = '<li><a title="$ACCOUNT$" rel="$ID$" >$NAME$(@$SACCOUNT$)</a></li>';
+var listHTML = '<li><a  rel="$ID$" >$NAME$(@$SACCOUNT$)</a></li>';
 
 
 /*
@@ -120,13 +120,12 @@ var TT = {
 	add:function (t, txt){
 		var val = t.value;
 		var wrap = wrap || '' ;
-		
 			var cp = parseInt(t.getAttribute('yuhao'));
 			var ubbLength = t.value.length;
 			t.value = t.value.slice(0,cp) + txt + t.value.slice(cp, ubbLength);
 			t.setAttribute('yuhao',cp + txt.length);
 			this.setCursorPosition(t, cp + txt.length); 
-		
+			
 	},
 	
 	del:function(t, n){
@@ -316,7 +315,7 @@ friendsData =date;
 		var em = '<em>'+ char +'</em>';
 		for(var i=0; i<len; i++){
 			var hm = data[i]['user'].replace(reg,em);
-			h += html.replace(/\$ACCOUNT\$|\$NAME\$/g,data[i]['name']).
+			h += html.replace(/\$NAME\$/g,data[i]['name']).
 						replace('$SACCOUNT$',hm).replace('$ID$',data[i]['user']);
 		}
 		
@@ -379,9 +378,9 @@ friendsData =date;
 	}
 	
 	_this.hide = function(){
-		selectList.list = null;
-		selectList.index = -1;
-		selectList._this = null;
+		//selectList.list = null;
+		//selectList.index = -1;
+		//selectList._this = null;
 		D.ER(elem, 'keydown', _this.KeyDown);
 		D.$(config.wrap).style.display = 'none';
 	}
@@ -390,7 +389,9 @@ friendsData =date;
 		
 		elem.onkeyup = _this.keyupFn;
 		elem.onclick = _this.keyupFn;
-		elem.onblur = function(){setTimeout(_this.hide, 100)}
+		elem.onblur = function(){
+			setTimeout(_this.hide, 1000);
+		}
 		//elem.onkeyup= fn;
 		//D.EA(elem, 'keyup', _this.keyupFn, false)
 		//D.EA(elem, 'keyup', fn, false)

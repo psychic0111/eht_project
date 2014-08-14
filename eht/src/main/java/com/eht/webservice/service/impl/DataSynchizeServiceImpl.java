@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -749,8 +748,10 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				sr.setLastSynTimestamp(synchTimeStamp);
 				synchResultService.addSynResult(sr);
 			}else{
-				sr.setLastSynTimestamp(synchTimeStamp);
-				synchResultService.updateSynResult(sr);
+				if(synchTimeStamp != 0){
+					sr.setLastSynTimestamp(synchTimeStamp);
+					synchResultService.updateSynResult(sr);
+				}
 			}
 			return JsonUtil.bean2json(sr);
 		}else{
@@ -1565,66 +1566,100 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/batchdata")
 	public String deleteBatchData(@FormParam("data") String data, @DefaultValue(SynchConstants.CLIENT_SYNCH_SEND) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res){
-		String[] dataTypes = DataCacheTool.getReverseDatasSort();
-		Map map = JsonUtil.getMap4Json(data);
-		String dataType = map.get("dataType").toString();
-		
-		if(!action.equals(DataSynchAction.FINISH.toString())){
-			String datas = map.get("datas").toString();
-			List list = JsonUtil.getList4Json(datas, List.class);
+		if(!StringUtil.isEmpty(data)){
+			String[] dataTypes = DataCacheTool.getReverseDatasSort();
+			logger.info("批量删除数据：" + data);
+			Map map = JsonUtil.getMap4Json(data);
+			String dataType = map.get("dataType").toString();
 			
-			if(dataType.equals(DataType.SUBJECT.toString())){
-				for(Object id : list){
-					subjectService.deleteSubject(id.toString());
+			if(!action.equals(DataSynchAction.FINISH.toString())){
+				String datas = map.get("datas").toString();
+				if(datas.charAt(0) == '"'){
+					datas = datas.substring(1, datas.length() - 1);
 				}
-			}else if(dataType.equals(DataType.DIRECTORY.toString())){
-				for(Object id : list){
-					directoryService.deleteDirectory(id.toString());
+				List list = JsonUtil.getList4Json(datas, HashMap.class);
+				
+				if(dataType.equals(DataType.SUBJECT.toString())){
+					for(Object obj : list){
+						Map<String, String> objMap = (Map<String, String>) obj;
+						String id = objMap.get("id");
+						SubjectEntity subject = subjectService.getSubject(id);
+						subjectService.markDelSubject(subject);
+					}
+				}else if(dataType.equals(DataType.DIRECTORY.toString())){
+					for(Object obj : list){
+						Map<String, String> objMap = (Map<String, String>) obj;
+						String id = objMap.get("id");
+						DirectoryEntity dir = directoryService.getDirectory(id);
+						directoryService.markDelDirectory(dir);
+					}
+				}else if(dataType.equals(DataType.TAG.toString())){
+					for(Object obj : list){
+						Map<String, String> objMap = (Map<String, String>) obj;
+						String id = objMap.get("id");
+						tagService.deleteTagById(id.toString());
+					}
+				}else if(dataType.equals(DataType.NOTE.toString())){
+					for(Object obj : list){
+						Map<String, String> objMap = (Map<String, String>) obj;
+						String id = objMap.get("id");
+						NoteEntity note = noteService.getNote(id.toString());
+						noteService.markDelNote(note);
+					}
+				}else if(dataType.equals(DataType.COMMENT.toString())){
+					for(Object obj : list){
+						Map<String, String> objMap = (Map<String, String>) obj;
+						String id = objMap.get("id");
+						commentService.deleteComment(id.toString());
+					}
 				}
-			}else if(dataType.equals(DataType.TAG.toString())){
-				for(Object id : list){
-					tagService.deleteTagById(id.toString());
-				}
-			}else if(dataType.equals(DataType.NOTE.toString())){
-				for(Object id : list){
-					NoteEntity note = noteService.getNote(id.toString());
-					noteService.markDelNote(note);
-				}
-			}else if(dataType.equals(DataType.COMMENT.toString())){
-				for(Object id : list){
-					commentService.deleteComment(id.toString());
-				}
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
+			}else{
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
 			}
-			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
-			
-			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
-			res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
-			
+			BatchDataBean bean = new BatchDataBean();
+			String nextDataType = DataSynchizeUtil.getNextDataType(dataType, dataTypes);
+			if(nextDataType != null){
+				bean.setDataType(dataType);
+				bean.setDatas(null);
+				
+				String str = JsonUtil.bean2json(bean);
+				Map<String, String> delMap = new HashMap<String, String>();
+				delMap.put("dataType", nextDataType);
+				delMap.put("action", DataSynchAction.DELETE.toString());
+				String returnData = JsonUtil.map2json(delMap);
+				
+				Map<String, String> resultMap = new HashMap<String, String>();
+				resultMap.put("data", str);
+				resultMap.put("nextData", returnData);
+				
+				String returnVal = JsonUtil.map2json(resultMap);
+				return returnVal;
+			}else{  //nextDataType == null 批量删除操作完成了
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+			}
 		}else{
+			// 这段代码应该走不到
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
 			
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
 		}
-		BatchDataBean bean = new BatchDataBean();
-		String nextDataType = DataSynchizeUtil.getNextDataType(dataType, dataTypes);
-		bean.setDataType(dataType);
-		bean.setDatas(null);
-		
-		String str = JsonUtil.bean2json(bean);
-		Map<String, String> delMap = new HashMap<String, String>();
-		delMap.put("dataType", nextDataType);
-		delMap.put("action", DataSynchAction.DELETE.toString());
-		String returnData = JsonUtil.map2json(delMap);
-		
-		Map<String, String> resultMap = new HashMap<String, String>();
-		resultMap.put("data", str);
-		resultMap.put("nextData", returnData);
-		
-		String returnVal = JsonUtil.map2json(resultMap);
-		return returnVal;
+		return "";
 	}
 	
 	@Override

@@ -1,9 +1,9 @@
 MIME-Version: 1.0
-Content-Type: multipart/related; boundary="----=_NextPart_01CFB0EA.6FC21560"
+Content-Type: multipart/related; boundary="----=_NextPart_01CFB26F.9E36F6F0"
 
 此文档为“单个文件网页”，也称为“Web 档案”文件。如果您看到此消息，但是您的浏览器或编辑器不支持“Web 档案”文件。请下载支持“Web 档案”的浏览器，如 Windows? Internet Explorer?。
 
-------=_NextPart_01CFB0EA.6FC21560
+------=_NextPart_01CFB26F.9E36F6F0
 Content-Location: file:///C:/11B9CAB4/export.htm
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/html; charset="us-ascii"
@@ -15,7 +15,7 @@ xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml"
 xmlns=3D"http://www.w3.org/TR/REC-html40">
 
 <head>
-<meta http-equiv=3DContent-Type content=3D"text/html; charset=UTF-8">
+<meta http-equiv=3DContent-Type content=3D"text/html; charset=3Dus-ascii">
 <meta name=3DProgId content=3DWord.Document>
 <meta name=3DGenerator content=3D"Microsoft Word 12">
 <meta name=3DOriginator content=3D"Microsoft Word 12">
@@ -25,15 +25,15 @@ xmlns=3D"http://www.w3.org/TR/REC-html40">
   <o:Author>&#38889;&#38634;</o:Author>
   <o:LastAuthor>&#38889;&#38634;</o:LastAuthor>
   <o:Revision>2</o:Revision>
-  <o:TotalTime>6</o:TotalTime>
-  <o:Created>2014-08-05T12:18:00Z</o:Created>
-  <o:LastSaved>2014-08-05T12:18:00Z</o:LastSaved>
+  <o:TotalTime>3</o:TotalTime>
+  <o:Created>2014-08-07T10:44:00Z</o:Created>
+  <o:LastSaved>2014-08-07T10:44:00Z</o:LastSaved>
   <o:Pages>1</o:Pages>
-  <o:Words>2</o:Words>
-  <o:Characters>18</o:Characters>
+  <o:Words>20</o:Words>
+  <o:Characters>115</o:Characters>
   <o:Lines>1</o:Lines>
   <o:Paragraphs>1</o:Paragraphs>
-  <o:CharactersWithSpaces>19</o:CharactersWithSpaces>
+  <o:CharactersWithSpaces>134</o:CharactersWithSpaces>
   <o:Version>12.00</o:Version>
  </o:DocumentProperties>
 </xml><![endif]-->
@@ -78,6 +78,7 @@ ry>
    <w:CachedColBalance/>
    <w:UseFELayout/>
   </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
   <m:mathPr>
    <m:mathFont m:val=3D"Cambria Math"/>
    <m:brkBin m:val=3D"before"/>
@@ -539,26 +540,19 @@ p.MsoBodyText, li.MsoBodyText, div.MsoBodyText
 	mso-bidi-font-family:"Times New Roman";
 	mso-bidi-theme-font:minor-bidi;
 	mso-font-kerning:1.0pt;}
-p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	mso-themecolor:hyperlink;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
 	{mso-style-noshow:yes;
 	mso-style-priority:99;
-	mso-style-link:"\6279\6CE8\6846\6587\672C Char";
-	margin:0cm;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	text-justify:inter-ideograph;
-	mso-pagination:none;
-	font-size:9.0pt;
-	font-family:"Calibri","sans-serif";
-	mso-ascii-font-family:Calibri;
-	mso-ascii-theme-font:minor-latin;
-	mso-fareast-font-family:SimSun;
-	mso-fareast-theme-font:minor-fareast;
-	mso-hansi-font-family:Calibri;
-	mso-hansi-theme-font:minor-latin;
-	mso-bidi-font-family:"Times New Roman";
-	mso-bidi-theme-font:minor-bidi;
-	mso-font-kerning:1.0pt;}
+	color:purple;
+	mso-themecolor:followedhyperlink;
+	text-decoration:underline;
+	text-underline:single;}
 p.XD, li.XD, div.XD
 	{mso-style-name:XD\7AE0\53F7;
 	mso-style-unhide:no;
@@ -826,15 +820,6 @@ span.Char1
 	mso-style-link:\9875\811A;
 	mso-ansi-font-size:9.0pt;
 	mso-bidi-font-size:9.0pt;}
-span.Char2
-	{mso-style-name:"\6279\6CE8\6846\6587\672C Char";
-	mso-style-noshow:yes;
-	mso-style-priority:99;
-	mso-style-unhide:no;
-	mso-style-locked:yes;
-	mso-style-link:\6279\6CE8\6846\6587\672C;
-	mso-ansi-font-size:9.0pt;
-	mso-bidi-font-size:9.0pt;}
 .MsoChpDefault
 	{mso-style-type:export-only;
 	mso-default-props:yes;
@@ -950,42 +935,104 @@ ul
 	mso-font-kerning:1.0pt;}
 </style>
 <![endif]--><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext=3D"edit" spidmax=3D"15362"/>
+ <o:shapedefaults v:ext=3D"edit" spidmax=3D"3074"/>
 </xml><![endif]--><!--[if gte mso 9]><xml>
  <o:shapelayout v:ext=3D"edit">
   <o:idmap v:ext=3D"edit" data=3D"1"/>
  </o:shapelayout></xml><![endif]-->
 </head>
 
-<body lang=3DZH-CN style=3D'tab-interval:21.0pt;text-justify-trim:punctuati=
-on'>
+<body lang=3DZH-CN link=3Dblue vlink=3Dpurple style=3D'tab-interval:21.0pt;=
+text-justify-trim:
+punctuation'>
 
 <div class=3DWordSection1 style=3D'layout-grid:15.6pt'>
 
 <p class=3DMsoNormal align=3Dcenter style=3D'text-align:center'><span
-style=3D'font-size:24.0pt;font-family:SimSun;mso-ascii-font-family:Calibri;
+style=3D'font-size:26.0pt;font-family:SimSun;mso-ascii-font-family:Calibri;
 mso-ascii-theme-font:minor-latin;mso-fareast-font-family:SimSun;mso-fareast=
 -theme-font:
 minor-fareast;mso-hansi-font-family:Calibri;mso-hansi-theme-font:minor-lati=
-n'>${subject.subjectName}</span><span
-lang=3DEN-US style=3D'font-size:24.0pt'><o:p></o:p></span></p>
+n'>${subject.subjectNameTitle}</span><span
+lang=3DEN-US style=3D'font-size:26.0pt'><o:p></o:p></span></p>
+<#list subjectNoteslist as rootnote>
+<p class=3DMsoNormal align=3Dleft style=3D'text-align:left'><span style=3D'=
+font-size:
+16.0pt;font-family:SimSun;mso-ascii-font-family:Calibri;mso-ascii-theme-fon=
+t:
+minor-latin;mso-fareast-font-family:SimSun;mso-fareast-theme-font:minor-far=
+east;
+mso-hansi-font-family:Calibri;mso-hansi-theme-font:minor-latin'>${rootnote.titleMht}</s=
+pan><span
+lang=3DEN-US style=3D'font-size:16.0pt'><o:p></o:p></span></p>
 
-<#list rootnotelist as rootnote>
+<p class=3DMsoNormal align=3Dleft style=3D'text-align:left'><span style=3D'=
+font-size:
+12.0pt;font-family:SimSun;mso-ascii-font-family:Calibri;mso-ascii-theme-fon=
+t:
+minor-latin;mso-fareast-font-family:SimSun;mso-fareast-theme-font:minor-far=
+east;
+mso-hansi-font-family:Calibri;mso-hansi-theme-font:minor-latin'>${rootnote.contentMht}</s=
+pan><span
+lang=3DEN-US style=3D'font-size:12.0pt'><o:p></o:p></span></p>
 <p class=3DMsoNormal align=3Dleft style=3D'text-align:left'><span lang=3DEN=
 -US
-style=3D'font-size:16.0pt'>${rootnote.title}<o:p></o:p></span></p>
+style=3D'font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
 
+<#list rootnote.attachmentEntitylist as attachment>
 <p class=3DMsoNormal align=3Dleft style=3D'text-align:left'><span lang=3DEN=
 -US
-style=3D'mso-bidi-font-size:10.5pt'>${rootnote.content}<o:p></o:p></span></p>
+style=3D'font-size:12.0pt'><a href=3D"${basePath}3D${attachment.id}">${attachment.fileName}</a><o:p></o:p></span></p>
+</#list>
+</#list>
 
+<#list subjectdirlist as dir>
+<h1><span lang=3DEN-US>${dir.dirNameTitle}</span></h1>
 <p class=3DMsoNormal align=3Dleft style=3D'text-align:left'><span lang=3DEN=
 -US
-style=3D'font-size:15.0pt'><o:p>&nbsp;</o:p></span></p>
+style=3D'font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
 
+<#if dir.attachmentEntitylist??>
+<#list dir.attachmentEntitylist as attr>
 <p class=3DMsoNormal align=3Dleft style=3D'text-align:left'><span lang=3DEN=
 -US
-style=3D'font-size:15.0pt'><o:p>&nbsp;</o:p></span></p>
+style=3D'font-size:12.0pt'><a href=3D"${basePath}3D${attr.id}">${attr.fileNameMht}</a><o:p></o:p></span></p>
+</#list>
+</#if>
+
+
+<#if dir.noteEntitylist??>
+<#list dir.noteEntitylist as note>
+<p class=3DMsoNormal><span style=3D'font-size:16.0pt;font-family:SimSun;mso=
+-ascii-font-family:
+Calibri;mso-ascii-theme-font:minor-latin;mso-fareast-font-family:SimSun;
+mso-fareast-theme-font:minor-fareast;mso-hansi-font-family:Calibri;mso-hans=
+i-theme-font:
+minor-latin'>${note.titleMht}</span><span lang=3DEN-US style=3D'font-size:16.0pt'><=
+o:p></o:p></span></p>
+
+<p class=3DMsoNormal><span style=3D'font-size:12.0pt;font-family:SimSun;mso=
+-ascii-font-family:
+Calibri;mso-ascii-theme-font:minor-latin;mso-fareast-font-family:SimSun;
+mso-fareast-theme-font:minor-fareast;mso-hansi-font-family:Calibri;mso-hans=
+i-theme-font:
+minor-latin'>${note.contentMht}</span><span lang=3DEN-US style=3D'font-size:12.0pt'><=
+o:p></o:p></span></p>
+
+<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:12.0pt'><o:p>&nb=
+sp;</o:p></span></p>
+<#list note.attachmentEntitylist as yuhao>
+<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:12.0pt'><a
+href=3D"${basePath}3D${yuhao.id}">${yuhao.fileNameMht}</a><o:p></o:p></span></=
+p>
+</#list>
+</#list>
+</#if>
+
+
+
+
+
 </#list>
 </div>
 
@@ -993,7 +1040,7 @@ style=3D'font-size:15.0pt'><o:p>&nbsp;</o:p></span></p>
 
 </html>
 
-------=_NextPart_01CFB0EA.6FC21560
+------=_NextPart_01CFB26F.9E36F6F0
 Content-Location: file:///C:/11B9CAB4/export.files/themedata.thmx
 Content-Transfer-Encoding: base64
 Content-Type: application/vnd.ms-officetheme
@@ -1054,7 +1101,7 @@ dGhlbWUvdGhlbWUxLnhtbFBLAQItABQABgAIAAAAIQAN0ZCftgAAABsBAAAnAAAAAAAAAAAAAAAA
 AKEJAAB0aGVtZS90aGVtZS9fcmVscy90aGVtZU1hbmFnZXIueG1sLnJlbHNQSwUGAAAAAAUABQBd
 AQAAnAoAAAAA
 
-------=_NextPart_01CFB0EA.6FC21560
+------=_NextPart_01CFB26F.9E36F6F0
 Content-Location: file:///C:/11B9CAB4/export.files/colorschememapping.xml
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/xml
@@ -1065,18 +1112,19 @@ Content-Type: text/xml
 2=3D"accent2" accent3=3D"accent3" accent4=3D"accent4" accent5=3D"accent5" a=
 ccent6=3D"accent6" hlink=3D"hlink" folHlink=3D"folHlink"/>
 
-<#list imgbaselist as attr>
-------=_NextPart_01CFB0EA.6FC21560
-Content-Location: file:///C:/11B9CAB4/export.files/${rootnote.fileName}
+<#list subjectImglist as mhtImg>
+------=_NextPart_01CFB26F.9E36F6F0
+Content-Location: file:///C:/11B9CAB4/export.files/${mhtImg.uuid}
 Content-Transfer-Encoding: base64
-Content-Type: image/jpeg
+Content-Type: image/${mhtImg.kzm}
 
-${rootnote.content}
+${mhtImg.base64}
 
-------=_NextPart_01CFB0EA.6FC21560
+
 </#list>
 
 
+------=_NextPart_01CFB26F.9E36F6F0
 Content-Location: file:///C:/11B9CAB4/export.files/header.htm
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/html; charset="us-ascii"
@@ -1097,11 +1145,11 @@ xmlns=3D"http://www.w3.org/TR/REC-html40">
 <base href=3D"file:///C:\11B9CAB4\export.files\header.htm"
 id=3D"webarch_temp_base_tag">
 <![endif]><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext=3D"edit" spidmax=3D"15362"/>
+ <o:shapedefaults v:ext=3D"edit" spidmax=3D"3074"/>
 </xml><![endif]-->
 </head>
 
-<body lang=3DZH-CN>
+<body lang=3DZH-CN link=3Dblue vlink=3Dpurple>
 
 <div style=3D'mso-element:footnote-separator' id=3Dfs>
 
@@ -1151,7 +1199,7 @@ r:footnote-continuation-separator'><![if !supportFootnotes]>
 
 </html>
 
-------=_NextPart_01CFB0EA.6FC21560
+------=_NextPart_01CFB26F.9E36F6F0
 Content-Location: file:///C:/11B9CAB4/export.files/filelist.xml
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/xml; charset="utf-8"
@@ -1163,4 +1211,4 @@ Content-Type: text/xml; charset="utf-8"
  <o:File HRef=3D"header.htm"/>
  <o:File HRef=3D"filelist.xml"/>
 </xml>
-------=_NextPart_01CFB0EA.6FC21560--
+------=_NextPart_01CFB26F.9E36F6F0--

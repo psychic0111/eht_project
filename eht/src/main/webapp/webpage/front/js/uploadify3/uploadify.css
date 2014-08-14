@@ -18,16 +18,24 @@ Released under the MIT License <http://www.opensource.org/licenses/mit-license.p
 	color:#333; 
 	background-color:#fff
 }
-.uploadify:hover .uploadify-button {
+.upload-sa {
+	backbround:url("../../images/97162.gif.png");
+	background-size:18px 18px;	 
 	cursor:pointer;
-	padding:0px 12px; 
-	margin:0; 
-	height:28px; 
-	background:url(../../images/bg_btn4.png) bottom repeat-x; 
-	border:1px #d5d5d5 solid; 
-	color:#333; 
-	background-color:#fff
+	padding:0px ; 
+	margin:0px; 
+	height:16px; 
+	border:0px #d5d5d5 solid; 
 }
+.outButtonDiv{
+	position: absolute; 
+	top:0px;
+	left:40px
+}
+
+/* .uploadify:hover .uploadify-button { 
+	background:url(../../images/bg_btn4.png) bottom repeat-x;  
+} */
 .uploadify-button.disabled {
 	background-color: #D0D0D0;
 	color: #808080;

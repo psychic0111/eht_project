@@ -110,8 +110,10 @@ function removeCurrAttachment(obj){
 			var url = webRoot+"/noteController/front/removeAttach.dht";
 			AT.post(url, params, function(data){ 
 				$(obj).parent().remove();
-			});
-			jBox.tip("删除成功!", 'info');
+				//刷新附件前7个附件
+				loadAttachment("current");
+				loadAttachment();
+			}); 
 	    }
 	    return true;
 	}; 

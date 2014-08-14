@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -63,7 +64,15 @@ public class LogonController extends BaseController {
 		if(username!=null&&password!=null){
 			u = accountService.findUserByAccount(username);
 		}
-		
+		if(u!=null&&u.getPassword()==null){
+			mv = new ModelAndView("login");
+			mmp.put("username", username);
+			mmp.put("password", request.getParameter("password"));
+			mmp.put("sendmail", "1");
+			mmp.put("message", "账号未激活！");
+			mv.addAllObjects(mmp); 
+			return mv;
+		}
 		if(u!=null&&u.getPassword()!=null&&u.getPassword().equals(password) && u.getStatus() == Constants.ENABLED && u.getDeleted() == Constants.DATA_NOT_DELETED){
 			session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, u);
 			ClientManager.getInstance().addSession(session.getId(), session);
@@ -76,12 +85,35 @@ public class LogonController extends BaseController {
 			mv = new ModelAndView(new RedirectView("/indexController/front/index.dht", true));
 		}else{
 			mmp.put("message", "账号或密码错误！");
+			mmp.put("username", username);
+			mmp.put("password", request.getParameter("password"));
 			mv = new ModelAndView("login");
 		}
 		
 		mv.addAllObjects(mmp); 
 		
 		return mv;
+	}
+	
+	/**
+	 * 邮件重发
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/repeat.dht")
+	public ModelAndView save( HttpServletRequest request) {
+		String linkname = null;
+		String linkpath = null;
+		try {
+			msg = "注册成功！请查看邮件并激活账号！";
+			AccountEntity account = accountService.findUserByAccount(request.getParameter("username"));
+			
+			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
+			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
+		  } catch (Exception e) {
+	     	e.printStackTrace();
+	    } 
+		return linkLoginMessage(msg,null,linkpath,linkname,null);
 	}
 	
 	/**
@@ -306,6 +338,23 @@ public class LogonController extends BaseController {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * 验证账户是否激活
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/checkUserStats.dht")
+	public @ResponseBody String checkUserStats(HttpServletRequest request,HttpServletResponse response) {
+		String bool = "true";
+		String username = request.getParameter("username");
+		AccountEntity u = accountService.findUserByAccount(username);
+		if(u!=null&&u.getPassword()==null){
+			  bool = "false";
+		}
+		
+		return bool;
+	}
 
 	/**
 	 * 验证注册邮箱
@@ -346,6 +395,7 @@ public class LogonController extends BaseController {
 			e.printStackTrace();
 		}
 	}
+	
 	
 	/**
 	 * 跳转注册页面
