@@ -82,11 +82,11 @@ public interface SynchLogServiceI extends CommonService{
 	public List<String> findSynchedLogIds(String clientId, String userId);
 	
 	/**
-	 * 从中间表中删除已经同步过的日志记录
+	 * 从中间表中删除已经同步过的日志记录,返回最新的时间戳
 	 * @param clientId
 	 * @param userId
 	 */
-	public void deleteSynchedLogs(String clientId, String userId);
+	public long deleteSynchedLogs(String clientId, String userId);
 	
 	/**
 	 * 查询某一数据日志数量
@@ -214,6 +214,15 @@ public interface SynchLogServiceI extends CommonService{
 	 * @param userId
 	 * @param clientId
 	 * @return
+	 * @throws Exception 
 	 */
-	public List<SynchronizedLogEntity> findNeedDownloadAttachment(String userId, String clientId);
+	public List<SynchronizedLogEntity> findNeedDownloadAttachment(String userId, String clientId) throws Exception;
+
+	/**
+	 * 根据用户、客户端查询已同步日志
+	 * @param clientId
+	 * @param userId
+	 * @return
+	 */
+	public List<SynchronizedLogEntity> findSynchedLogs(String clientId, String userId);
 }

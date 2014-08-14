@@ -515,11 +515,20 @@ public interface DataSynchizeService {
 	public String getSubjectRelatedLogs(@PathParam("subjectId") String subjectId, @PathParam("clientId") String clientId, @PathParam("userId") String userId, @PathParam("timeStamp") long timeStamp, @Context HttpServletResponse res);
 	
 	/**
-	 * 客户端同步开始-- 检查配置信息
+	 * 客户端同步开始/结束 -- 检查更新时间戳等信息
 	 * @param clientId
 	 * @param res
 	 * @return
 	 */
-	public String synchBegin(String clientId, HttpServletResponse res);
+	public String checkConfig(String clientId, String data, String action, HttpServletResponse res);
 
+	/**
+	 * 批量删除数据
+	 * @param data
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String deleteBatchData(String data, String action, HttpServletResponse res);
+	
 }

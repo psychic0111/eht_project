@@ -182,4 +182,5 @@ public class SynchLogEntity implements java.io.Serializable {
 	public void setSynchTime(long synchTime) {
 		this.synchTime = synchTime;
 	}
+	
 }

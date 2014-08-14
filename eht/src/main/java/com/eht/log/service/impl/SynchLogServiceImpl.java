@@ -674,7 +674,9 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	private List<SynchLogEntity> filterSynchLogs(List<SynchLogEntity> logList, boolean filterDelete) throws Exception {
+		//所有删除操作日志集合
 		List<SynchLogEntity> filterList = new ArrayList<SynchLogEntity>();
 		for(SynchLogEntity log : logList) {
 			if(log.getAction().equals(DataSynchAction.DELETE.toString())){
@@ -682,11 +684,27 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 			}
 		}
 		
-		List<SynchLogEntity> result = null;
+		List<SynchLogEntity> result = new ArrayList<SynchLogEntity>();
 		if(filterList != null && !filterList.isEmpty()){
-			for(SynchLogEntity log : filterList) {
-				result = filterLogsByClassPK(logList, log.getClassName(), log.getClassPK(), filterDelete);
+			for(SynchLogEntity l : logList) {
+				boolean equal = false;
+				for(SynchLogEntity log : filterList) {
+					if(l.getClassName().equals(log.getClassName()) && l.getClassPK().equals(log.getClassPK())){
+						equal = true;
+						break;
+					}
+				}
+				if(equal){
+					result.add(l);  // 将所有有删除操作的日志添加进result
+				}
 			}
+			// 如果要过滤掉删除操作日志
+			if(filterDelete){
+				return ListUtils.subtract(logList, result);
+			}else{
+				return result;
+			}
+			
 		}else{
 			if(filterDelete){
 				return logList;
@@ -774,6 +792,8 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 					}
 				}
 				
+			}else{ //i == 最后一条记录索引
+				result.add(orgi);
 			}
 		}
 		return result;
@@ -790,22 +810,33 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 		SynchronizedLogEntity sLog = new SynchronizedLogEntity();
 		sLog.setClientId(clientId);
 		sLog.setLogId(theLog.getId());
-		sLog.setOperateTime(System.currentTimeMillis());
+		sLog.setOperateTime(theLog.getSynchTime());
 		sLog.setTargetUser(userId);
 		sLog.setClassName(theLog.getClassName());
-		sLog.setClassPk(theLog.getClassPK());
+		sLog.setClassPK(theLog.getClassPK());
 		sLog.setAction(theLog.getAction());
 		saveOrUpdate(sLog);   //保存到同步完成日志表中
 	}
 	
 	@Override
-	public void deleteSynchedLogs(String clientId, String userId) {
+	public long deleteSynchedLogs(String clientId, String userId) {
+		List<SynchronizedLogEntity> list = findSynchedLogs(clientId, userId);
+		if(list != null && !list.isEmpty()){
+			deleteAllEntitie(list);
+			return list.get(0).getOperateTime();
+		}
+		return 0;
+	}
+	
+	@Override
+	public List<SynchronizedLogEntity> findSynchedLogs(String clientId, String userId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(SynchronizedLogEntity.class);
 		dc.add(Restrictions.eq("clientId", clientId));
 		dc.add(Restrictions.eq("targetUser", userId));
+		dc.addOrder(Order.desc("operateTime"));
 		List<SynchronizedLogEntity> list = findByDetached(dc);
 		
-		deleteAllEntitie(list);
+		return list;
 	}
 	
 	/**
@@ -816,33 +847,102 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 	 * @param remove   true为移除, false保留
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private List<SynchLogEntity> filterLogsByClassPK(List<SynchLogEntity> logList, String className, String classPk, boolean remove){
 		List<SynchLogEntity> list = new ArrayList<SynchLogEntity>();
-		if(remove){
-			for(SynchLogEntity log : logList){
-				if(!log.getClassName().equals(className) || !log.getClassPK().equals(classPk)){
-					list.add(log);
-				}
-			}
-		}else{
-			for(SynchLogEntity log : logList){
-				if(log.getClassName().equals(className) && log.getClassPK().equals(classPk)){
-					list.add(log);
-				}
+		for(SynchLogEntity log : logList){
+			if(!log.getClassName().equals(className) || !log.getClassPK().equals(classPk)){
+				list.add(log);
 			}
 		}
-		return list;
+		if(remove){
+			return list;
+		}else{
+			return ListUtils.subtract(logList, list);
+		}
 	}
 
 	@Override
 	public List<SynchronizedLogEntity> findNeedDownloadAttachment(String userId,
-			String clientId) {
+			String clientId) throws Exception {
 		DetachedCriteria dc = DetachedCriteria.forClass(SynchronizedLogEntity.class);
 		dc.add(Restrictions.eq("clientId", clientId));
 		dc.add(Restrictions.eq("targetUser", userId));
 		dc.add(Restrictions.eq("className", DataType.ATTACHMENT.toString()));
 		dc.add(Restrictions.eq("action", DataSynchAction.ADD.toString()));
+		dc.add(Restrictions.eq("status", SynchConstants.LOG_NOT_SYNCHRONIZED));
 		List<SynchronizedLogEntity> list = findByDetached(dc);
-		return list;
+		
+		List<SynchronizedLogEntity> logList = mergeAttaLogs(list, clientId, userId);
+		return logList;
+	}
+	
+	public List<SynchronizedLogEntity> mergeAttaLogs(List<SynchronizedLogEntity> logList, String clientId, String userId) throws Exception {
+		List<SynchronizedLogEntity> result = new ArrayList<SynchronizedLogEntity>();
+		// 只有一条日志，不需要合并
+		if(logList.size() == 1){
+			result.add(logList.get(0));
+			return result;
+		}
+		for(int i = 0; i < logList.size(); i++) {
+			SynchronizedLogEntity orgi = logList.get(i);
+			String classPK = orgi.getClassPK();
+			if(i < logList.size() - 1){
+				for(int k = i + 1; k < logList.size(); k++){
+					SynchronizedLogEntity nextLog = logList.get(k);
+					//判断是否为同一数据日志
+					if(nextLog.getClassPK().equals(classPK)){
+						orgi = mergeLog(orgi, nextLog, clientId, userId);
+						i ++;  // 外层循环跳过 nextLog
+					}
+					// 下一数据日志了或已合并到最后
+					if(!nextLog.getClassPK().equals(classPK) || k == logList.size() - 1) {
+						if(orgi != null){
+							result.add(orgi);
+							break;
+						}
+					}
+				}
+				
+			}else{ //i == 最后一条记录索引
+				result.add(orgi);
+			}
+		}
+		return result;
+	}
+	
+	public SynchronizedLogEntity mergeLog(SynchronizedLogEntity orgi, SynchronizedLogEntity nextLog, String clientId, String userId) throws Exception{
+		if(orgi == null) {
+			return nextLog;
+		}
+		if(nextLog == null){
+			return orgi;
+		}
+		if(!orgi.getClassName().equals(nextLog.getClassName())){
+			throw new Exception("合并的两个日志必须日志类型相同！");
+		}
+		if(!orgi.getClassPK().equals(nextLog.getClassPK())){
+			throw new Exception("合并的两个日志必须属于同一条数据！");
+		}
+		
+		if(orgi.getAction().equals(DataSynchAction.ADD.toString())){
+			// A + D = null
+			if(nextLog.getAction().equals(DataSynchAction.DELETE.toString())){
+				orgi = null;
+			}
+			// A + U = A
+			if(nextLog.getAction().equals(DataSynchAction.UPDATE.toString())){
+				orgi = nextLog;
+				orgi.setAction(DataSynchAction.ADD.toString());
+			}
+		}else if(orgi.getAction().equals(DataSynchAction.UPDATE.toString())){
+			// U + D = D
+			if(nextLog.getAction().equals(DataSynchAction.DELETE.toString())){
+				orgi = nextLog;
+			}
+		}else if(orgi.getAction().equals(DataSynchAction.DELETE.toString())){
+			// 数据已删除
+		}
+		return orgi;
 	}
 }

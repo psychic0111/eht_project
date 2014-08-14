@@ -101,9 +101,10 @@ public class DataSynchizeUtil {
 	public static Map<String, Object> parseDeleteLog(SynchLogEntity log){
 		Map<String, Object> map = new HashMap<String, Object>();
 		
-		map.put("UUID", log.getClassPK());
-		map.put("operateUser", log.getOperateUser());
-		map.put("operateTime", log.getOperateTime());
+		map.put("id", log.getClassPK());
+		map.put("operation", log.getAction());
+		map.put("updateUserId", log.getOperateUser());
+		map.put("updateTimeStamp", log.getOperateTime());
 		map.put("synchTime", log.getSynchTime());
 		
 		return map;
@@ -133,7 +134,7 @@ public class DataSynchizeUtil {
 		}
 	}
 	
-	public static String queryDownloadFile(String userId, String clientId, String nextAction, SynchLogServiceI synchLogService, HttpServletResponse res){
+	public static String queryDownloadFile(String userId, String clientId, String nextAction, SynchLogServiceI synchLogService, HttpServletResponse res) throws Exception{
 		//查询要下载的文件
 		List<SynchronizedLogEntity> list = synchLogService.findNeedDownloadAttachment(userId, clientId);
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
@@ -147,8 +148,9 @@ public class DataSynchizeUtil {
 			SynchronizedLogEntity attachmentLog = list.remove(0);
 			Map<String, String> map = new HashMap<String, String>();
 			map.put(SynchConstants.HEADER_HOST_DATATYPE, DataType.ATTACHMENT.toString());
-			map.put(SynchConstants.HEADER_HOST_UUID, attachmentLog.getClassPk());
-			synchLogService.delete(attachmentLog);
+			map.put(SynchConstants.HEADER_HOST_UUID, attachmentLog.getClassPK());
+			attachmentLog.setStatus(SynchConstants.LOG_SYNCHRONIZED);
+			synchLogService.updateEntitie(attachmentLog);
 			return JsonUtil.map2json(map);
 		}else{
 			res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.FINISH.toString());
@@ -156,15 +158,19 @@ public class DataSynchizeUtil {
 			
 			res.setHeader(SynchConstants.HEADER_NEXT_ACTION, DataSynchAction.FINISH.toString());
 			res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.FILE.toString());
-			// 日志已经同步完成,删除中间表相关记录
-			synchLogService.deleteSynchedLogs(clientId, userId);
+			
 			return "";
 		}
 	}
 	
 	/**
-	 * 解析日志action
-	 * @param log
+	 * 查询应返回客户端的下一数据类型
+	 * @param clientId
+	 * @param userId
+	 * @param timeStamp
+	 * @param currentDataType
+	 * @param dataTypes
+	 * @param synchLogService
 	 * @return
 	 */
 	public static String queryNextDataType(String clientId, String userId, long timeStamp, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
@@ -186,5 +192,18 @@ public class DataSynchizeUtil {
 			}
 		}
 		return nextDataType;
+	}
+	
+	public static String getNextDataType(String currentDataType, String[] dataTypes){
+		for(int i = 0; i < dataTypes.length; i++){
+			if(dataTypes[i].equals(currentDataType)){
+				if(i < dataTypes.length - 1){
+					return dataTypes[i + 1];
+				}else{
+					return null;
+				}
+			}
+		}
+		return null;
 	}
 }

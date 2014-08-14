@@ -1,5 +1,6 @@
 package com.eht.log.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,7 +13,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 /**   
  * @Title: Entity
- * @Description: 同步完成的日志记录
+ * @Description: 本次同步中的日志记录
  * @author zhangdaihao
  * @date 2014-03-21 14:49:54
  * @version V1.0   
@@ -37,9 +38,13 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	
 	private String className;
 	
-	private String classPk;
+	private String classPK;
 	
 	private String action;
+	/**同步状态*/
+	private int status;
+	
+	
 	
 	/**
 	 *方法: 取得java.lang.String
@@ -60,7 +65,7 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	public void setId(int id){
 		this.id = id;
 	}
-
+	@Column(updatable=false)
 	public long getOperateTime() {
 		return operateTime;
 	}
@@ -68,7 +73,7 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	public void setOperateTime(long operateTime) {
 		this.operateTime = operateTime;
 	}
-
+	@Column(updatable=false)
 	public String getClientId() {
 		return clientId;
 	}
@@ -76,7 +81,7 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
 	}
-
+	@Column(updatable=false)
 	public String getTargetUser() {
 		return targetUser;
 	}
@@ -84,15 +89,15 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	public void setTargetUser(String targetUser) {
 		this.targetUser = targetUser;
 	}
-
+	@Column(updatable=false)
 	public String getLogId() {
 		return logId;
 	}
-
+	@Column(updatable=false)
 	public void setLogId(String logId) {
 		this.logId = logId;
 	}
-
+	@Column(updatable=false)
 	public String getClassName() {
 		return className;
 	}
@@ -100,21 +105,29 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	public void setClassName(String className) {
 		this.className = className;
 	}
-
-	public String getClassPk() {
-		return classPk;
+	@Column(updatable=false)
+	public String getClassPK() {
+		return classPK;
 	}
 
-	public void setClassPk(String classPk) {
-		this.classPk = classPk;
+	public void setClassPK(String classPK) {
+		this.classPK = classPK;
 	}
-
+	@Column(updatable=false)
 	public String getAction() {
 		return action;
 	}
 
 	public void setAction(String action) {
 		this.action = action;
+	}
+
+	public int getStatus() {
+		return status;
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
 	}
 
 }
