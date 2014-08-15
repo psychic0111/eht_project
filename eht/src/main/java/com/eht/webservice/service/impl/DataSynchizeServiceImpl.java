@@ -937,7 +937,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if(subject != null && subject.getDeleted() == Constants.DATA_NOT_DELETED){
 				AccountEntity user = accountService.getUser4Session();
 				subject.setUpdateUser(user.getId());
-				subjectService.markDelSubject(subject);
+				subjectService.deleteSubject(subject);
 			}
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
@@ -1715,15 +1715,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						Map<String, String> objMap = (Map<String, String>) obj;
 						String id = objMap.get("id");
 						SubjectEntity subject = subjectService.getSubject(id);
-						long timestamp = StringUtil.isEmpty(String.valueOf(objMap.get("updateTimeStamp"))) ? 0 : Long.parseLong(String.valueOf(objMap.get("updateTimeStamp")));
-						if(timestamp > 0){
-							subject.setUpdateTimeStamp(timestamp);
-						}
-						String updateUserId = objMap.get("updateUserId");
-						if(!StringUtil.isEmpty(updateUserId)){
-							subject.setUpdateUserId(updateUserId);
-						}
-						subjectService.markDelSubject(subject);
+						subjectService.deleteSubject(subject);
 					}
 				}else if(dataType.equals(DataType.DIRECTORY.toString())){
 					for(Object obj : list){
