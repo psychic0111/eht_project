@@ -261,7 +261,12 @@ public interface NoteServiceI extends CommonService{
 	 * 保存条目的html
 	 * @return
 	 */
-	public void saveNoteHtml(NoteEntity note,HttpServletRequest request) throws IOException;
-		
+	public void saveNoteHtml(NoteEntity note) throws IOException;
 	
+	/**
+	 * 生成条目内容MD5
+	 * @param note
+	 * @return
+	 */
+	public String generateContentMD5(NoteEntity note);
 }

@@ -53,6 +53,23 @@ public class FilePathUtil {
 		return sb.toString();
 	}
 	
+	public static String getNoteHtmlPath(NoteEntity note){
+		StringBuffer savePath=new StringBuffer(webRootPath);
+		savePath.append("notes").append(File.separator);
+		savePath.append(note.getSubjectId());
+		savePath.append(File.separator);
+		savePath.append(note.getId());
+		savePath.append(File.separator);
+		return savePath.toString();
+	}
+	
+	/**
+	 * 条目附件上传路径
+	 * @param subjectId
+	 * @param dirId
+	 * @param nodeId
+	 * @return
+	 */
 	public static String getFileUploadPath(String  subjectId, String dirId,String nodeId){
 		StringBuilder sb = new StringBuilder(webRootPath + "upload");
 		
@@ -70,6 +87,7 @@ public class FilePathUtil {
 		
 		return sb.toString();
 	}
+	
 	public static String getImageUploadPath(NoteEntity note){
 		StringBuilder sb = new StringBuilder(webRootPath + "upload");
 		

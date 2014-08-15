@@ -110,9 +110,9 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws Exception 
 	 */
-	@GET
+	@POST
 	@Path("/get_data/{clientId}/{userId}/{timeStamp}/{offset}")
-	public String getDeleteLogs(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception;
+	public String getDeleteLogs(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception;
 	
 	/**
 	 * 客户端获取要同步的数据数量

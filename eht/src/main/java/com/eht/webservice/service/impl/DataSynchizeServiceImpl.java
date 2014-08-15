@@ -72,6 +72,7 @@ import com.eht.template.service.TemplateServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
 import com.eht.webservice.bean.BatchDataBean;
+import com.eht.webservice.bean.DataBean;
 import com.eht.webservice.bean.SynchResult;
 import com.eht.webservice.service.DataSynchizeService;
 import com.eht.webservice.service.SynchResultService;
@@ -395,7 +396,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/attachment/a/{timeStamp}")
 	public String addAttachment(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws ParserException {
-		logger.info("添加附件信息 ！！！");
+		logger.info("添加附件信息 : " + data);
 		AccountEntity user = accountService.getUser4Session();
 		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
@@ -504,12 +505,20 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		return count;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	@GET
+	@POST
 	@Path("/getdellogs/{timeStamp}")
-	public String getDeleteLogs(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
+	public String getDeleteLogs(@FormParam("data") String dataStr, @HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
 		AccountEntity user = accountService.getUser4Session();
 		String[] dataTypes = DataCacheTool.getReverseDatasSort();
+		
+		// 从data中提取本次要查询的数据类型
+		if(!StringUtil.isEmpty(dataStr)){
+			Map<String, String> map = JsonUtil.getMap4Json(dataStr);
+			dataClass = map.get("dataType");
+		}
+		
 		boolean filterDelete = false;  //留下删除操作日志,过滤掉其它
 		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, dataClass, filterDelete);
 		// 如果存在需要同步的日志
@@ -608,7 +617,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
 					
 					Map<String, String> delMap = new HashMap<String, String>();
-					delMap.put(HeaderName.DATATYPE.toString(), nextDataType);
+					delMap.put("dataType", nextDataType);
+					delMap.put("action", DataSynchAction.DELETE.toString());
 					String returnData = JsonUtil.map2json(delMap);  // 客户端再次请求需提交的数据类型
 					
 					Map<String, String> map = new HashMap<String, String>();
@@ -651,7 +661,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		String[] dataTypes = DataCacheTool.getDatasSort();
 		if(dataClass.equals(DataType.FILE.toString())){ // 请求下载文件
 			String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
-			return downloadData;
+			DataBean bean = new DataBean("", downloadData);
+			return JsonUtil.bean2json(bean);
 		}
 		boolean isDeleteFilter = true;
 		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, dataClass, isDeleteFilter);
@@ -674,7 +685,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				
 				res.setHeader(HeaderName.ACTION.toString(), theLog.getAction());
 				res.setHeader(HeaderName.DATATYPE.toString(), theLog.getClassName());
-				return JsonUtil.map2json(map);
+				DataBean bean = new DataBean("", JsonUtil.map2json(map));
+				return JsonUtil.bean2json(bean);
 			}else{
 				SynchLogEntity theLog = result.get(0);
 				Map<String, Object> map = DataSynchizeUtil.parseLog(theLog);
@@ -684,20 +696,23 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				
 				res.setHeader(HeaderName.ACTION.toString(), theLog.getAction());
 				res.setHeader(HeaderName.DATATYPE.toString(), theLog.getClassName());
-				return JsonUtil.map2json(map);
+				DataBean bean = new DataBean("", JsonUtil.map2json(map));
+				return JsonUtil.bean2json(bean);
 			}
 		}else{
 			//已经到了最后一个数据类型
 			if(dataClass.equals(dataTypes[dataTypes.length - 1]) || dataClass.equals(DataType.ALL.toString())){
 				String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
-				return downloadData;
+				DataBean bean = new DataBean("", downloadData);
+				return JsonUtil.bean2json(bean);
 			}else if(dataClass.equals(DataType.ALL.toString())){    //所有数据类型均查询不到需要同步的日志
 				res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.FINISH.toString());
 				res.setHeader(SynchConstants.HEADER_DATATYPE, DataType.ALL.toString());
 				
 				res.setHeader(SynchConstants.HEADER_NEXT_ACTION, DataSynchAction.FINISH.toString());
 				res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.ALL.toString());
-				return "";
+				DataBean bean = new DataBean("", "");
+				return JsonUtil.bean2json(bean);
 			}else{
 				String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, dataClass, dataTypes, synchLogService);
 				
@@ -706,7 +721,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextDataType);
-				return "";
+				DataBean bean = new DataBean("", "");
+				return JsonUtil.bean2json(bean);
 			}
 		}
 	}
@@ -761,7 +777,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.COMMENT.toString());
-			return DataSynchAction.SUCCESS.toString();
+			
+			String[] dataTypes = DataCacheTool.getReverseDatasSort();
+			Map<String, String> delMap = new HashMap<String, String>();
+			delMap.put("dataType", dataTypes[0]);
+			delMap.put("action", DataSynchAction.DELETE.toString());
+			String returnData = JsonUtil.map2json(delMap);
+			return returnData;
 		}
 	}
 	
@@ -777,7 +799,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/subject/a")
 	public String addSubject(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
-		logger.info("添加专题信息 ！！！");
+		logger.info("添加专题信息: " + data);
 		AccountEntity user = accountService.getUser4Session();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			SubjectEntity subject = (SubjectEntity) JsonUtil.getObject4JsonString(data, SubjectEntity.class);
@@ -838,12 +860,30 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 				
-				res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), "" + System.currentTimeMillis());
+				String timestamp = "";
+				String id = "";
+				String updateUser = "";
 				if(sub != null && sub.getDeleted() == Constants.DATA_DELETED){
-					return sub.getUpdateTime() + "";
+					timestamp = sub.getUpdateTimeStamp() + "";
+					id = sub.getId();
+					updateUser = sub.getUpdateUser();
 				}else{
-					return log.getOperateTime() + "";
+					timestamp = log.getOperateTime() + "";
+					id = log.getClassPK();
+					updateUser = log.getOperateUser();
 				}
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("id", id);
+				map.put("className", DataType.SUBJECT.toString());
+				map.put("operation", DataSynchAction.DELETE.toString());
+				map.put("updateUserId", updateUser);
+				map.put("updateTimeStamp", timestamp);
+				
+				String dataStr = JsonUtil.map2json(map);
+				Map<String, String> mp = new HashMap<String, String>();
+				mp.put("data", dataStr);
+				
+				return JsonUtil.map2json(mp);
 			}
 			if(log != null){
 				if(log.getAction().equals(SynchConstants.DATA_OPERATE_DELETE)){
@@ -980,11 +1020,31 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 				
 				res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+				
+				String timestamp = "";
+				String id = "";
+				String updateUser = "";
 				if(dir != null && dir.getDeleted() == Constants.DATA_DELETED){
-					return dir.getUpdateTime() + "";
+					timestamp = dir.getUpdateTimeStamp() + "";
+					id = dir.getId();
+					updateUser = dir.getUpdateUser();
 				}else{
-					return log.getOperateTime() + "";
+					timestamp = log.getOperateTime() + "";
+					id = log.getClassPK();
+					updateUser = log.getOperateUser();
 				}
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("id", id);
+				map.put("className", DataType.DIRECTORY.toString());
+				map.put("operation", DataSynchAction.DELETE.toString());
+				map.put("updateUserId", updateUser);
+				map.put("updateTimeStamp", timestamp);
+				
+				String dataStr = JsonUtil.map2json(map);
+				Map<String, String> mp = new HashMap<String, String>();
+				mp.put("data", dataStr);
+				
+				return JsonUtil.map2json(mp);
 			}
 			
 			if(log != null){
@@ -1104,10 +1164,49 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+		
 		return rs.toString();
 	}
+	
+	public String uploadNoteHtml(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException {
+		logger.info("上传条目HTML数据 :" + data);
+		AccountEntity user = accountService.getUser4Session();
+		InputStream ins = null;
+		OutputStream ous = null;
+		NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+		// 条目HTML存放路径
+		String savePath = FilePathUtil.getNoteHtmlPath(note);
+		String htmlFileName = savePath + note.getId() + ".zip";
+		
+		File folder = new File(savePath);
+		if (!folder.exists()) {
+			folder.mkdirs();
+		}
+		File file = new File(htmlFileName + ".tmp");
+		try {
+			ins = request.getInputStream();
+			ous = new FileOutputStream(file);
+			int n = 0;
+			int buffer = 1024;
+			byte[] bytes = new byte[buffer];
+			while ((n = ins.read(bytes)) != -1) {
+				ous.write(bytes, 0, n);
+			}
 
+		} catch (Exception e) {
+			ResponseStatus rs = new ResponseStatus(ResponseCode.SERVER_ERROR);
+			e.printStackTrace();
+			return rs.toString();
+		} finally {
+			ous.flush();
+			ous.close();
+			ins.close();
+			File html = new File(htmlFileName);
+			file.renameTo(html);
+		}
+		return "";
+	}
+	
 	@Override
 	@POST
 	@Path("/send/note/u/{timeStamp}")
@@ -1144,12 +1243,30 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 				
-				res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+				String timestamp = "";
+				String id = "";
+				String updateUser = "";
 				if(n != null && n.getDeleted() == Constants.DATA_DELETED){
-					return n.getUpdateTime() + "";
+					timestamp = n.getUpdateTimeStamp() + "";
+					id = n.getId();
+					updateUser = n.getUpdateUser();
 				}else{
-					return log.getOperateTime() + "";
+					timestamp = log.getOperateTime() + "";
+					id = log.getClassPK();
+					updateUser = log.getOperateUser();
 				}
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("id", id);
+				map.put("className", DataType.NOTE.toString());
+				map.put("operation", DataSynchAction.DELETE.toString());
+				map.put("updateUserId", updateUser);
+				map.put("updateTimeStamp", timestamp);
+				
+				String dataStr = JsonUtil.map2json(map);
+				Map<String, String> mp = new HashMap<String, String>();
+				mp.put("data", dataStr);
+				
+				return JsonUtil.map2json(mp);
 			}
 	
 			if(log != null){
@@ -1163,8 +1280,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-					return log.getOperateTime() + "";
+					Map<String, Object> map = DataSynchizeUtil.parseDeleteLog(log);
+					return JsonUtil.map2json(map);
 				}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() >= note.getUpdateTimeStamp()){
 					rs.setResponse(ResponseCode.UPDATE);
 					rs.setData(log.getId());
@@ -1178,7 +1295,6 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					
 					noteService.saveNoteHistory(note, user.getId());   //保存为历史版本
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 					return JsonUtil.bean2json(note);
 				}else {
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -1196,7 +1312,6 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 		}
 		
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		return rs.toString();
 	}
 
@@ -1263,6 +1378,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/tag/a")
 	public String addTag(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		logger.info("添加标签信息 : " + data);
 		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			TagEntity tag = (TagEntity) JsonUtil.getObject4JsonString(data, TagEntity.class);
@@ -1323,8 +1439,22 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.TAG.toString());
 				
-				res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-				return log.getOperateTime() + "";
+				String timestamp = log.getOperateTime() + "";
+				String id = log.getClassPK();
+				String updateUser = log.getOperateUser();
+				
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("id", id);
+				map.put("className", DataType.TAG.toString());
+				map.put("operation", DataSynchAction.DELETE.toString());
+				map.put("updateUserId", updateUser);
+				map.put("updateTimeStamp", timestamp);
+				
+				String dataStr = JsonUtil.map2json(map);
+				Map<String, String> mp = new HashMap<String, String>();
+				mp.put("data", dataStr);
+				
+				return JsonUtil.map2json(mp);
 			}
 			
 			if(log != null){
@@ -1409,6 +1539,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/comment/a")
 	public String addComment(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		logger.info("添加评论信息 : " + data);
 		AccountEntity user = accountService.getUser4Session();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			CommentEntity comment = (CommentEntity) JsonUtil.getObject4JsonString(data, CommentEntity.class);
@@ -1584,6 +1715,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						Map<String, String> objMap = (Map<String, String>) obj;
 						String id = objMap.get("id");
 						SubjectEntity subject = subjectService.getSubject(id);
+						long timestamp = StringUtil.isEmpty(String.valueOf(objMap.get("updateTimeStamp"))) ? 0 : Long.parseLong(String.valueOf(objMap.get("updateTimeStamp")));
+						if(timestamp > 0){
+							subject.setUpdateTimeStamp(timestamp);
+						}
+						String updateUserId = objMap.get("updateUserId");
+						if(!StringUtil.isEmpty(updateUserId)){
+							subject.setUpdateUserId(updateUserId);
+						}
 						subjectService.markDelSubject(subject);
 					}
 				}else if(dataType.equals(DataType.DIRECTORY.toString())){
@@ -1591,19 +1730,37 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						Map<String, String> objMap = (Map<String, String>) obj;
 						String id = objMap.get("id");
 						DirectoryEntity dir = directoryService.getDirectory(id);
+						
+						long timestamp = StringUtil.isEmpty(String.valueOf(objMap.get("updateTimeStamp"))) ? 0 : Long.parseLong(String.valueOf(objMap.get("updateTimeStamp")));
+						if(timestamp > 0){
+							dir.setUpdateTimeStamp(timestamp);
+						}
+						String updateUserId = objMap.get("updateUserId");
+						if(!StringUtil.isEmpty(updateUserId)){
+							dir.setUpdateUserId(updateUserId);
+						}
 						directoryService.markDelDirectory(dir);
 					}
 				}else if(dataType.equals(DataType.TAG.toString())){
 					for(Object obj : list){
 						Map<String, String> objMap = (Map<String, String>) obj;
 						String id = objMap.get("id");
-						tagService.deleteTagById(id.toString());
+						tagService.deleteTagById(id);
 					}
 				}else if(dataType.equals(DataType.NOTE.toString())){
 					for(Object obj : list){
 						Map<String, String> objMap = (Map<String, String>) obj;
 						String id = objMap.get("id");
 						NoteEntity note = noteService.getNote(id.toString());
+						
+						long timestamp = StringUtil.isEmpty(String.valueOf(objMap.get("updateTimeStamp"))) ? 0 : Long.parseLong(String.valueOf(objMap.get("updateTimeStamp")));
+						if(timestamp > 0){
+							note.setUpdateTimeStamp(timestamp);
+						}
+						String updateUserId = objMap.get("updateUserId");
+						if(!StringUtil.isEmpty(updateUserId)){
+							note.setUpdateUserId(updateUserId);
+						}
 						noteService.markDelNote(note);
 					}
 				}else if(dataType.equals(DataType.COMMENT.toString())){
@@ -1612,7 +1769,24 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						String id = objMap.get("id");
 						commentService.deleteComment(id.toString());
 					}
+				}else if(dataType.equals(DataType.ATTACHMENT.toString())){
+					for(Object obj : list){
+						Map<String, String> objMap = (Map<String, String>) obj;
+						String id = objMap.get("id");
+						AttachmentEntity attachment = attachmentService.getAttachment(id);
+						
+						long timestamp = StringUtil.isEmpty(String.valueOf(objMap.get("updateTimeStamp"))) ? 0 : Long.parseLong(String.valueOf(objMap.get("updateTimeStamp")));
+						if(timestamp > 0){
+							attachment.setUpdateTimeStamp(timestamp);
+						}
+						String updateUserId = objMap.get("updateUserId");
+						if(!StringUtil.isEmpty(updateUserId)){
+							attachment.setUpdateUserId(updateUserId);
+						}
+						attachmentService.markDelAttachment(attachment);
+					}
 				}
+				
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
 				

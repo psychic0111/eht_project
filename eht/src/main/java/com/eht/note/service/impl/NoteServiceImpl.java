@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
@@ -32,7 +33,9 @@ import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.CollectionUtil;
+import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.HtmlParser;
+import com.eht.common.util.MD5FileUtil;
 import com.eht.group.entity.Group;
 import com.eht.group.entity.GroupUser;
 import com.eht.group.service.GroupService;
@@ -383,7 +386,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	@Override
 	public String shapeNote(String nodeId, String userid) {
 		NoteVersionEntity noteVersionEntity = getEntity(NoteVersionEntity.class, nodeId);
-		NoteEntity noteEntity = getEntity(NoteEntity.class, noteVersionEntity.getNoteid());
+		NoteEntity noteEntity = getNote(noteVersionEntity.getNoteid());
 		noteEntity.setContent(noteVersionEntity.getContent());
 		noteEntity.setUpdateTime(new Date());
 		noteEntity.setUpdateUser(userid);
@@ -529,21 +532,68 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public void saveNoteHtml(NoteEntity note,HttpServletRequest request) throws IOException {
-		StringBuffer savePath=new StringBuffer(request.getSession().getServletContext().getRealPath("/"));
-		savePath.append("/notes/");
-		savePath.append(note.getSubjectId());
-		savePath.append("/");
-		savePath.append(note.getId());
-		savePath.append("/");
-		File savefile = new File(savePath.toString());
+	public void saveNoteHtml(NoteEntity note) throws IOException {
+		String savePath = FilePathUtil.getNoteHtmlPath(note);
+		File savefile = new File(savePath);
 		// 判断是否已存在
 		if (!savefile.exists()) {
 			savefile.mkdirs();
 		}
-		savefile = new File(savePath.append(note.getId()).append(".html").toString());
+		savefile = new File(savePath + note.getId() + ".html");
 		String pcontet=HtmlParser.repleceHtmlImg(note.getContent(), "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
 		FileCopyUtils.copy(pcontet.getBytes(), savefile); 
 	}
-
+	
+	@Override
+	public String generateContentMD5(NoteEntity note){
+		return null;
+	}
+	
+	class NoteThread extends Thread{
+		
+		private Logger logger = Logger.getLogger(NoteThread.class);
+		
+		private NoteEntity note;
+		
+		/**
+		 * 是否为更新操作
+		 */
+		private boolean update;
+		
+		NoteThread(NoteEntity note){
+			this.note = note;
+			this.update = true;
+		}
+		
+		NoteThread(NoteEntity note, boolean update){
+			this.note = note;
+			this.update = update;
+		}
+		
+		@Override
+		public void run() {
+			String md5 = MD5FileUtil.getMD5String(note.getContent() == null ? "" : note.getContent());
+			if(!update){
+				note.setMd5(md5);
+				updateEntitie(note);
+				try {
+					saveNoteHtml(note);
+				} catch (IOException e) {
+					logger.error("保存条目HTML文件异常！", e);
+				}
+			}else{
+				NoteEntity oldNote = getNote(note.getId());
+				String oldMD5 = oldNote.getMd5();
+				if(StringUtil.isEmpty(oldMD5) || !oldMD5.equals(md5)){
+					oldNote.setMd5(md5);
+					updateEntitie(note);
+					try {
+						saveNoteHtml(note);
+					} catch (IOException e) {
+						logger.error("保存条目HTML文件异常！", e);
+					}
+				}
+			}
+		}
+	}
 }
