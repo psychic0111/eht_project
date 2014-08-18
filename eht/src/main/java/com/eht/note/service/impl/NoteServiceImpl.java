@@ -404,8 +404,8 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		noteHistory.setCreatetime(new Date());
 		noteHistory.setCreateuser(createUserId);
 		noteHistory.setNoteid(note.getId());
-		int n = super.singleResult("select (count(version) + 1) from NoteVersionEntity where noteid='"+ note.getId() +"'");
-		noteHistory.setVersion(n + 1);
+		Object obj = super.singleResult("select CASE when max(version) is null THEN 0 else max(version) end from NoteVersionEntity where noteid='"+ note.getId() +"'");
+		noteHistory.setVersion(Integer.parseInt(obj.toString()) + 1);
 		saveNoteHistory(noteHistory);
 	}
 	

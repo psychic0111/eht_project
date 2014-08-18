@@ -179,15 +179,17 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					logger.info("服务器存在该文件，直接复制服务器文件！！！");
 					DataSynchizeUtil.copyServerFile(attaServer, attachment);
 					attachmentService.updateAttachment(attachment);
-					return DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+					String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+					DataBean bean = new DataBean("", downloadData);
+					return JsonUtil.bean2json(bean);
 				}
 			}
 	
 			// 上次已经上传过该文件或分块传输
-			if ((attachment.getTranSfer() != null && attachment.getTranSfer() > 0 && attachment.getStatus() == 0)) {
+			/*if ((attachment.getTranSfer() != null && attachment.getTranSfer() > 0 && attachment.getStatus() == 0)) {
 				logger.info("上次传输文件中断，共传输了" + attachment.getTranSfer() + "字节，准备继续传输！！！");
 				return resumeUploadAttachment(attachmentId, 1, request, res); // 1默认文件数据都提交过来
-			}
+			}*/
 	
 			InputStream ins = null;
 			OutputStream ous = null;
@@ -235,7 +237,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.FILE.toString());
 			
 			res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-			return DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			DataBean bean = new DataBean("", downloadData);
+			return JsonUtil.bean2json(bean);
 		}else{
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ALL.toString());
@@ -244,7 +248,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.FILE.toString());
 			
 			res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-			return new ResponseStatus().toString();
+			DataBean bean = new DataBean("", "");
+			return JsonUtil.bean2json(bean);
 		}
 	}
 
@@ -382,7 +387,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			outputStream.close();
 			fis.close();
 		}
-		return "";
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -454,10 +460,12 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 			
-			res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-			return DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			DataBean bean = new DataBean("", downloadData);
+			return JsonUtil.bean2json(bean);
 		}
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -492,8 +500,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -523,6 +531,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, dataClass, filterDelete);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
+			//从查询到的日志中确定当前的数据类型
 			if(dataClass.equals(DataType.ALL.toString()) || dataClass.equals(DataType.BATCHDATA.toString())){
 				SynchLogEntity theLog = result.get(0);
 				dataClass = theLog.getClassName();
@@ -536,6 +545,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					list.add(map);
 				}
 			}
+			bean.setDatas(JsonUtil.list2json(list));
+			bean.setDataType(dataClass);
+			String data = JsonUtil.bean2json(bean);
 			
 			// 查询下一有同步日志的数据类型
 			String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, dataClass, dataTypes, synchLogService);
@@ -543,46 +555,38 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if(nextDataType != null){
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
+				Map<String, String> delMap = new HashMap<String, String>();
+				delMap.put("dataType", nextDataType);
+				delMap.put("action", DataSynchAction.DELETE.toString());
+				String returnData = JsonUtil.map2json(delMap);  // 客户端再次请求需提交的数据类型
+				
+				
+				DataBean returnBean = new DataBean(returnData, data);
+				String returnVal = JsonUtil.bean2json(returnBean);
+				
+				logger.info("删除日志返回：" + returnVal);
+				return returnVal;
 			}else{
 				// count = 0, 剩下的数据类型中未找到需同步的日志
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
 				
-				bean.setDataType(DataType.COMMENT.toString());
-				String data = JsonUtil.bean2json(bean);
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+				
 				Map<String, String> delMap = new HashMap<String, String>();
 				delMap.put("dataType", DataType.COMMENT.toString());
 				delMap.put("action", DataSynchAction.DELETE.toString());
 				String returnData = JsonUtil.map2json(delMap);
 				
-				Map<String, String> map = new HashMap<String, String>();
-				map.put("data", data);
-				map.put("nextData", returnData);
-				
-				String returnVal = JsonUtil.map2json(map);
-				return returnVal;
+				DataBean returnBean = new DataBean(returnData, data);
+				return JsonUtil.bean2json(returnBean);
 			}
 			
-			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DELETE.toString());
-			res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
-			
-			bean.setDatas(JsonUtil.list2json(list));
-			bean.setDataType(dataClass);
-			String data = JsonUtil.bean2json(bean);
-			
-			Map<String, String> delMap = new HashMap<String, String>();
-			delMap.put("dataType", nextDataType);
-			delMap.put("action", DataSynchAction.DELETE.toString());
-			String returnData = JsonUtil.map2json(delMap);  // 客户端再次请求需提交的数据类型
-			
-			
-			Map<String, String> map = new HashMap<String, String>();
-			map.put("data", data);
-			map.put("nextData", returnData);
-			
-			String returnVal = JsonUtil.map2json(map);
-			logger.info("删除日志返回：" + returnVal);
-			return returnVal;
 		}else{
 			//已经到了最后一个数据类型
 			if(dataClass.equals(dataTypes[dataTypes.length - 1]) || dataClass.equals(DataType.ALL.toString())){
@@ -600,11 +604,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				delMap.put("action", DataSynchAction.DELETE.toString());
 				String returnData = JsonUtil.map2json(delMap);
 				
-				Map<String, String> map = new HashMap<String, String>();
-				map.put("data", data);
-				map.put("nextData", returnData);
-				
-				String returnVal = JsonUtil.map2json(map);
+				DataBean returnBean = new DataBean(returnData, data);
+				String returnVal = JsonUtil.bean2json(returnBean);
+				logger.info("删除日志返回：" + returnVal);
 				return returnVal;
 			}else{
 				// 查询下一有同步日志的数据类型
@@ -621,10 +623,10 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					delMap.put("action", DataSynchAction.DELETE.toString());
 					String returnData = JsonUtil.map2json(delMap);  // 客户端再次请求需提交的数据类型
 					
-					Map<String, String> map = new HashMap<String, String>();
-					map.put("data", "");
-					map.put("nextData", returnData);
-					return JsonUtil.map2json(map);
+					DataBean returnBean = new DataBean(returnData, "");
+					String returnVal = JsonUtil.bean2json(returnBean);
+					logger.info("删除日志返回：" + returnVal);
+					return returnVal;
 				}else{
 					// nextDataType = null, 剩下的数据类型中未找到需同步的日志
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -641,11 +643,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					delMap.put("action", DataSynchAction.DELETE.toString());
 					String returnData = JsonUtil.map2json(delMap);
 					
-					Map<String, String> map = new HashMap<String, String>();
-					map.put("data", data);
-					map.put("nextData", returnData);
-					
-					String returnVal = JsonUtil.map2json(map);
+					DataBean returnBean = new DataBean(returnData, data);
+					String returnVal = JsonUtil.bean2json(returnBean);
+					logger.info("删除日志返回：" + returnVal);
 					return returnVal;
 				}
 			}
@@ -769,7 +769,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					synchResultService.updateSynResult(sr);
 				}
 			}
-			return JsonUtil.bean2json(sr);
+			DataBean bean = new DataBean("", JsonUtil.bean2json(sr));
+			return JsonUtil.bean2json(bean);
 		}else{
 			logger.info("同步开始，检查时间戳：" + sr.getLastSynTimestamp());
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
@@ -783,7 +784,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			delMap.put("dataType", dataTypes[0]);
 			delMap.put("action", DataSynchAction.DELETE.toString());
 			String returnData = JsonUtil.map2json(delMap);
-			return returnData;
+			DataBean bean = new DataBean(returnData, "");
+			return JsonUtil.bean2json(bean);
 		}
 	}
 	
@@ -819,10 +821,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), "" + System.currentTimeMillis());
-		ResponseStatus rs = new ResponseStatus();
-		
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -880,10 +880,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				map.put("updateTimeStamp", timestamp);
 				
 				String dataStr = JsonUtil.map2json(map);
-				Map<String, String> mp = new HashMap<String, String>();
-				mp.put("data", dataStr);
-				
-				return JsonUtil.map2json(mp);
+				DataBean bean = new DataBean("", dataStr);
+				return JsonUtil.bean2json(bean);
 			}
 			if(log != null){
 				if(log.getAction().equals(SynchConstants.DATA_OPERATE_DELETE)){
@@ -896,8 +894,16 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-					return log.getOperateTime() + "";
+					Map<String, Object> map = new HashMap<String, Object>();
+					map.put("id", log.getClassPK());
+					map.put("className", DataType.SUBJECT.toString());
+					map.put("operation", DataSynchAction.DELETE.toString());
+					map.put("updateUserId", log.getOperateUser());
+					map.put("updateTimeStamp", log.getOperateTime());
+					
+					String dataStr = JsonUtil.map2json(map);
+					DataBean bean = new DataBean("", dataStr);
+					return JsonUtil.bean2json(bean);
 				}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() >= subject.getUpdateTimeStamp()){
 					//header中添加控制位
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -906,8 +912,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_UPDATE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-					return JsonUtil.bean2json(sub);
+					DataBean bean = new DataBean("", JsonUtil.bean2json(sub));
+					return JsonUtil.bean2json(bean);
 				}else {
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
@@ -923,8 +929,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -978,9 +984,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		ResponseStatus rs = new ResponseStatus(ResponseCode.NEXT);
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -1041,10 +1046,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				map.put("updateTimeStamp", timestamp);
 				
 				String dataStr = JsonUtil.map2json(map);
-				Map<String, String> mp = new HashMap<String, String>();
-				mp.put("data", dataStr);
-				
-				return JsonUtil.map2json(mp);
+				DataBean bean = new DataBean("", dataStr);
+				return JsonUtil.bean2json(bean);
 			}
 			
 			if(log != null){
@@ -1057,8 +1060,16 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-					return log.getOperateTime() + "";
+					Map<String, Object> map = new HashMap<String, Object>();
+					map.put("id", log.getClassPK());
+					map.put("className", DataType.DIRECTORY.toString());
+					map.put("operation", DataSynchAction.DELETE.toString());
+					map.put("updateUserId", log.getOperateUser());
+					map.put("updateTimeStamp", log.getOperateTime());
+					
+					String dataStr = JsonUtil.map2json(map);
+					DataBean bean = new DataBean("", dataStr);
+					return JsonUtil.bean2json(bean);
 				}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() > directory.getUpdateTimeStamp()){
 					rs.setResponse(ResponseCode.UPDATE);
 					rs.setData(log.getId());
@@ -1070,8 +1081,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_UPDATE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-					return JsonUtil.bean2json(dir);
+					DataBean bean = new DataBean("", JsonUtil.bean2json(dir));
+					return JsonUtil.bean2json(bean);
 				}else {
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.DIRECTORY.toString());
@@ -1087,8 +1098,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -1140,8 +1151,6 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/send/note/a")
 	public String addNote(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
 		logger.info("添加条目信息 :" + data);
-		System.out.println(data);
-		ResponseStatus rs = new ResponseStatus(ResponseCode.NEXT);
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
 			AccountEntity user = accountService.getUser4Session();
@@ -1164,8 +1173,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 		}
-		
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 	
 	public String uploadNoteHtml(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException {
@@ -1263,10 +1272,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				map.put("updateTimeStamp", timestamp);
 				
 				String dataStr = JsonUtil.map2json(map);
-				Map<String, String> mp = new HashMap<String, String>();
-				mp.put("data", dataStr);
-				
-				return JsonUtil.map2json(mp);
+				DataBean bean = new DataBean("", dataStr);
+				return JsonUtil.bean2json(bean);
 			}
 	
 			if(log != null){
@@ -1281,7 +1288,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 					
 					Map<String, Object> map = DataSynchizeUtil.parseDeleteLog(log);
-					return JsonUtil.map2json(map);
+					String dataStr = JsonUtil.map2json(map);
+					DataBean bean = new DataBean("", dataStr);
+					return JsonUtil.bean2json(bean);
 				}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() >= note.getUpdateTimeStamp()){
 					rs.setResponse(ResponseCode.UPDATE);
 					rs.setData(log.getId());
@@ -1295,7 +1304,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					
 					noteService.saveNoteHistory(note, user.getId());   //保存为历史版本
 					
-					return JsonUtil.bean2json(note);
+					String dataStr = JsonUtil.bean2json(note);
+					DataBean bean = new DataBean("", dataStr);
+					return JsonUtil.bean2json(bean);
 				}else {
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
@@ -1312,7 +1323,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 		}
 		
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -1451,10 +1463,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				map.put("updateTimeStamp", timestamp);
 				
 				String dataStr = JsonUtil.map2json(map);
-				Map<String, String> mp = new HashMap<String, String>();
-				mp.put("data", dataStr);
-				
-				return JsonUtil.map2json(mp);
+				DataBean bean = new DataBean("", dataStr);
+				return JsonUtil.bean2json(bean);
 			}
 			
 			if(log != null){
@@ -1467,8 +1477,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.TAG.toString());
 					
-					res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-					return log.getOperateTime() + "";
+					Map<String, Object> map = DataSynchizeUtil.parseDeleteLog(log);
+					DataBean bean = new DataBean("", JsonUtil.map2json(map));
+					return JsonUtil.bean2json(bean);
 				}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() >= tag.getUpdateTimeStamp()){
 					rs.setResponse(ResponseCode.UPDATE);
 					rs.setData(log.getId());
@@ -1493,8 +1504,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.TAG.toString());
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		return rs.toString();
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -1561,8 +1572,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			//准备上传文件
 			return DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
 		}
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		return "";
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 
 	@Override
@@ -1818,14 +1829,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
 			}
 		}else{
-			// 这段代码应该走不到
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
 			
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
 		}
-		return "";
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
 	}
 	
 	@Override

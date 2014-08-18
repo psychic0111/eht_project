@@ -590,7 +590,7 @@ public class NoteController extends BaseController {
 	String saveNote(NoteEntity note, HttpServletRequest request) throws IOException {
 		NoteEntity oldNote = noteService.getNote(note.getId());
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		noteService.saveNoteHtml(note, request);
+		noteService.saveNoteHtml(note);
 		if (oldNote == null) {
 			note.setDeleted(Constants.DATA_NOT_DELETED);
 			note.setVersion(1);

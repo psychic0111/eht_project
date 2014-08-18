@@ -30,7 +30,7 @@ public class DataCacheTool {
 	/**
 	 * 客户端获取同步数据类型的顺序 -- 添加、修改
 	 */
-	private static String[] datasSort = new String[] {"SUBJECT", "DIRECTORY", "TAG", "NOTE", "ATTACHMENT", "COMMENT"};
+	private static String[] datasSort = null;
 	
 	/**
 	 * 客户端获取同步数据类型的顺序 -- 删除
@@ -70,12 +70,6 @@ public class DataCacheTool {
 	 * @return
 	 */
 	public static String[] getReverseDatasSort() {
-		if(datasDeleteSort == null){
-			datasDeleteSort = new String[datasSort.length];
-			for(int i = datasSort.length; i > 0; i--){
-				datasDeleteSort[datasSort.length - i] = datasSort[i - 1];
-			}
-		}
 		return datasDeleteSort;
 	}
 	
@@ -89,5 +83,13 @@ public class DataCacheTool {
 	
 	public static Class<?> getDataClass(String dataType){
 		return dataClassMap.get(dataType);
+	}
+
+	public static void setDatasSort(String[] datasSort) {
+		DataCacheTool.datasSort = datasSort;
+	}
+
+	public static void setDatasDeleteSort(String[] datasDeleteSort) {
+		DataCacheTool.datasDeleteSort = datasDeleteSort;
 	}
 }

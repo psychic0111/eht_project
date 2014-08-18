@@ -10,6 +10,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 import com.eht.common.bean.ResponseStatus;
 import com.eht.common.cache.DataCacheTool;
@@ -20,8 +22,10 @@ import com.eht.common.enumeration.DataType;
 import com.eht.common.enumeration.HeaderName;
 import com.eht.common.enumeration.ResponseCode;
 import com.eht.common.util.AppContextUtils;
+import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.FileToolkit;
 import com.eht.common.util.JsonUtil;
+import com.eht.common.util.XmlUtil;
 import com.eht.log.entity.SynchLogEntity;
 import com.eht.log.entity.SynchronizedLogEntity;
 import com.eht.log.service.SynchLogServiceI;
@@ -194,6 +198,12 @@ public class DataSynchizeUtil {
 		return nextDataType;
 	}
 	
+	/**
+	 * 返回下一要同步的数据类型
+	 * @param currentDataType
+	 * @param dataTypes
+	 * @return
+	 */
 	public static String getNextDataType(String currentDataType, String[] dataTypes){
 		for(int i = 0; i < dataTypes.length; i++){
 			if(dataTypes[i].equals(currentDataType)){
@@ -205,5 +215,22 @@ public class DataSynchizeUtil {
 			}
 		}
 		return null;
+	}
+	
+	public static void readSynConfig(){
+		String filePath = FilePathUtil.getClassPath() + File.separator + "synch_config.xml";
+		Document document = XmlUtil.readXmlFile(filePath);
+		Element root = document.getRootElement();
+		Element dataTypeElement = XmlUtil.getUniqueElement(root, "datatypes");
+		
+		// 添加、更新时数据类型的同步顺序
+		Element datasSortEle = XmlUtil.getUniqueElement(dataTypeElement, "datasSort");
+		String[] datasSort = datasSortEle.getTextTrim().split(",");
+		DataCacheTool.setDatasSort(datasSort);
+		
+		// 删除时数据类型的同步顺序
+		Element datasDelSortEle = XmlUtil.getUniqueElement(dataTypeElement, "datasDeleteSort");
+		String[] datasDelSort = datasDelSortEle.getTextTrim().split(",");
+		DataCacheTool.setDatasDeleteSort(datasDelSort);
 	}
 }

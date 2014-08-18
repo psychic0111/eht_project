@@ -10,6 +10,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.eht.common.util.AppContextUtils;
 import com.eht.system.service.DataInitService;
+import com.eht.webservice.service.util.DataSynchizeUtil;
 
 
 /**
@@ -52,6 +53,11 @@ public class InitListener  implements javax.servlet.ServletContextListener {
 		DataInitService dataInitService = (DataInitService) AppContextUtils.getBean("dataInitService");
 		dataInitService.initRoles();
 		dataInitService.initResources();
+		
+		/**
+		 * 初始化同步配置
+		 */
+		DataSynchizeUtil.readSynConfig();
 	}
 
 }
