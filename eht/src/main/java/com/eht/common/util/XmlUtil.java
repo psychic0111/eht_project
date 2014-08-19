@@ -3,12 +3,15 @@ package com.eht.common.util;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+
+import com.eht.webservice.bean.DataBean;
 
 public class XmlUtil {
 	public static boolean readStringXml(String xml) {
@@ -55,8 +58,15 @@ public class XmlUtil {
     }
 	
 	public static void main(String[] args){
-		String str = "<p style=\"text-align:center;margin-top:0px;margin-bottom:0px;\" class=\"p0\"><strong><span style=\"font-family:&#39;宋体&#39;,&#39;simsun&#39;;font-size:12px\">芜湖市大学生创业园管理办法</span></strong></p>";
-		System.out.println(str.replaceAll("<[a-zA-Z]+(\\s+[a-zA-Z]+\\s*=\\s*(\"([^\"]*)\"|'([^']*)'))*\\s*>", "").replaceAll("[<]{1}[/]{1}[a-zA-Z]+[>]{1}", ""));
+		String str = "{\"data\":\"\",\"nextData\":\"{\\\"dataType\\\":\\\"COMMENT\\\",\\\"action\\\":\\\"DELETE\\\"}\"}";
+		DataBean bean = (DataBean) JsonUtil.getObject4JsonString(str, DataBean.class);
+		String nextData = bean.getNextData();
+		if(nextData.charAt(0) == '"'){
+			nextData = nextData.substring(1, nextData.length() - 1);
+		}
+		Map map = JsonUtil.getMap4Json(nextData);
+		
+		System.out.println(JsonUtil.getObject4JsonString(str, DataBean.class));
 	}
 
 }

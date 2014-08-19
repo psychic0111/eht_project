@@ -769,8 +769,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					synchResultService.updateSynResult(sr);
 				}
 			}
-			DataBean bean = new DataBean("", JsonUtil.bean2json(sr));
-			return JsonUtil.bean2json(bean);
+			return JsonUtil.bean2json(sr);
 		}else{
 			logger.info("同步开始，检查时间戳：" + sr.getLastSynTimestamp());
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
@@ -784,8 +783,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			delMap.put("dataType", dataTypes[0]);
 			delMap.put("action", DataSynchAction.DELETE.toString());
 			String returnData = JsonUtil.map2json(delMap);
-			DataBean bean = new DataBean(returnData, "");
-			return JsonUtil.bean2json(bean);
+			return returnData;
 		}
 	}
 	
@@ -1570,7 +1568,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.COMMENT.toString());
 			
 			//准备上传文件
-			return DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			DataBean bean = new DataBean("", downloadData);
+			return JsonUtil.bean2json(bean);
 		}
 		DataBean bean = new DataBean("", "");
 		return JsonUtil.bean2json(bean);
