@@ -1281,7 +1281,7 @@
 				tmp_switchObj = $("#" + parentNode.tId + consts.id.SWITCH);
 				tmp_icoObj = $("#" + parentNode.tId + consts.id.ICON);
 				view.replaceSwitchClass(parentNode, tmp_switchObj, consts.folder.DOCU);
-				view.replaceIcoClass(parentNode, tmp_icoObj, consts.folder.DOCU);
+				//view.replaceIcoClass(parentNode, tmp_icoObj, consts.folder.DOCU);
 				tmp_ulObj.css("display", "none");
 
 			} else if (setting.view.showLine && childLength > 0) {

@@ -80,8 +80,8 @@ $().ready(function() {
 	$("#setpwdForm").validate({
  	   rules:{
  		    oldpassword:{required:true,maxlength:20,remote:{url:'${webRoot}/accountController/front/checkpwd.dht'}},
- 		  	password:{required:true,maxlength:20},
-			passwordConf:{required:true,maxlength:20,equalTo:'#password'},
+ 		  	password:{required:true,maxlength:20,minlength:6},
+			passwordConf:{required:true,maxlength:20,minlength:6,equalTo:'#password'},
 		},
 		messages:{
 			oldpassword:{remote:'* 旧密码错误!'},

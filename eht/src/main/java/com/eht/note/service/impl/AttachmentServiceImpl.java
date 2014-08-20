@@ -88,6 +88,19 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 
 	@Override
+	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType) {
+		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
+		dc.add(Restrictions.eq("noteId", noteId));
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_COMPLETED));
+		if(fileType != null && fileType > 0){
+			dc.add(Restrictions.eq("fileType", fileType));
+		}
+		List<AttachmentEntity> list = findByDetached(dc);
+		return list;
+	}
+	
+	@Override
 	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType,String searchType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("noteId", noteId));

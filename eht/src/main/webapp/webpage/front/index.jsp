@@ -250,7 +250,7 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 			editorheight = document.body.clientHeight- 380;
 		}
 
-		setTimeout('hideLoading_tree()',1000);
+		setTimeout('hideLoading_tree()',800);
 	});
 }
 /* 计算消息数量 */
@@ -417,9 +417,11 @@ $(document).ready(function(){
 	rightMenu = $("#treeRightMenu").html();
 	buildMainMenu(0,null,true);
 });
-$( document ).tooltip({
+//专题导出进度任务句柄
+var actionSchedule;
+/* $( document ).tooltip({
 	track: true
-});
+}); */
 </script>
 </body>
 </html>

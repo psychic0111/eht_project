@@ -92,7 +92,15 @@ function deleteNode(){
 						zTree_Menu.selectNode(parentNode.children[0]);
 						beforeNodeClick("treeMenu",parentNode.children[0]);
 						onNodeClick(null,"treeMenu",parentNode.children[0]);
+					}else{
+						if(parentNode.id=='-2'){
+							parentNode.isParent = true;
+						}
+						zTree_Menu.selectNode(parentNode);
+						beforeNodeClick("treeMenu",parentNode);
+						onNodeClick(null,"treeMenu",parentNode);
 					}
+					
 				}
 				if(dataType == "DIRECTORY"){ //目录节点
 					//parentNode = zTree_Menu.getNodeByParam("id", subjectId, null);

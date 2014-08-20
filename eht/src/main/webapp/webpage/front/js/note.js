@@ -45,7 +45,7 @@ function saveNote(){
 				 $("#comments_list").append(data);
 			});
 		}
-		setTimeout('hideLoading_edit()',1000);
+		setTimeout('hideLoading_edit()',100);
 	});
 } 
 

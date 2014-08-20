@@ -74,7 +74,12 @@ function toShowSubject(obj){
 		       <tr>
 		         <td>专题类型：</td>
 		         <td>
-		         <c:if test="${subject.subjectType eq 1}"> 
+		          <c:choose>
+		            <c:when test="${subject.subjectName eq '默认专题'}">
+		            	 	个人<input type="hidden" name="subjectType" value="1">
+		            </c:when>
+		            <c:otherwise>
+		             <c:if test="${subject.subjectType eq 1}"> 
 		         	<input type="radio" name="subjectType" id="subjectType_p" value="1" <c:if test="${subject.subjectType ==1}"> checked="checked"  </c:if> />
 		           	个人
 		          </c:if> 
@@ -83,8 +88,10 @@ function toShowSubject(obj){
 		          	 多人
 		          </c:if>
 		          <c:if test="${subject.subjectType eq 2}">
-		                          多人<input type="hidden" name="subjectType" value="2">
+		                                        多人<input type="hidden" name="subjectType" value="2">
 		          </c:if>
+		            </c:otherwise>
+		            </c:choose>
 				</td>
 		       </tr>
 		      <tr>

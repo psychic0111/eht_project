@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eht.common.bean.ResponseStatus;
-import com.eht.common.cache.DataCacheTool;
 import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
@@ -42,6 +41,7 @@ import com.eht.system.service.DataInitService;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
 import com.eht.webservice.service.impl.DataSynchizeServiceImpl;
+import com.eht.webservice.service.util.SynchDataCache;
 
 @Service("synchLogService")
 @Transactional
@@ -547,9 +547,9 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 	 */
 	@Override
 	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, String dataClass, boolean filterDelete) throws Exception {
-		String[] dataTypes = DataCacheTool.getDatasSort();
+		String[] dataTypes = SynchDataCache.getDatasSort();
 		if(!filterDelete){
-			dataTypes = DataCacheTool.getReverseDatasSort();
+			dataTypes = SynchDataCache.getReverseDatasSort();
 		}
 		//dc.add(Restrictions.eq("clientId", SynchConstants.CLIENT_DEFAULT_ID));   // web页面操作产生的操作日志
 		List<String> idList = findSynchedLogIds(clientId, userId);
@@ -616,7 +616,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 	 */
 	@Override
 	public List<SynchLogEntity> findSynchLogsBySQL(String clientId, String userId, long timeStamp, String dataClass) throws Exception {
-		String[] dataTypes = DataCacheTool.getDatasSort();
+		String[] dataTypes = SynchDataCache.getDatasSort();
 		
 		//dc.add(Restrictions.eq("clientId", SynchConstants.CLIENT_DEFAULT_ID));   // web页面操作产生的操作日志
 		List<String> idList = findSynchedLogIds(clientId, userId);

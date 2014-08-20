@@ -275,6 +275,13 @@ public class HtmlParser {
 				list.add(mht);
 			}
 		}
+		Elements as = doc.select("a");
+		for (int i = 0; i < as.size(); i++) {
+			String url = as.get(i).attr("href");
+			if(url.startsWith("http")){
+				as.get(i).attr("href", "3D\""+url);
+			}
+		}
 		return doc.select("body").get(0).html().replaceAll("\"3D&quot;", "3D\"");
 	}
 	

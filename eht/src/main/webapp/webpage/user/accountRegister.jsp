@@ -86,8 +86,8 @@
 $().ready(function() {
 	$("#setpwdForm").validate({
  	   rules:{
- 		  	password:{required:true,maxlength:20},
-			passwordConf:{required:true,maxlength:20,equalTo:'#password'},
+ 		  	password:{required:true,maxlength:20,minlength:6},
+			passwordConf:{required:true,maxlength:20,minlength:6,equalTo:'#password'},
 			mobile:{required:false,isMobile : true},
 			file:{required:false,img_1:true}
 		},

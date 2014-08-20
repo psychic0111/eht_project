@@ -26,6 +26,20 @@
 li.over {background-color: #bcd4ec;}   
 /* 上传附件不换行 */
 #attTemp1 div{display:inline;border:1px double red}
+
+
+#tagSelectContent ul li a span:nth-child(2){	
+			width:200px;
+			height:12px;
+			overflow:hidden;
+			white-space:nowrap;
+			text-overflow:ellipsis;
+			text-overflow: ellipsis;/* IE/Safari */
+			-ms-text-overflow: ellipsis;
+			-o-text-overflow: ellipsis;/* Opera */
+			-moz-binding: url("ellipsis.xml#ellipsis");/*FireFox*/
+} 
+
 -->
 </style> 
 <script type="text/javascript"> 

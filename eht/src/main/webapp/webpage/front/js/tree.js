@@ -192,9 +192,9 @@ function onNodeClickDo(e, treeId, node) {
 			
 			//处理文档类
 			if(isDocumentFolder(node)){ 
-				currentSubjectId = currentSubjectId==null?node.subjectId:currentSubjectId;
+				//currentSubjectId = currentSubjectId==null?node.subjectId:currentSubjectId;
 				currentDirId = node.id; 
-				dirAttachmentManage();
+				dirAttachmentManage(node.subjectId);
 			}
 			
 			//添加目录
@@ -385,8 +385,8 @@ function getSonIds(nodes){
 }
 
 //条目附件管理跳转
-function dirAttachmentManage(){ 
-	url = currentdirAttachmentURL+"?dirId=" +currentDirId  + "&subjectId=" + currentSubjectId;
+function dirAttachmentManage(subjectId){ 
+	url = currentdirAttachmentURL+"?dirId=" +currentDirId  + "&subjectId=" + subjectId;
 	AT.load("iframepage",url,function() {});
 } 
 

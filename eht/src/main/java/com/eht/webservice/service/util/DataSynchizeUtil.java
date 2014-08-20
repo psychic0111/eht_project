@@ -3,6 +3,7 @@ package com.eht.webservice.service.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,6 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 import com.eht.common.bean.ResponseStatus;
-import com.eht.common.cache.DataCacheTool;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
@@ -31,6 +31,7 @@ import com.eht.log.entity.SynchronizedLogEntity;
 import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.service.AttachmentServiceI;
+import com.eht.webservice.bean.Step;
 
 public class DataSynchizeUtil {
 	
@@ -75,7 +76,7 @@ public class DataSynchizeUtil {
 		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
 		if (!log.getAction().equals(DataSynchAction.DELETE) && !log.getClassName().equals(DataType.DIRECTORYBLACK) && !log.getClassName().equals(DataType.NOTEBLACK)
 				&& !log.getClassName().equals(DataType.SUBJECTUSER)) {
-			Class c = DataCacheTool.getDataClass(log.getClassName());
+			Class c = SynchDataCache.getDataClass(log.getClassName());
 			data = synchLogService.getEntity(c, log.getClassPK());
 			String dataJson = JsonUtil.bean2json(data);
 			map = JsonUtil.getMap4Json(dataJson);
@@ -226,11 +227,38 @@ public class DataSynchizeUtil {
 		// 添加、更新时数据类型的同步顺序
 		Element datasSortEle = XmlUtil.getUniqueElement(dataTypeElement, "datasSort");
 		String[] datasSort = datasSortEle.getTextTrim().split(",");
-		DataCacheTool.setDatasSort(datasSort);
+		SynchDataCache.setDatasSort(datasSort);
 		
 		// 删除时数据类型的同步顺序
 		Element datasDelSortEle = XmlUtil.getUniqueElement(dataTypeElement, "datasDeleteSort");
 		String[] datasDelSort = datasDelSortEle.getTextTrim().split(",");
-		DataCacheTool.setDatasDeleteSort(datasDelSort);
+		SynchDataCache.setDatasDeleteSort(datasDelSort);
+		
+		Element stepsElement = XmlUtil.getUniqueElement(root, "steps");
+		List<?> stepEleList = XmlUtil.getElementsByNodeName(stepsElement, "step");
+		List<Step> stepList = new ArrayList<Step>();
+		for(Object obj : stepEleList){
+			Element stepEle = (Element) obj;
+			String name = stepEle.attributeValue("name");
+			String description = stepEle.attributeValue("description");
+			
+			Step step = new Step();
+			step.setDescription(description);
+			step.setName(name);
+			
+			Element redirectELe = XmlUtil.getUniqueElement(stepEle, "redirect_requirement");
+			List<?> headList = XmlUtil.getElementsByNodeName(redirectELe, "header");
+			for(Object o : headList){
+				Element headEle = (Element) o;
+				if(headEle.attributeValue("name").equals(HeaderName.NEXT_ACTION.toString())){
+					step.setRequireNextAction(headEle.getTextTrim());
+				}
+				if(headEle.attributeValue("name").equals(HeaderName.NEXT_DATATYPE.toString())){
+					step.setRequireNextDataType(headEle.getTextTrim());
+				}
+			}
+			stepList.add(step);
+		}
+		SynchDataCache.setStepList(stepList);
 	}
 }

@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.eht.comment.entity.CommentEntity;
 import com.eht.comment.service.CommentServiceI;
 import com.eht.common.bean.ResponseStatus;
-import com.eht.common.cache.DataCacheTool;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.RoleName;
 import com.eht.common.constant.SynchConstants;
@@ -77,6 +76,7 @@ import com.eht.webservice.bean.SynchResult;
 import com.eht.webservice.service.DataSynchizeService;
 import com.eht.webservice.service.SynchResultService;
 import com.eht.webservice.service.util.DataSynchizeUtil;
+import com.eht.webservice.service.util.SynchDataCache;
 
 public class DataSynchizeServiceImpl implements DataSynchizeService {
 
@@ -519,7 +519,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/getdellogs/{timeStamp}")
 	public String getDeleteLogs(@FormParam("data") String dataStr, @HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
 		AccountEntity user = accountService.getUser4Session();
-		String[] dataTypes = DataCacheTool.getReverseDatasSort();
+		String[] dataTypes = SynchDataCache.getReverseDatasSort();
 		
 		// 从data中提取本次要查询的数据类型
 		if(!StringUtil.isEmpty(dataStr)){
@@ -658,7 +658,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/getlogs/{timeStamp}")
 	public String getSynchDataByStep(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
 		AccountEntity user = accountService.getUser4Session();
-		String[] dataTypes = DataCacheTool.getDatasSort();
+		String[] dataTypes = SynchDataCache.getDatasSort();
 		if(dataClass.equals(DataType.FILE.toString())){ // 请求下载文件
 			String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
 			DataBean bean = new DataBean("", downloadData);
@@ -752,9 +752,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/checkcfg")
 	public String checkConfig(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res){
 		SynchResult sr = (SynchResult) JsonUtil.getObject4JsonString(data, SynchResult.class);
+		AccountEntity user = accountService.getUser4Session();
 		if(action.equals(DataSynchAction.FINISH.toString())){
 			logger.info("同步完成 ！！！");
-			AccountEntity user = accountService.getUser4Session();
 			long synchTimeStamp = synchLogService.deleteSynchedLogs(clientId, user.getId());
 			sr = synchResultService.findSynchResults(clientId, user.getId());
 			if(sr == null){
@@ -772,13 +772,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			return JsonUtil.bean2json(sr);
 		}else{
 			logger.info("同步开始，检查时间戳：" + sr.getLastSynTimestamp());
+			long synchTimeStamp = synchLogService.deleteSynchedLogs(clientId, user.getId());
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
 			
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.COMMENT.toString());
 			
-			String[] dataTypes = DataCacheTool.getReverseDatasSort();
+			String[] dataTypes = SynchDataCache.getReverseDatasSort();
 			Map<String, String> delMap = new HashMap<String, String>();
 			delMap.put("dataType", dataTypes[0]);
 			delMap.put("action", DataSynchAction.DELETE.toString());
@@ -1218,14 +1219,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/note/u/{timeStamp}")
 	public String updateNote(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @DefaultValue("true") @QueryParam("updateContent") boolean updateContent, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
-		logger.info("更新条目基本信息 ！！！");
+		logger.info("更新条目基本信息 : " + data);
 		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
 			NoteEntity n = noteService.getNote(note.getId());
 			AccountEntity user = accountService.getUser4Session();
 			SynchLogEntity log = synchLogService.findLogByData(user.getClientId(), user.getId(), timeStamp, SynchConstants.DATA_CLASS_NOTE, note.getId());
-			if (n != null && n.getDeleted() == Constants.DATA_NOT_DELETED){
+			if (n != null && (n.getDeleted() == Constants.DATA_NOT_DELETED || n.getDeleted() == Constants.DATA_NOTSEARCH)){
 				//服务器上不存在该数据其它操作日志，或者有修改操作日志并且操作早于此次操作，才更新数据库数据
 				if(log == null || (log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() < note.getUpdateTimeStamp())){
 					note.setUpdateUser(user.getId());
@@ -1709,7 +1710,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/send/batchdata")
 	public String deleteBatchData(@FormParam("data") String data, @DefaultValue(SynchConstants.CLIENT_SYNCH_SEND) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res){
 		if(!StringUtil.isEmpty(data)){
-			String[] dataTypes = DataCacheTool.getReverseDatasSort();
+			String[] dataTypes = SynchDataCache.getReverseDatasSort();
 			logger.info("批量删除数据：" + data);
 			Map map = JsonUtil.getMap4Json(data);
 			String dataType = map.get("dataType").toString();

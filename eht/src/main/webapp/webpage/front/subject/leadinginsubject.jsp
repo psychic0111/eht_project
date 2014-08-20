@@ -11,10 +11,12 @@ jQuery.validator.addMethod("zip", function(value, element) {
 $().ready(function() {
 	$("#addSubjectZipForm").validate({
 			rules:{
+			    subjectName:{required:true,minlength:2,maxlength:40,remote:{url:'${webRoot}/subjectController/front/checkSubjectName.dht'}},
 				file:{required:true,zip:true}
 			},
 			messages:{
-				file:{required:'请选择上传文件'}
+				file:{required:'请选择上传文件'},
+				subjectName:{remote:'专题名称已被使用'}
 			}
 		}
 	);
@@ -33,6 +35,14 @@ $().ready(function() {
 		  <div class="title">导入专题</div>
 		  <div class="Table">
 		    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		     <tr>
+		        <td width="100">专题名称：</td>
+		        <td>
+		         <span class="tags">
+		           <input name="subjectName" id="subjectName" class="InputTxt2" style="width:80%;height:28px;line-height:28px;" type="text"/>
+		          </span>
+		         </td>
+		       </tr>
 		      <tr>
 		        <td width="100">选择文件：</td>
 		        <td>

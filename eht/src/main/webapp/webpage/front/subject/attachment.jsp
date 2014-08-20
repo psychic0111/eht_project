@@ -1,6 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%> 
 <%@ page import="java.util.*" %> 
+<%@page import="com.eht.common.constant.*"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
+<%@ taglib prefix="xd" uri="http://www.xd-tech.com.cn/" %>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
@@ -94,7 +98,9 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 
     <div class="right_top">
        <div class="Nav" id="nav_div" style="position:absolute;">
-			<div id="attachment"></div>     
+			<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ASSIGN_MEMBER %>">
+					<div id="attachment"></div> 
+			</xd:hasPermission>	    
        </div>
     </div>
     <div class="right_index" >

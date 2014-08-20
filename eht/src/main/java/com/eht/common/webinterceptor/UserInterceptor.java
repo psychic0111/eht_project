@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -68,6 +69,19 @@ public class UserInterceptor implements HandlerInterceptor {
 	 */
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception {
 		String requestPath = ResourceUtil.getRequestPath(request);// 用户访问的资源地址
+		if(requestPath.startsWith("noteController/front/downloadNodeAttach.dht")){
+			Cookie cookies[] = request.getCookies();
+			if (cookies != null ) {
+				for (int i = 0; i < cookies.length; i++) {
+					Cookie cookie = cookies[i];
+					if("username".equals(cookie.getName())){
+						if(cookie.getValue()!=null){
+							return true;
+						}
+					}
+				}
+			}
+		}
 		if (isInexcludeUrlList(requestPath)) {
 			return true;
 		} else {
@@ -81,7 +95,6 @@ public class UserInterceptor implements HandlerInterceptor {
 				 // 从session 里面获取用户名的信息  
 			    //System.out.println("sessionID======================================" + request.getParameter("jsessionid"));
 				Object obj = session.getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-				
 				// 判断如果没有取到用户信息，就跳转到登陆页面，提示用户进行登陆  
 				if (obj == null || "".equals(obj.toString())) {  
 					response.sendRedirect(projectName+"/"); 

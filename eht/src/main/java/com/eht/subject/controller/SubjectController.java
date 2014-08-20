@@ -1,6 +1,9 @@
 package com.eht.subject.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.Date;
@@ -9,12 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.jeecgframework.core.common.controller.BaseController;
@@ -38,6 +39,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
+import com.eht.common.util.AppRequstUtiles;
 import com.eht.common.util.SubjectToMht;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.note.entity.AttachmentEntity;
@@ -47,10 +49,12 @@ import com.eht.note.service.NoteServiceI;
 import com.eht.role.entity.RoleUser;
 import com.eht.role.service.RoleService;
 import com.eht.subject.entity.DirectoryEntity;
+import com.eht.subject.entity.Info;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.entity.SubjectMht;
-import com.eht.subject.service.DirectoryServiceI;
+import com.eht.subject.entity.SujectSchedule;
+import com.eht.subject.entity.ZipEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.template.entity.TemplateEntity;
 import com.eht.template.service.TemplateServiceI;
@@ -94,8 +98,6 @@ public class SubjectController extends BaseController {
 	@Autowired
 	private AttachmentServiceI attachmentService;
 
-	@Autowired
-	private DirectoryServiceI directoryService;
 
 	private String message;
 
@@ -284,6 +286,30 @@ public class SubjectController extends BaseController {
 		return j;
 
 	}
+	
+	/**
+	 * 专题导出状态
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/front/sujectSchedule.dht")
+	@ResponseBody
+	public AjaxJson sujectSchedule(HttpServletRequest request) {
+		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		Info  info =SujectSchedule.getSchedule(user.getId());
+		AjaxJson j = new AjaxJson();
+		if(info!=null){
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("subjectId", info.getSubjectId());
+			map.put("cout", info.getCout());
+			map.put("couts", info.getCouts());
+			j.setSuccess(true);
+			j.setAttributes(map);
+		}else{
+			j.setSuccess(false);
+		}
+		return j;
+	}
 
 	/**
 	 * 前台编辑专题
@@ -312,6 +338,7 @@ public class SubjectController extends BaseController {
 		AjaxJson j = new AjaxJson();
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, subject.getId());
+		Integer type=subjectEntity.getSubjectType();
 		subjectEntity.setDescription(subject.getDescription());
 		if(subject.getSubjectName()!=null){
 			subjectEntity.setSubjectName(subject.getSubjectName());
@@ -320,7 +347,11 @@ public class SubjectController extends BaseController {
 		subjectEntity.setUpdateUser(user.getId());
 		subjectEntity.setUpdateTime(new Date());
 		try {
-			subjectService.updateSubject(subjectEntity);
+			if(type!=subjectEntity.getSubjectType()){
+				subjectService.updateSubject(subjectEntity,true);
+			}else{
+				subjectService.updateSubject(subjectEntity);
+			}
 		Map <String, Object>map=new HashMap<String, Object>();
 		map.put("subjectId", subject.getId());
 		map.put("subjectType", subject.getSubjectType());
@@ -480,66 +511,109 @@ public class SubjectController extends BaseController {
 	 * @return
 	 * @throws IOException
 	 */
-	@RequestMapping("/front/exportSuject.dht")
-	public ModelAndView exportSuject(HttpServletRequest request, HttpServletResponse response) {
-		response.setContentType("application/octet-stream");
-		response.setHeader("Content-Disposition", "attachment; filename=export.zip");
-		ZipOutputStream zos = null;
-		try {
-			zos = new ZipOutputStream(response.getOutputStream());
-			AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-			subjectService.exportSuject(zos, request.getParameter("id"), request, user);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (zos != null) {
-				try {
-					zos.flush();
-					zos.close();
-				} catch (IOException e) {
-
-				}
-
-			}
-		}
-		return null;
+	@RequestMapping("/front/treeSuject.dht")
+	public ModelAndView treeSuject(HttpServletRequest request, HttpServletResponse response) {
+		ModelAndView mv = new ModelAndView("front/subject/subjectTree");
+		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		mv.addObject("tree", subjectService.treeSubject(request.getParameter("subjectId"),user.getId()));
+		return mv;
 	}
-
+	
+	
 	/**
-	 * 前台导出专题报告
+	 * 前台导出专题
 	 * 
 	 * @return
 	 * @throws IOException
 	 */
-	@RequestMapping("/front/exportSujectWord.dht")
-	public ModelAndView exportWord(HttpServletRequest request, HttpServletResponse response) {
-		response.setContentType("application/msword;charset=utf-8");
-		response.setHeader("Content-Disposition", "attachment; filename=export.mht");
-		OutputStream out = null;
+	@RequestMapping("/front/exportSuject.dht")
+	@ResponseBody
+	public AjaxJson exportSuject(HttpServletRequest request, HttpServletResponse response) {
+		final AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		final String subjectId=request.getParameter("subjectId");
+		final String dirs[] =request.getParameter("dirsId").split(",");
+		final String path = request.getSession().getServletContext().getRealPath("/");
+		final  String basePath = AppRequstUtiles.getAppUrl(request);
+		Info info=new Info();
+		info.setCouts(dirs.length);
+		info.setSubjectId(subjectId);
+		info.setUserId(user.getId());
+		AjaxJson ajaxJson=new AjaxJson();
+		boolean b=SujectSchedule.putSchedule(user.getId(), info);
+		if(b){
+			ajaxJson.setSuccess(false);
+			Thread thread = new Thread() {
+				public void run() {
+					try {
+						subjectService.exportSuject(subjectId, path,basePath, user,dirs);
+					} catch (Exception e) {
+						
+					}
+				}
+			};
+			thread.setDaemon(true);
+			thread.start();
+		}else{
+			ajaxJson.setSuccess(true);
+		}
+		
+		return ajaxJson;
+	}
+	
+	/**
+	 * 前台下载专题
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping("/front/downzip.dht")
+	public ModelAndView downzip(HttpServletRequest request, HttpServletResponse response) {
+		ZipEntity  zipEntity=subjectService.getEntity(ZipEntity.class, request.getParameter("id"));
+		File file=new File(zipEntity.getPath());
+		if(!file.exists()){
+			try {
+				response.setContentType("text/html;charset=UTF-8");
+				response.getWriter().write("文件已不存在！");
+			} catch (IOException e) {
+			}
+			return null;
+		}
+		response.setContentType("application/octet-stream");
+		response.setHeader("Content-Disposition", "attachment; filename=export.zip");
+	    OutputStream  outputStream=null;
+	    InputStream inStream=null;
+		byte[] b = new byte[1024];
+	    int len;
 		try {
-			out = response.getOutputStream();
-			SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, request.getParameter("id"));
-			AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-			XWPFDocument doc = new XWPFDocument();
-			subjectService.showCatalogueSubject(subjectEntity, user, doc);
-			doc.write(out);
-			out.flush();
-		} catch (IOException e) {
+			outputStream=response.getOutputStream();
+			inStream = new FileInputStream(file);// 文件的存放路径
+			 while ((len = inStream.read(b)) > 0){
+				 outputStream.write(b, 0, len);
+			 }
+			 outputStream.flush();
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			if (out != null) {
+			if(inStream!=null){
 				try {
-					out.close();
+					inStream.close();
 				} catch (IOException e) {
-
+					e.printStackTrace();
+				}
+			}
+			if(outputStream!=null){
+				try {
+					outputStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}
 		return null;
 	}
-	
 	/**
-	 * 
+	 * 前台导出报告
 	 * 
 	 * @return
 	 * @throws IOException
@@ -552,10 +626,7 @@ public class SubjectController extends BaseController {
 		try {
 			out = response.getWriter();
 			AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-			String path = request.getContextPath();
-			String basePath = request.getScheme() + "://"
-			+ request.getServerName() + ":" + request.getServerPort()
-			+ path+"/noteController/front/downloadNodeAttach.dht?id=";
+			String basePath = AppRequstUtiles.getAppUrl(request)+"/noteController/front/downloadNodeAttach.dht?id=";
 			SubjectMht  mht=subjectService.SubjectforMht(request.getParameter("id"),user);
 			SubjectToMht.subjectToMht(mht, request);
 			Map map=new HashMap<String, Object>();

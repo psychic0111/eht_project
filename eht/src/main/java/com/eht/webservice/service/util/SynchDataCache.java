@@ -1,6 +1,7 @@
-package com.eht.common.cache;
+package com.eht.webservice.service.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.eht.comment.entity.CommentEntity;
@@ -17,8 +18,9 @@ import com.eht.system.bean.ClientEntity;
 import com.eht.tag.entity.TagEntity;
 import com.eht.template.entity.TemplateEntity;
 import com.eht.user.entity.AccountEntity;
+import com.eht.webservice.bean.Step;
 
-public class DataCacheTool {
+public class SynchDataCache {
 	
 	private static Map<String, ClassName> classNameMap = new HashMap<String, ClassName>();
 	
@@ -26,6 +28,11 @@ public class DataCacheTool {
 	 * 同步数据类型与相应实体
 	 */
 	private static Map<String, Class<?>> dataClassMap = new HashMap<String, Class<?>>();
+	
+	/**
+	 * 同步顺序
+	 */
+	private static List<Step> stepList = null;
 	
 	/**
 	 * 客户端获取同步数据类型的顺序 -- 添加、修改
@@ -86,10 +93,18 @@ public class DataCacheTool {
 	}
 
 	public static void setDatasSort(String[] datasSort) {
-		DataCacheTool.datasSort = datasSort;
+		SynchDataCache.datasSort = datasSort;
 	}
 
 	public static void setDatasDeleteSort(String[] datasDeleteSort) {
-		DataCacheTool.datasDeleteSort = datasDeleteSort;
+		SynchDataCache.datasDeleteSort = datasDeleteSort;
+	}
+
+	public static List<Step> getStepList() {
+		return stepList;
+	}
+
+	public static void setStepList(List<Step> stepList) {
+		SynchDataCache.stepList = stepList;
 	}
 }

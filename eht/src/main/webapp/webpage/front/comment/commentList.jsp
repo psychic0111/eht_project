@@ -40,8 +40,9 @@
 <input type="hidden" name="noteId" id="noteId" value="${noteId}">
 <div style="margin-bottom: 1px;padding-right: 10px; ">
           <div style="margin-top:-4px;width:75%;" class="left">
-          	<textarea style="width:100%;height:50px" title="选择最近@的人或直接输入加空格" name="content" cols="" rows="" id="pinglun"></textarea>
-          </div>
+          	<textarea style="width:100%;height:50px"  name="content" cols="" rows="" id="pinglun"></textarea>
+          	选择最近@的人或直接输入加空格
+    	   </div>
           <div  class="right"  style="margin-top:-4px;">
           <input type="button" value="表情" id="face" class="Button4">
           <input type="button" value="评论" class="Button4" onclick="addComment()">

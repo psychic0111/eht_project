@@ -60,6 +60,14 @@ public interface DirectoryServiceI extends CommonService{
 	 */
 	public List<DirectoryEntity> findDirsBySubject(String subjectId);
 	
+	
+	/**
+	 * 查询专题下目录删除黑名单
+	 * @param subjectId
+	 * @return
+	 */
+	public List<DirectoryEntity> findDirsDelBlackSubject(String subjectId,String userId);
+	
 	/**
 	 * 查询专题下目录根据时间排序
 	 * @param subjectId

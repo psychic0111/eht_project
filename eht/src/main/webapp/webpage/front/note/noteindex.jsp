@@ -44,7 +44,7 @@
 				<input type="hidden" name="parentTag" id="note_parentTag" value="${parentTag }"/>
 				<input type="hidden" name="rootTag" id="note_rootTag" value="${rootTag }"/>
 				<input id="tagSelect" style="float:left;height:25px;width:66%" type="text" onclick="showTagTree()" readonly value="" class="InputTxt_tag"/>
-				<img alt="" src="${imgPath}/delete.png" style="cursor:pointer;float:left;margin-top:7px;" onclick='$("#tagSelect").val("");$("#note_tagId").val("");searchNotesclick();' width="20" height="20">
+				<img alt="" src="${imgPath}/delete.png" style="cursor:pointer;float:left;margin-top:7px;" onclick='$("#tagSelect").val("");$("#note_tagId").val("");searchNotesclick();' width="20" height="20" title="清空过滤标签">
 				<!-- <input id="tagQuery_btn" style="float:right;width:98px;" onclick="showTagTree()" class="Button5" type="button" value="标签过滤" name="tagQuery_btn"/> -->
 			</div>
 	        <div class="others" style="float:right;margin-top:5px;width:30%">
@@ -71,8 +71,9 @@
       <!-- End function--> 
       <!-- Begin notes_list-->
       <div style="position:relative;top:0;left:0;padding-top: 0px;">
-			<div id="pageloading_search" style="display:none"></div> 
+			<div id="pageloading_search" style="display:block"></div> 
       		<div class="notes_list" id="noteListIframe" style="width:93%;padding-left:10px;padding-top:10px;padding-right:5px;height:100%"></div>
+      		<script type="text/javascript">$("#pageloading_search").show();</script>
       </div>
       <!-- End notes_list--> 
     </div>
@@ -81,8 +82,9 @@
     <!-- Begin notes_new-->
     
     <div id="notes_new" class="notes_new" style="position:relative;top:0;left:0;padding-top: 0px;">
-		<div id="pageloading_edit" style="display:none"></div> 
+		<div id="pageloading_edit" style="display:block"></div> 
       	<jsp:include page="./notecontent.jsp"></jsp:include>
+      	<script type="text/javascript">$("#pageloading_edit").show();</script>
     </div>
     <!-- End notes_new-->
     <div class="clear"></div>

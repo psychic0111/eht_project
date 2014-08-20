@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -51,7 +52,7 @@ public class LogonController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/login.dht")
-	public ModelAndView account(HttpServletRequest request,HttpSession session) {
+	public ModelAndView account(HttpServletRequest request,HttpSession session,HttpServletResponse response) {
 		ModelMap mmp = new ModelMap();
 		ModelAndView mv = null;
 		
@@ -82,6 +83,12 @@ public class LogonController extends BaseController {
 				   opentype = request.getParameter("bind_opentype"),
 				   uid = u.getId();
 			saveGadUser(openid,openuser,opentype,uid);
+			String host = request.getServerName();
+			Cookie cookie = new Cookie("username", username);
+			cookie.setPath("/");  
+			cookie.setMaxAge(30*60);
+			cookie.setDomain(host); 
+			response.addCookie(cookie);
 			mv = new ModelAndView(new RedirectView("/indexController/front/index.dht", true));
 		}else{
 			mmp.put("message", "账号或密码错误！");
@@ -89,7 +96,6 @@ public class LogonController extends BaseController {
 			mmp.put("password", request.getParameter("password"));
 			mv = new ModelAndView("login");
 		}
-		
 		mv.addAllObjects(mmp); 
 		
 		return mv;
@@ -107,7 +113,6 @@ public class LogonController extends BaseController {
 		try {
 			msg = "注册成功！请查看邮件并激活账号！";
 			AccountEntity account = accountService.findUserByAccount(request.getParameter("username"));
-			
 			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
 			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 		  } catch (Exception e) {

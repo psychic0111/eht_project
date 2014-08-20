@@ -2,7 +2,10 @@ package com.eht.subject.service.impl;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -360,6 +363,22 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		return  this.commonDao.findListbySql(query, DirectoryEntity.class);
 	}
 
+	@Override
+	public List<DirectoryEntity> findDirsDelBlackSubject(String subjectId,String userId) {
+		String query="select d.* from eht_directory d where  d.subjectId='"+subjectId+"' and d.deleted="+Constants.DATA_NOT_DELETED+"  and d.id not in(select p.classpk from eht_group p , eht_group_user u where u.userid='"+userId +"' and  u.groupid=p.groupid )  order by d.createTime asc ";
+		List<DirectoryEntity> list=this.commonDao.findListbySql(query, DirectoryEntity.class);
+		Map <String, DirectoryEntity>map=new HashMap<String, DirectoryEntity>();
+		for (DirectoryEntity directoryEntity : list) {
+			map.put(directoryEntity.getId(), directoryEntity);
+		}
+		for (Iterator iterator = list.iterator(); iterator.hasNext();) {
+			DirectoryEntity directoryEntity = (DirectoryEntity) iterator.next();
+			if(!directoryEntity.getPId().equals(subjectId)&&map.get(directoryEntity.getPId())==null){
+				iterator.remove();
+			}
+		}
+		return list;
+	}
 	@Override
 	public void findUpDirs(String dirId,List<String> list) {
 		DirectoryEntity  directoryEntity=getEntity(DirectoryEntity.class, dirId);

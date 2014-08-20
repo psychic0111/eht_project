@@ -3,13 +3,9 @@ package com.eht.subject.service;
 import java.io.Serializable;
 import java.util.List;
 import java.util.zip.ZipOutputStream;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jeecgframework.core.common.service.CommonService;
-
-import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.entity.SubjectMht;
@@ -27,6 +23,13 @@ public interface SubjectServiceI extends CommonService{
 	 * @param subject
 	 */
 	public void updateSubject(SubjectEntity subject);
+	
+	/**
+	 * 更新专题
+	 * @param subject
+	 */
+	public void updateSubject(SubjectEntity subject,boolean delNoteTag);
+	
 	/**
 	 * 删除专题
 	 * @param id
@@ -125,11 +128,6 @@ public interface SubjectServiceI extends CommonService{
 	 */
 	public void updateInviteMemberRole(String []ids,String type)throws Exception;
 	
-	/**
-	 * 查看专题生成大纲
-	 * @return
-	 */
-    public void showCatalogueSubject(SubjectEntity SubjectEntity,AccountEntity user,XWPFDocument doc);
     
     /**
 	 * 为专题生成MHT做准备
@@ -148,7 +146,7 @@ public interface SubjectServiceI extends CommonService{
 	 * 导出专题生成ZIP
 	 * @return
 	 */
-    public void exportSuject(ZipOutputStream zos,String subjectId,HttpServletRequest request,AccountEntity user) throws Exception;
+    public void exportSuject(String subjectId,String path,String basePath,AccountEntity user,String ids[]) ;
     
     /**
 	 * 导入专题
@@ -161,5 +159,11 @@ public interface SubjectServiceI extends CommonService{
      * @param subject
      */
     public void markDelSubject(SubjectEntity subject);
+    
+    /**
+     * 专题树形结构
+     * @param subject
+     */
+    public String treeSubject(String subjectId,String userId);
     
 }

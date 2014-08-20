@@ -1,13 +1,5 @@
 package com.eht.common.util;
 
-import java.io.File;
-import java.util.Locale;
-import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
-
-import com.eht.subject.entity.SubjectEntity;
-
-import freemarker.template.Configuration;
-
 
 public class StringUtil {
 	/**

@@ -24,11 +24,8 @@ import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
-import org.apache.poi.xwpf.usermodel.TextAlignment;
+
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -39,6 +36,7 @@ import org.dom4j.io.XMLWriter;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
+import org.jeecgframework.core.util.JSONHelper;
 import org.jeecgframework.core.util.SendMailUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,7 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.ActionName;
 import com.eht.common.constant.Constants;
@@ -55,10 +52,16 @@ import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.AppContextUtils;
+import com.eht.common.util.AppRequstUtiles;
 import com.eht.common.util.FilePathUtil;
+import com.eht.common.util.FileToolkit;
+import com.eht.common.util.TreeUtils;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
+import com.eht.message.entity.MessageEntity;
+import com.eht.message.entity.MessageUserEntity;
+import com.eht.message.service.MessageServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.AttachmentServiceI;
@@ -74,9 +77,12 @@ import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.entity.SubjectMht;
+import com.eht.subject.entity.SujectSchedule;
+import com.eht.subject.entity.ZipEntity;
 import com.eht.subject.service.DirectoryServiceI;
 import com.eht.subject.service.InviteMememberServiceI;
 import com.eht.subject.service.SubjectServiceI;
+import com.eht.system.bean.TreeData;
 import com.eht.tag.entity.TagEntity;
 import com.eht.tag.service.TagServiceI;
 import com.eht.template.entity.TemplateEntity;
@@ -118,6 +124,9 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	@Autowired
 	private TemplateServiceI TemplateServiceI;
 
+	@Autowired
+	private  MessageServiceI MessageServiceI;
+	
 	@Override
 	
 	@RecordOperate(dataClass = DataType.SUBJECT, action = DataSynchAction.ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "createTime")
@@ -286,6 +295,16 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
+	public void updateSubject(SubjectEntity subject, boolean delNoteTag) {
+		updateSubject(subject);
+		if(delNoteTag){
+			super.executeHql("update NoteEntity set tagId = null where subjectId = ? ", new Object[]{subject.getId()});
+		}
+		
+	}
+
+	
+	@Override
 	@RecordOperate(dataClass = DataType.SUBJECT, action = DataSynchAction.DELETE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
 	public void markDelSubject(SubjectEntity subject) {
 		subject.setDeleted(Constants.DATA_DELETED);
@@ -438,10 +457,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 			HttpServletRequest request, SubjectEntity SubjectEntity)
 			throws Exception {
 		if (email != null) {
-			String path = request.getContextPath();
-			String basePath = request.getScheme() + "://"
-					+ request.getServerName() + ":" + request.getServerPort()
-					+ path;
+			String basePath = AppRequstUtiles.getAppUrl(request);
 			for (int i = 0; i < email.length; i++) {
 				InviteMememberEntity inviteMemember = new InviteMememberEntity();
 				inviteMemember.setEmail(email[i]);
@@ -519,10 +535,6 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 
 	}
 	
-	@Override
-	public void showCatalogueSubject(SubjectEntity SubjectEntity,AccountEntity user, XWPFDocument doc) {
-		
-	}
 	
 	//===============================================导出mht开始
 	public SubjectMht  SubjectforMht(String subjectid,AccountEntity user){
@@ -570,7 +582,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			List<NoteEntity> noteEntityList = new ArrayList<NoteEntity>();
 			for (NoteEntity noteEntity : noteEntitylist) {
 				if (directoryEntity.getId().equals(noteEntity.getDirId())) {
-					List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL,null);
+					List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL);
 					noteEntity.setAttachmentEntitylist(lists);
 					noteEntityList.add(noteEntity);
 				}
@@ -594,7 +606,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		List<NoteEntity> list=new ArrayList<NoteEntity>();
 		for (NoteEntity noteEntity : noteEntitylist) {
 			if (noteEntity.getDirId() == null|| noteEntity.getDirId().equals("")){
-				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL,null);
+				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL);
 				noteEntity.setAttachmentEntitylist(lists);
 				list.add(noteEntity);
 			}
@@ -670,7 +682,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 				sb.append("</tr>");
 				List<AttachmentEntity> lists = attachmentServiceI
 						.findAttachmentByNote(noteEntity.getId(),
-								Constants.FILE_TYPE_NORMAL,null);
+								Constants.FILE_TYPE_NORMAL);
 				if (lists.size() > 0) {
 					String pathContent = AppContextUtils.getContextPath();
 					sb.append("<tr><td>");
@@ -735,7 +747,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 				sb.append(noteEntity.getContent());
 				sb.append("</td>");
 				sb.append("</tr>");
-				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL,null);
+				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL);
 				if (lists.size() > 0) {
 					String pathContent = AppContextUtils.getContextPath();
 					sb.append("<tr><td>");
@@ -753,48 +765,98 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			}
 		}
 	}
-
+//=========================================================================页面展现报告结束
 	@Override
-	public void exportSuject(ZipOutputStream zos, String subjectId,
-			HttpServletRequest request, AccountEntity user) throws Exception {
-		SubjectEntity SubjectEntity = get(SubjectEntity.class, subjectId);
-		List<DirectoryEntity> directoryList = directoryService
-				.findDirsBySubject(SubjectEntity.getId(), user.getId());
-		List<NoteEntity> noteEntitylist = noteService.findNotesBySubject(
-				SubjectEntity.getId(), user.getId());
-		List<TagEntity> list = tagServiceI.findTagBySubject(subjectId);
-		StringBuffer sb = new StringBuffer("");
-		sb.append(SubjectEntity.getSubjectName() + "/");
-		String path = request.getSession().getServletContext().getRealPath("/");
-		Document document = DocumentHelper.createDocument();
-		document.setXMLEncoding("UTF-8");
+	public void exportSuject(String subjectId,String path,String basePath, AccountEntity user,String ids[])  {
+		String  message=null;
+		ZipOutputStream zos =null;
+		FileOutputStream f=null;
+		SubjectEntity SubjectEntity=null;
+		
+		String uuid=UUIDGenerator.uuid();
+		String zipPath=new StringBuffer(path).append("/zip/").append(uuid).append("/").append(uuid).append(".zip").toString();
+		Document document=createDocument();
 		Element root = createRootXml(document);
-		createSubjectXml(root, SubjectEntity);
-		List<DirectoryEntity> listk = createDirectoryXml(root, directoryList,
-				zos, path);
-		for (Iterator iterator = noteEntitylist.iterator(); iterator.hasNext();) {
-			NoteEntity noteEntity = (NoteEntity) iterator.next();
-			if (noteEntity.getDirId() != null
-					&& !noteEntity.getDirId().equals("")) {
-				boolean remove = true;
-				for (DirectoryEntity directoryEntity : listk) {
-					if (directoryEntity.getId().equals(noteEntity.getDirId())) {
-						remove = false;
-						break;
+		File file=new File(zipPath);
+		if (!file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();// 创建根目录
+		}
+		try {
+			f=new FileOutputStream(file);
+			zos = new ZipOutputStream(f);
+			SubjectEntity = get(SubjectEntity.class, subjectId);
+			List<DirectoryEntity> directoryList = directoryService.findDirsByIds(ids);
+			List<NoteEntity> noteEntitylist = noteService.findNotesBySubject(SubjectEntity.getId(), user.getId());
+			List<TagEntity> list = tagServiceI.findTagBySubject(subjectId);
+			createSubjectXml(root, SubjectEntity);
+			List<DirectoryEntity> listk = createDirectoryXml(root, directoryList,zos, path,user);
+			for (Iterator iterator = noteEntitylist.iterator(); iterator.hasNext();) {
+				NoteEntity noteEntity = (NoteEntity) iterator.next();
+				if (noteEntity.getDirId() != null&& !noteEntity.getDirId().equals("")) {
+					boolean remove = true;
+					for (DirectoryEntity directoryEntity : listk) {
+						if (directoryEntity.getId().equals(noteEntity.getDirId())) {
+							remove = false;
+							break;
+						}
+					}
+					if (remove) {
+						iterator.remove();
 					}
 				}
-				if (remove) {
-					iterator.remove();
+			}
+			createNoteXml(root, noteEntitylist, zos, path);
+			createTagXml(root, list);
+			createXml(document, zos);
+			ZipEntity z=new ZipEntity();
+			z.setId(uuid);
+			z.setPath(zipPath);
+			z.setCreateUser(user.getId());
+			save(z);
+			 message="<a  target='_blank' href='"
+					+ basePath
+					+ "/subjectController/front/downzip.dht?id="
+					+ uuid + "'>" + SubjectEntity.getSubjectName()
+					+ "下载</a>";
+		} catch (Exception e) {
+			SujectSchedule.remveSchedule(user.getId());
+			message=SubjectEntity.getSubjectName()+"下载失败";
+		}finally{
+			 if(zos!=null){
+				 try {
+					zos.flush();
+				} catch (IOException e) {
+				}
+			 }
+			if(zos!=null){
+				try {
+					zos.close();
+				} catch (IOException e) {
+				}
+			}
+			if(f!=null){
+				try {
+					f.close();
+				} catch (IOException e) {
 				}
 			}
 		}
-		createNoteXml(root, noteEntitylist, zos, path);
-		createTagXml(root, list);
-		createXml(document, zos);
+		MessageEntity  m=new MessageEntity();
+		 m.setContent( message);
+		 m.setCreateTime(new Date());
+		 m.setCreateUser(user.getId());
+		 m.setMsgType(Constants.MSG_USER_TYPE);
+		 m.setUserIsRead(Constants.NOT_READ_OBJECT);
+		 MessageServiceI.save(m);
+		 MessageUserEntity k=new MessageUserEntity();
+		 k.setIsRead(Constants.NOT_READ_OBJECT);
+		 k.setMessageId(m.getId());
+		 k.setUserId(user.getId());
+		 MessageServiceI.save(k);
+		 SujectSchedule.remveSchedule(user.getId());
 	}
-
-	private void createXml(Document document, ZipOutputStream zos)
-			throws IOException {
+	
+	private void createXml(Document document, ZipOutputStream zos)throws IOException {
 		OutputFormat opf;
 		StringWriter sw = new StringWriter();
 		XMLWriter xmlWriter = new XMLWriter(sw);
@@ -809,7 +871,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			zos.write(by, 0, by.length);
 			zos.flush();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IOException();
 		} finally {
 			if (is != null) {
 				try {
@@ -824,7 +886,13 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		}
 
 	}
-
+    
+	private Document createDocument() {
+		Document document = DocumentHelper.createDocument();
+		document.setXMLEncoding("UTF-8");
+		return document;
+	}
+	
 	private Element createRootXml(Document document) {
 		Element root = document.addElement("root");
 		return root;
@@ -838,9 +906,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		suject.addElement("id").addText(SubjectEntity.getId());
 	}
 
-	private List<DirectoryEntity> createDirectoryXml(Element root,
-			List<DirectoryEntity> directoryList, ZipOutputStream zos,
-			String cotextpath) {
+	private List<DirectoryEntity> createDirectoryXml(Element root,List<DirectoryEntity> directoryList, ZipOutputStream zos,String cotextpath,AccountEntity user) {
 		List<DirectoryEntity> listk = new ArrayList<DirectoryEntity>();
 		List<DirectoryEntity> rootDirectoryList = new ArrayList<DirectoryEntity>();
 		for (DirectoryEntity directoryEntity : directoryList) {
@@ -853,10 +919,10 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			if (directoryEntity.getDirName().equals(
 					Constants.SUBJECT_DOCUMENT_DIRNAME)) {
 				createDirectoryXml(root, directoryList, zos, cotextpath,
-						directoryEntity, true, listk);
+						directoryEntity, true, listk,user);
 			} else {
 				createDirectoryXml(root, directoryList, zos, cotextpath,
-						directoryEntity, false, listk);
+						directoryEntity, false, listk,user);
 			}
 		}
 		return listk;
@@ -865,7 +931,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 	private void createDirectoryXml(Element root,
 			List<DirectoryEntity> directoryList, ZipOutputStream zos,
 			String cotextpath, DirectoryEntity directoryEntity,
-			boolean iswendang, List<DirectoryEntity> listk) {
+			boolean iswendang, List<DirectoryEntity> listk,AccountEntity user) {
 		listk.add(directoryEntity);
 		Element directory = root.addElement("directory");
 		directory.addElement("dirName").addCDATA(directoryEntity.getDirName());
@@ -881,12 +947,14 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					.findAttachmentByDir(directoryEntity.getId());
 			createAttachmentXml(root, list, zos, cotextpath);
 		}
+		SujectSchedule.putSchedule(user.getId());
 		for (DirectoryEntity directorylist : directoryList) {
 			if (directorylist.getPId().equals(directoryEntity.getId())) {
 				createDirectoryXml(root, directoryList, zos, cotextpath,
-						directorylist, iswendang, listk);
+						directorylist, iswendang, listk,user);
 			}
 		}
+		
 	}
 
 	private void createTagXml(Element root, List<TagEntity> list) {
@@ -904,7 +972,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 	}
 
 	private void createNoteXml(Element root, List<NoteEntity> noteEntitylist,
-			ZipOutputStream zos, String cotextpath) {
+			ZipOutputStream zos, String cotextpath) throws IOException {
 		for (NoteEntity noteEntity : noteEntitylist) {
 			Element note = root.addElement("note");
 			note.addElement("id").addText(noteEntity.getId());
@@ -923,15 +991,12 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			String uuidFiename = UUIDGenerator.uuid() + ".txt";
 			note.addElement("filepath").addText(uuidFiename);
 			byte[] buf = noteEntity.getContent().getBytes();
-			try {
-				zos.putNextEntry(new ZipEntry(uuidFiename));
-				zos.write(buf);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			zos.putNextEntry(new ZipEntry(uuidFiename));
+			zos.write(buf);
+			zos.flush();
 			List<AttachmentEntity> list = attachmentServiceI
 					.findAttachmentByNote(noteEntity.getId(),
-							Constants.FILE_TYPE_NORMAL,null);
+							Constants.FILE_TYPE_NORMAL);
 			createAttachmentXml(root, list, zos, cotextpath);
 		}
 	}
@@ -939,10 +1004,9 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 	private void createAttachmentXml(Element root, List<AttachmentEntity> list,
 			ZipOutputStream zos, String cotextpath) {
 		for (AttachmentEntity attachmentEntity : list) {
-			String uuidFiename = UUIDGenerator.uuid() + "."
-					+ attachmentEntity.getSuffix();
+			String uuidFiename = UUIDGenerator.uuid() + ".zip";
 			String filePath = attachmentEntity.getFilePath() + "/"
-					+ attachmentEntity.getFileName();
+					+ attachmentEntity.getFileName().substring(0,attachmentEntity.getFileName().lastIndexOf("."))+".zip";
 			InputStream is = null;
 			try {
 				byte[] buf = new byte[1024];
@@ -965,7 +1029,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 				} else {
 					attachment.addElement("noteId").addText("");
 				}
-				attachment.addElement("md5").addText(attachmentEntity.getMd5());
+				//attachment.addElement("md5").addText(attachmentEntity.getMd5());
 				if (attachmentEntity.getDirectoryId() != null) {
 					attachment.addElement("directoryId").addText(
 							attachmentEntity.getDirectoryId());
@@ -986,7 +1050,8 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			}
 		}
 	}
-
+	
+//===================导出结束
 	@Override
 	public void leadinginSuject(HttpServletRequest request) throws Exception {
 		String uuid = UUIDGenerator.uuid();
@@ -1004,11 +1069,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
 		for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
 			MultipartFile mf = entity.getValue();// 获取上传文件对象
-			try {
-				FileCopyUtils.copy(mf.getBytes(), savefile);
-			} catch (IOException e) {
-				throw new IOException();
-			}
+			FileToolkit.copyFileFromStream(mf.getInputStream(), savefile, true);
 		}
 		ZipFile zipFile = null;
 		ZipEntry zipEntry = null;
@@ -1017,18 +1078,22 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			zipEntry = zipFile.getEntry("suject.xml");
 			if (zipEntry != null) {
 				InputStream inputStream = zipFile.getInputStream(zipEntry);
-				parserXml(inputStream, zipFile, userId, realPath);
+				parserXml(inputStream, zipFile, userId, realPath,request);
 			}
 			savefile.delete();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new Exception();
+		}finally{
+			if(zipFile!=null){
+				zipFile.close();
+			}
 		}
 
 	}
 
 	public void parserXml(InputStream inputStream, ZipFile zipFile,
-			String userId, String realPath) throws Exception {
+			String userId, String realPath,HttpServletRequest request) throws Exception {
 		SAXReader saxReader = new SAXReader();
 		try {
 			Document document = saxReader.read(inputStream);
@@ -1043,6 +1108,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			List<AttachmentEntity> attachmentList = readAttachmentXml(root,
 					userId, realPath, zipFile);
 			subjectEntity.setId(UUIDGenerator.uuid());
+			subjectEntity.setSubjectName(request.getParameter("subjectName"));
 			addSubject(subjectEntity);
 			for (DirectoryEntity directoryEntity : directoryList) {
 				directoryEntity.setSubjectId(subjectEntity.getId());
@@ -1079,6 +1145,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					if (tagEntity.getParentId() != null) {
 						if (tagEntity.getParentId().equals("")) {
 							tagEntity.setParentId(null);
+							tagServiceI.addTag(tagEntity);
 							continue;
 						}
 						for (TagEntity tag : tagList) {
@@ -1097,8 +1164,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 							for (DirectoryEntity directoryEntity : directoryList) {
 								if (directoryEntity.getOldId().equals(
 										noteEntity.getDirId())) {
-									noteEntity
-											.setDirId(directoryEntity.getId());
+									noteEntity.setDirId(directoryEntity.getId());
 								}
 							}
 						} else {
@@ -1120,6 +1186,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					}
 					noteEntity.setCreateUser(userId);
 					noteEntity.setCreateTime(new Date());
+					noteService.saveNoteHtml(noteEntity, request);
 					noteService.addNote(noteEntity);
 				}
 
@@ -1141,11 +1208,8 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					if (attachmentEntity.getDirectoryId() != null) {
 						if (!attachmentEntity.getDirectoryId().equals("")) {
 							for (DirectoryEntity directoryEntity : directoryList) {
-								if (directoryEntity.getOldId().equals(
-										attachmentEntity.getDirectoryId())) {
-									attachmentEntity
-											.setDirectoryId(directoryEntity
-													.getId());
+								if (directoryEntity.getOldId().equals(attachmentEntity.getDirectoryId())) {
+									attachmentEntity.setDirectoryId(directoryEntity.getId());
 								}
 							}
 						} else {
@@ -1284,7 +1348,6 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			String fileName = elementtag.element("fileName").getText();
 			String suffix = elementtag.element("suffix").getText();
 			String noteId = elementtag.element("noteId").getText();
-			String md5 = elementtag.element("md5").getText();
 			String directoryId = elementtag.element("directoryId").getText();
 			String filepath = elementtag.element("filepath").getText();
 			AttachmentEntity AttachmentEntity = new AttachmentEntity();
@@ -1295,7 +1358,6 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			AttachmentEntity.setFileName(fileName);
 			AttachmentEntity.setSuffix(suffix);
 			AttachmentEntity.setNoteId(noteId);
-			AttachmentEntity.setMd5(md5);
 			AttachmentEntity.setStatus(Constants.FILE_TRANS_COMPLETED);
 			AttachmentEntity.setDirectoryId(directoryId);
 			AttachmentEntity.setDeleted(Constants.DATA_NOT_DELETED);
@@ -1314,7 +1376,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			String realPathyuhao = FilePathUtil.getFileUploadPath(subjectId,
 					dirId, nodeId);
 			String filesavePath = realPathyuhao + "/"
-					+ AttachmentEntity.getFileName();
+					+ AttachmentEntity.getFileName().substring(0,AttachmentEntity.getFileName().lastIndexOf("."))+".zip";
 			File saveFile = new File(filesavePath);
 			if (!saveFile.getParentFile().exists()) {
 				saveFile.getParentFile().mkdirs();
@@ -1330,7 +1392,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					outputStream.write(b, 0, length);
 				}
 				outputStream.flush();
-				AttachmentEntity.setFilePath(filesavePath);
+				AttachmentEntity.setFilePath(realPathyuhao);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
@@ -1355,4 +1417,27 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 
 	}
 
+	@Override
+	public String treeSubject(String subjectId,String userId) {
+		SubjectEntity subjectEntity=getEntity(SubjectEntity.class, subjectId);
+		List<TreeData> listTreeData =new ArrayList<TreeData>();
+		TreeData treeData = new TreeData();
+		treeData.setName(subjectEntity.getSubjectName());
+		treeData.setId(subjectEntity.getId());
+		treeData.setpId("-1");
+		treeData.setOpen("true");
+		treeData.setChecked("true");
+		listTreeData.add(treeData);
+		List<DirectoryEntity> list=	directoryService.findDirsBySubjectOderByTime(subjectId,true);
+		for (DirectoryEntity directoryEntity : list) {
+			TreeData t = new TreeData();
+			t.setName(directoryEntity.getDirName());
+			t.setId(directoryEntity.getId());
+			t.setpId(directoryEntity.getPId());
+			t.setChecked("true");
+			listTreeData.add(t);
+		}
+		return JSONHelper.collection2json(listTreeData);
+	}
+ 
 }

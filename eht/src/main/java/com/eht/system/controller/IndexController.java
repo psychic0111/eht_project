@@ -1,5 +1,6 @@
 package com.eht.system.controller;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class IndexController extends BaseController {
 	 */
 	@RequestMapping(value = "/front/treeMenu.dht", produces = {"application/json;charset=UTF-8"})
 	public @ResponseBody String treeData(HttpServletRequest request) {
-		Object obj = request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		Object obj = request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE); 
 		if(obj != null){
 			AccountEntity user = (AccountEntity) obj;
 		
@@ -107,9 +108,9 @@ public class IndexController extends BaseController {
 			
 			//消息中心菜单部分
 			dataList.addAll(treeMenuService.buildMessageCenter(user.getId()));
+			System.out.println("+++++++++++++++end++++++++++++++++++++"+new Date());
 			return JSONHelper.collection2json(TreeUtils.buildTreeData(dataList));
-		}
-		
+		} 
 		return "";
 	}
 	
@@ -127,7 +128,13 @@ public class IndexController extends BaseController {
 		mv.addObject("primaryKey", primaryKey);
 		return mv;
 	}
-	
+	/**
+	 *	权限查询 
+	 * @param subjectId
+	 * @param noteId
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value = "/front/subjectPermission.dht", produces = {"application/json;charset=UTF-8"})
 	public @ResponseBody String subjectPermission(String subjectId,String noteId, HttpServletRequest request) {
 		AccountEntity user = accountService.getUser4Session();

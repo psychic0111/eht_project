@@ -90,6 +90,13 @@ public interface AttachmentServiceI extends CommonService{
 	 * @param noteId
 	 * @return
 	 */
+	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType);
+	
+	/**
+	 * 查询条目附件
+	 * @param noteId
+	 * @return
+	 */
 	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType,String searchType);
 	
 	/**
