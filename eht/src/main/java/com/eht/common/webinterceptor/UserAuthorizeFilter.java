@@ -16,7 +16,7 @@ public class UserAuthorizeFilter extends AbstractPreAuthenticatedProcessingFilte
 		Enumeration<String> enu = request.getHeaderNames();
 		while(enu.hasMoreElements()){
 			String name = enu.nextElement();
-			/*System.out.println(name + "=============" + request.getHeader(name));*/
+			System.out.println(name + "=============" + request.getHeader(name));
 		}
 		Object principal = request.getUserPrincipal() == null ? null : request.getUserPrincipal().getName();
 		if (logger.isDebugEnabled()) {

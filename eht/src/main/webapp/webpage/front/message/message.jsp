@@ -76,7 +76,7 @@ function findMsgNode(node){
 }
 
 $("#message_list font").each(function(index){
-	  var inputText = $(this).text();
+	  var inputText = $(this).html();
 	  $(this).html(AnalyticEmotion(inputText,context));
 	});
 

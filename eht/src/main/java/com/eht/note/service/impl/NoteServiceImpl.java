@@ -398,7 +398,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		save(noteHistory);
 	}
 	
-	public void saveNoteHistory(NoteEntity note, String createUserId){
+	public NoteVersionEntity saveNoteHistory(NoteEntity note, String createUserId){
 		NoteVersionEntity noteHistory = new NoteVersionEntity();
 		noteHistory.setContent(note.getContent());
 		noteHistory.setCreatetime(new Date());
@@ -407,6 +407,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		Object obj = super.singleResult("select CASE when max(version) is null THEN 0 else max(version) end from NoteVersionEntity where noteid='"+ note.getId() +"'");
 		noteHistory.setVersion(Integer.parseInt(obj.toString()) + 1);
 		saveNoteHistory(noteHistory);
+		return noteHistory;
 	}
 	
 	@Override
@@ -540,12 +541,14 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			savefile.mkdirs();
 		}
 		savefile = new File(savePath + note.getId() + ".html");
-		String pcontet=HtmlParser.repleceHtmlImg(note.getContent(), "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
-		FileCopyUtils.copy(pcontet.getBytes(), savefile); 
+		String pcontet=HtmlParser.repleceHtmlImg(note.getContent(), "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/", "");
+		FileCopyUtils.copy(pcontet.getBytes("UTF-8"), savefile);
 	}
 	
 	@Override
-	public String generateContentMD5(NoteEntity note){
+	public String generateMD5Html(NoteEntity note, boolean update){
+		NoteThread thread = new NoteThread(note, update);
+		thread.start();
 		return null;
 	}
 	

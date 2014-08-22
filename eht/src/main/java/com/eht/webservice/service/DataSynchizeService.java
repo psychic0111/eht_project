@@ -1,6 +1,7 @@
 package com.eht.webservice.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -530,5 +531,33 @@ public interface DataSynchizeService {
 	 * @return
 	 */
 	public String deleteBatchData(String data, String action, HttpServletResponse res);
+
+	/**
+	 * 添加条目，生成HTML
+	 * @param data
+	 * @param ins
+	 * @param action
+	 * @param request
+	 * @param res
+	 * @return
+	 * @throws IOException
+	 */
+	public String addNoteHtml(String data, InputStream ins, String action,
+			HttpServletRequest request, HttpServletResponse res)
+			throws IOException;
 	
+	/**
+	 * 更新条目HTML
+	 * @param data
+	 * @param ins
+	 * @param action
+	 * @param request
+	 * @param res
+	 * @return
+	 * @throws IOException
+	 */
+	public String updateNoteHtml(String data, InputStream ins, long timeStamp,
+			boolean updateContent, String action, HttpServletRequest request,
+			HttpServletResponse res) throws IOException;
+
 }

@@ -235,12 +235,30 @@ public class HtmlParser {
 		}
 	}
 
-	static public String repleceHtmlImg(String content, String replece) {
+	static public String repleceHtmlImg(String content, String replace, String replaceTo) {
 		Document doc = Jsoup.parseBodyFragment(content);
 		Elements imgs = doc.select("img");
 		for (int i = 0; i < imgs.size(); i++) {
 			String url = imgs.get(i).attr("src");
-			url = url.replaceAll(replece, "");
+			url = url.replaceAll(replace, replaceTo);
+			imgs.get(i).attr("src", url);
+		}
+		return doc.html();
+	}
+	
+	/**
+	 * 把html文件中的img路径替换成编辑器中可显示路径
+	 * @param content
+	 * @param replace
+	 * @param replaceTo
+	 * @return
+	 */
+	static public String replaceHtmlImg(String content, String replace) {
+		Document doc = Jsoup.parseBodyFragment(content);
+		Elements imgs = doc.select("img");
+		for (int i = 0; i < imgs.size(); i++) {
+			String url = imgs.get(i).attr("src");
+			url = replace + url;
 			imgs.get(i).attr("src", url);
 		}
 		return doc.html();

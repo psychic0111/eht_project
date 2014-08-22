@@ -206,9 +206,9 @@ public interface NoteServiceI extends CommonService{
 	/**
 	 * 保存条目历史版本
 	 * @param note
-	 * @return
+	 * @return 历史版本对象
 	 */
-	public void saveNoteHistory(NoteEntity note, String createUserId);
+	public NoteVersionEntity saveNoteHistory(NoteEntity note, String createUserId);
 	
 	/**
 	 * 查询标记删除的条目
@@ -268,5 +268,5 @@ public interface NoteServiceI extends CommonService{
 	 * @param note
 	 * @return
 	 */
-	public String generateContentMD5(NoteEntity note);
+	public String generateMD5Html(NoteEntity note, boolean update);
 }

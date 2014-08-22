@@ -27,6 +27,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
+import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.apache.log4j.Logger;
 import org.htmlparser.util.ParserException;
 import org.jeecgframework.core.util.JSONHelper;
@@ -54,6 +55,7 @@ import com.eht.log.entity.SynchLogEntity;
 import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
+import com.eht.note.entity.NoteVersionEntity;
 import com.eht.note.service.AttachmentServiceI;
 import com.eht.note.service.NoteServiceI;
 import com.eht.role.entity.Role;
@@ -1152,19 +1154,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		logger.info("添加条目信息 :" + data);
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
-			AccountEntity user = accountService.getUser4Session();
-			if(!StringUtil.isEmpty(note.getContent())){
-				note.setMd5(MD5FileUtil.getMD5String(note.getContent()));
-			}
-			note.setCreateUser(user.getId());
-			note.setDeleted(Constants.DATA_NOT_DELETED);
-			noteService.addNote(note);
-			
-			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
-			
-			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
-			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+			return addNote(note, res);
 		}else{
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
@@ -1176,43 +1166,92 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		return JsonUtil.bean2json(bean);
 	}
 	
-	public String uploadNoteHtml(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException {
-		logger.info("上传条目HTML数据 :" + data);
+	private String addNote(NoteEntity note, HttpServletResponse res) {
 		AccountEntity user = accountService.getUser4Session();
-		InputStream ins = null;
-		OutputStream ous = null;
-		NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
-		// 条目HTML存放路径
-		String savePath = FilePathUtil.getNoteHtmlPath(note);
-		String htmlFileName = savePath + note.getId() + ".zip";
+		if(!StringUtil.isEmpty(note.getContent())){
+			note.setMd5(MD5FileUtil.getMD5String(note.getContent()));
+		}
+		note.setCreateUser(user.getId());
+		note.setDeleted(Constants.DATA_NOT_DELETED);
+		noteService.addNote(note);
 		
-		File folder = new File(savePath);
-		if (!folder.exists()) {
-			folder.mkdirs();
-		}
-		File file = new File(htmlFileName + ".tmp");
-		try {
-			ins = request.getInputStream();
-			ous = new FileOutputStream(file);
-			int n = 0;
-			int buffer = 1024;
-			byte[] bytes = new byte[buffer];
-			while ((n = ins.read(bytes)) != -1) {
-				ous.write(bytes, 0, n);
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+		res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
+	}
+	
+	@Override
+	@POST
+	@Path("/send/notehtml/a")
+	public String addNoteHtml(@Multipart("data") String data,@Multipart("noteFile") InputStream ins, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException {
+		logger.info("上传条目HTML数据 :" + data);
+		if(action == null || !action.equals(DataSynchAction.FINISH.toString())){
+			OutputStream ous = null;
+			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+			// 条目HTML存放路径
+			String savePath = FilePathUtil.getNoteHtmlPath(note);
+			String htmlFileName = savePath + note.getId();
+			
+			File folder = new File(savePath);
+			if (!folder.exists()) {
+				folder.mkdirs();
 			}
-
-		} catch (Exception e) {
-			ResponseStatus rs = new ResponseStatus(ResponseCode.SERVER_ERROR);
-			e.printStackTrace();
-			return rs.toString();
-		} finally {
-			ous.flush();
-			ous.close();
-			ins.close();
-			File html = new File(htmlFileName);
-			file.renameTo(html);
+			File file = new File(htmlFileName + ".zip" + ".tmp");
+			File html = new File(htmlFileName + ".zip");
+			if(html.exists()){
+				boolean deleted = html.delete();
+				if(!deleted){
+					htmlFileName = htmlFileName + "副本";
+					html = new File(htmlFileName + ".zip");
+				}
+			}
+			try {
+				//ins = request.getInputStream();
+				ous = new FileOutputStream(file);
+				int n = 0;
+				int buffer = ins.available();
+				byte[] bytes = new byte[buffer];
+				while ((n = ins.read(bytes)) != -1) {
+					ous.write(bytes, 0, n);
+				}
+				ous.flush();
+				ous.close();
+				file.renameTo(html);
+				String content = DataSynchizeUtil.unZipNoteHtml(html, html.getParent());
+				content = HtmlParser.replaceHtmlImg(content, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
+				note.setContent(content);
+				String result = addNote(note, res);
+				
+				return result;
+			} catch (Exception e) {
+				ResponseStatus rs = new ResponseStatus(ResponseCode.SERVER_ERROR);
+				e.printStackTrace();
+				return rs.toString();
+			} finally {
+				ous.flush();
+				ous.close();
+				ins.close();
+				if(file.exists()){
+					file.delete();
+				}
+				if(html.exists()){
+					html.delete();
+				}
+			}
+		}else{
+			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+			
+			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+			
+			DataBean bean = new DataBean("", "");
+			return JsonUtil.bean2json(bean);
 		}
-		return "";
 	}
 	
 	@Override
@@ -1220,28 +1259,76 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/send/note/u/{timeStamp}")
 	public String updateNote(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @DefaultValue("true") @QueryParam("updateContent") boolean updateContent, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
 		logger.info("更新条目基本信息 : " + data);
-		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
-			NoteEntity n = noteService.getNote(note.getId());
-			AccountEntity user = accountService.getUser4Session();
-			SynchLogEntity log = synchLogService.findLogByData(user.getClientId(), user.getId(), timeStamp, SynchConstants.DATA_CLASS_NOTE, note.getId());
-			if (n != null && (n.getDeleted() == Constants.DATA_NOT_DELETED || n.getDeleted() == Constants.DATA_NOTSEARCH)){
-				//服务器上不存在该数据其它操作日志，或者有修改操作日志并且操作早于此次操作，才更新数据库数据
-				if(log == null || (log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() < note.getUpdateTimeStamp())){
-					note.setUpdateUser(user.getId());
-					note.setUpdateUserId(user.getId());
-					note.setDeleted(Constants.DATA_NOT_DELETED);
-					ReflectionUtils.copyBeanProperties(note, n);
-					noteService.updateNote(n, updateContent);
-					
-					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
-					
-					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
-					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
-				}
+			return updateNote(note, timeStamp, updateContent, res);
+		}else{
+			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+			
+			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+		}
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
+	}
+	
+	private String updateNote(NoteEntity note, long timeStamp, boolean updateContent, HttpServletResponse res) throws Exception {
+		ResponseStatus rs = new ResponseStatus();
+		NoteEntity n = noteService.getNote(note.getId());
+		AccountEntity user = accountService.getUser4Session();
+		SynchLogEntity log = synchLogService.findLogByData(user.getClientId(), user.getId(), timeStamp, SynchConstants.DATA_CLASS_NOTE, note.getId());
+		if (n != null && (n.getDeleted() == Constants.DATA_NOT_DELETED || n.getDeleted() == Constants.DATA_NOTSEARCH)){
+			//服务器上不存在该数据其它操作日志，或者有修改操作日志并且操作早于此次操作，才更新数据库数据
+			if(log == null || (log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() < note.getUpdateTimeStamp())){
+				note.setUpdateUser(user.getId());
+				note.setUpdateUserId(user.getId());
+				note.setDeleted(Constants.DATA_NOT_DELETED);
+				ReflectionUtils.copyBeanProperties(note, n);
+				noteService.updateNote(n, updateContent);
+				
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+			}
+		}else{
+			rs.setResponse(ResponseCode.DELETE);
+			
+			//header中添加控制位
+			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
+			
+			res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
+			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+			
+			String timestamp = "";
+			String id = "";
+			String updateUser = "";
+			if(n != null && n.getDeleted() == Constants.DATA_DELETED){
+				timestamp = n.getUpdateTimeStamp() + "";
+				id = n.getId();
+				updateUser = n.getUpdateUser();
 			}else{
+				timestamp = log.getOperateTime() + "";
+				id = log.getClassPK();
+				updateUser = log.getOperateUser();
+			}
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("id", id);
+			map.put("className", DataType.NOTE.toString());
+			map.put("operation", DataSynchAction.DELETE.toString());
+			map.put("updateUserId", updateUser);
+			map.put("updateTimeStamp", timestamp);
+			
+			String dataStr = JsonUtil.map2json(map);
+			DataBean bean = new DataBean("", dataStr);
+			return JsonUtil.bean2json(bean);
+		}
+
+		if(log != null){
+			if(log.getAction().equals(SynchConstants.DATA_OPERATE_DELETE)){
 				rs.setResponse(ResponseCode.DELETE);
 				
 				//header中添加控制位
@@ -1251,67 +1338,103 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 				
-				String timestamp = "";
-				String id = "";
-				String updateUser = "";
-				if(n != null && n.getDeleted() == Constants.DATA_DELETED){
-					timestamp = n.getUpdateTimeStamp() + "";
-					id = n.getId();
-					updateUser = n.getUpdateUser();
-				}else{
-					timestamp = log.getOperateTime() + "";
-					id = log.getClassPK();
-					updateUser = log.getOperateUser();
-				}
-				Map<String, Object> map = new HashMap<String, Object>();
-				map.put("id", id);
-				map.put("className", DataType.NOTE.toString());
-				map.put("operation", DataSynchAction.DELETE.toString());
-				map.put("updateUserId", updateUser);
-				map.put("updateTimeStamp", timestamp);
-				
+				Map<String, Object> map = DataSynchizeUtil.parseDeleteLog(log);
 				String dataStr = JsonUtil.map2json(map);
 				DataBean bean = new DataBean("", dataStr);
 				return JsonUtil.bean2json(bean);
+			}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() >= note.getUpdateTimeStamp()){
+				rs.setResponse(ResponseCode.UPDATE);
+				rs.setData(log.getId());
+				
+				//header中添加控制位
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_UPDATE);
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+				
+				NoteVersionEntity noteHistory = noteService.saveNoteHistory(note, user.getId());   //保存为历史版本
+				note.setVersion(noteHistory.getVersion());
+				String dataStr = JsonUtil.bean2json(note);
+				DataBean bean = new DataBean("", dataStr);
+				return JsonUtil.bean2json(bean);
+			}else {
+				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
+				
+				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 			}
+		}
+		
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
+	}
 	
-			if(log != null){
-				if(log.getAction().equals(SynchConstants.DATA_OPERATE_DELETE)){
-					rs.setResponse(ResponseCode.DELETE);
-					
-					//header中添加控制位
-					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
-					
-					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_DELETE);
-					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
-					
-					Map<String, Object> map = DataSynchizeUtil.parseDeleteLog(log);
-					String dataStr = JsonUtil.map2json(map);
-					DataBean bean = new DataBean("", dataStr);
-					return JsonUtil.bean2json(bean);
-				}else if(log.getAction().equals(SynchConstants.DATA_OPERATE_UPDATE) && log.getOperateTime() >= note.getUpdateTimeStamp()){
-					rs.setResponse(ResponseCode.UPDATE);
-					rs.setData(log.getId());
-					
-					//header中添加控制位
-					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
-					
-					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_UPDATE);
-					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
-					
-					noteService.saveNoteHistory(note, user.getId());   //保存为历史版本
-					
-					String dataStr = JsonUtil.bean2json(note);
-					DataBean bean = new DataBean("", dataStr);
-					return JsonUtil.bean2json(bean);
-				}else {
-					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
-					
-					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
-					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
+	@Override
+	@POST
+	@Path("/send/notehtml/u")
+	public String updateNoteHtml(@Multipart("data") String data, @Multipart("noteFile") InputStream ins, @PathParam("timeStamp") long timeStamp, @DefaultValue("true") @QueryParam("updateContent") boolean updateContent, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException {
+		logger.info("上传条目HTML数据 :" + data);
+		String result = null;
+		if(action == null || !action.equals(DataSynchAction.FINISH.toString())){
+			AccountEntity user = accountService.getUser4Session();
+			OutputStream ous = null;
+			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+			// 条目HTML存放路径
+			String savePath = FilePathUtil.getNoteHtmlPath(note);
+			String htmlFileName = savePath + note.getId();
+			
+			File folder = new File(savePath);
+			if (!folder.exists()) {
+				folder.mkdirs();
+			}
+			File file = new File(htmlFileName + ".zip" + ".tmp");
+			File html = new File(htmlFileName + ".zip");
+			if(html.exists()){
+				boolean deleted = html.delete();
+				if(!deleted){
+					htmlFileName = htmlFileName + "副本";
+					html = new File(htmlFileName + ".zip");
+				}
+			}
+			try {
+				//ins = request.getInputStream();
+				ous = new FileOutputStream(file);
+				int n = 0;
+				int buffer = 1024;
+				byte[] bytes = new byte[buffer];
+				while ((n = ins.read(bytes)) != -1) {
+					ous.write(bytes, 0, n);
+				}
+				NoteEntity oldNote = noteService.getNote(note.getId());
+				if(oldNote != null){
+					if(oldNote.getUpdateTimeStamp() < note.getUpdateTimeStamp()){
+						file.renameTo(html);
+						String content = DataSynchizeUtil.unZipNoteHtml(html, html.getParent());
+						content = HtmlParser.replaceHtmlImg(content, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
+						note.setContent(content);
+						result = updateNote(note, timeStamp, true, res);
+					}else{
+						result = updateNote(note, timeStamp, true, res);
+						// 服务器上的条目较新, 此次上传条目内容存为历史版本
+						html = new File(htmlFileName + "_" + note.getVersion() + ".zip");
+						file.renameTo(html);
+					}
+				}
+			} catch (Exception e) {
+				ResponseStatus rs = new ResponseStatus(ResponseCode.SERVER_ERROR);
+				e.printStackTrace();
+				return rs.toString();
+			} finally {
+				ous.flush();
+				ous.close();
+				ins.close();
+				if(file.exists()){
+					file.delete();
+				}
+				if(html.exists()){
+					html.delete();
 				}
 			}
 		}else{
@@ -1321,11 +1444,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 		}
-		
-		DataBean bean = new DataBean("", "");
-		return JsonUtil.bean2json(bean);
+		if(result != null){
+			return result;
+		}else{
+			DataBean bean = new DataBean("", "");
+			return JsonUtil.bean2json(bean);
+		}
 	}
-
+	
 	@Override
 	@POST
 	@Path("/send/note_/u/{id}")

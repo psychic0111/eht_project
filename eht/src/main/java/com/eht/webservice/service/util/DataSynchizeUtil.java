@@ -1,12 +1,17 @@
 package com.eht.webservice.service.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -260,5 +265,114 @@ public class DataSynchizeUtil {
 			stepList.add(step);
 		}
 		SynchDataCache.setStepList(stepList);
+	}
+	
+	/**
+	 * 解压条目压缩包
+	 * @param zipFile
+	 * @param dstFolder
+	 * @throws IOException
+	 */
+	public static String unZipNoteHtml(File zipFile, String dstFolder) throws IOException{
+		ZipInputStream zins = new ZipInputStream(new FileInputStream(zipFile));
+		ZipEntry entry = null;
+		StringBuilder sb = new StringBuilder();
+		while((entry = zins.getNextEntry()) != null){
+			String name = entry.getName();
+			if(entry.isDirectory()){
+				name = name.substring(0, name.length() - 1);
+				File folder = new File(dstFolder, name);
+				if(!folder.exists()){
+					folder.mkdirs();
+				}
+			}else{
+				File file = new File(dstFolder + File.separator + name);
+				if(!file.exists()){
+					file.createNewFile();
+				}
+				
+				FileOutputStream fos = new FileOutputStream(file);
+				int len = 0;
+				byte[] buffer = new byte[1024];
+				while((len = zins.read(buffer)) != -1){
+					fos.write(buffer, 0, len);
+					if(name.endsWith(".html")){
+						sb.append(new String(buffer, "UTF-8"));
+					}
+					fos.flush();
+				}
+				fos.close();
+			}
+			
+		}
+		zins.close();
+		return sb.toString();
+	}
+	
+	/**
+	 * 压缩条目文件
+	 * @param zipFile
+	 * @param dstFolder
+	 * @throws IOException
+	 */
+	public static void zipNoteHtml(File zipFile, String srcFile) throws IOException{
+		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
+		File htmlFile = new File(srcFile);
+		
+		ZipEntry entry = new ZipEntry(htmlFile.getName());
+		FileInputStream fis = new FileInputStream(htmlFile);
+		zos.putNextEntry(entry);
+		if(htmlFile.isFile()){
+			int len = 0;
+			byte[] buffer = new byte[1024];
+			while((len = fis.read(buffer)) != -1){
+				zos.write(buffer, 0, len);
+			}
+			zos.closeEntry();
+		}
+		
+		// 压缩files文件夹
+		File folder = new File(htmlFile.getParent(), "files");
+		zipNoteFolder(zos, folder);
+		zos.finish();
+		zos.close();
+	}
+	
+	private static void zipNoteFolder(ZipOutputStream zos, File folder) throws IOException{
+		File[] files = folder.listFiles();
+		if(files.length <= 0){
+			ZipEntry entry = new ZipEntry(folder.getName());
+			zos.putNextEntry(entry);
+			zos.closeEntry();
+		}
+		
+		for(File file : files){
+			if(file.isFile()){
+				ZipEntry entry = new ZipEntry(file.getName());
+				FileInputStream fis = new FileInputStream(file);
+				zos.putNextEntry(entry);
+				int len = 0;
+				byte[] buffer = new byte[1024];
+				while((len = fis.read(buffer)) != -1){
+					zos.write(buffer, 0, len);
+				}
+				zos.closeEntry();
+			}else{
+				zipNoteFolder(zos, file);
+			}
+		}
+		
+	}
+	
+	public static void main(String[] args){
+		File file = new File("E:\\webroot\\wtpwebapps\\eht\\notes\\621c09c19f4c4f45a1b2ffbc12702874\\dbd23cff97e944c894388a6eba71a306\\dbd23cff97e944c894388a6eba71a306.zip");
+		System.out.println(file.exists());
+		System.out.println(file.canRead());
+		try {
+			unZipNoteHtml(file, "e:\\");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

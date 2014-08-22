@@ -1186,7 +1186,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					}
 					noteEntity.setCreateUser(userId);
 					noteEntity.setCreateTime(new Date());
-					noteService.saveNoteHtml(noteEntity, request);
+					noteService.saveNoteHtml(noteEntity);
 					noteService.addNote(noteEntity);
 				}
 
