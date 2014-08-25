@@ -36,6 +36,7 @@ import com.eht.log.entity.SynchronizedLogEntity;
 import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.service.AttachmentServiceI;
+import com.eht.resource.service.ResourcePermissionService;
 import com.eht.webservice.bean.Step;
 
 public class DataSynchizeUtil {
@@ -123,7 +124,6 @@ public class DataSynchizeUtil {
 	public static String queryUploadFile(String userId, AttachmentServiceI attachmentService, HttpServletResponse res){
 		//查询要上传的文件
 		List<AttachmentEntity> list = attachmentService.findNeedUploadAttachmentByUser(userId, Constants.FILE_TYPE_NORMAL);
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		if(list != null && !list.isEmpty()){
 			res.setHeader(SynchConstants.HEADER_NEXT_ACTION, DataSynchAction.UPLOAD.toString());
 			res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.FILE.toString());
@@ -315,9 +315,8 @@ public class DataSynchizeUtil {
 	 * @param dstFolder
 	 * @throws IOException
 	 */
-	public static void zipNoteHtml(File zipFile, String srcFile) throws IOException{
+	public static void zipNoteHtml(File zipFile, File htmlFile) throws IOException{
 		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile));
-		File htmlFile = new File(srcFile);
 		
 		ZipEntry entry = new ZipEntry(htmlFile.getName());
 		FileInputStream fis = new FileInputStream(htmlFile);
@@ -362,6 +361,16 @@ public class DataSynchizeUtil {
 			}
 		}
 		
+	}
+	
+	public static boolean hasPermission(String userId, String subjectId, String actionName){
+		ResourcePermissionService resourcePermissionService = AppContextUtils.getBean("resourcePermissionService");
+		Map<String, String> map = resourcePermissionService.findSubjectPermissionsByUser(userId, subjectId);
+		if(map.get(actionName).equals("true")){
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	public static void main(String[] args){

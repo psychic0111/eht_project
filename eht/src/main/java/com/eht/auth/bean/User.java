@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.eht.common.constant.Constants;
 import com.eht.common.constant.RoleName;
 import com.eht.user.entity.AccountEntity;
 
@@ -49,7 +50,7 @@ public class User implements UserDetails{
 
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return ((AccountEntity)this).getStatus() == Constants.ENABLED ? true : false;
 	}
 
 }

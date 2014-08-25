@@ -84,7 +84,13 @@
 		<property name="authenticationManager" ref="oauth2AuthenticationManager" />
 		<property name="userAuthService" ref="oauth2ClientDetailsUserService" />
 	</bean>
-
+	
+	<bean id="lastAuthFilter"
+		class="com.eht.common.webinterceptor.UserAuthorizeFilter">
+		<property name="authenticationManager" ref="oauth2AuthenticationManager" />
+		<property name="userAuthService" ref="oauth2ClientDetailsUserService" />
+	</bean>
+	
 	<bean id="clientPasswordTokenEndpointFilter"
 		class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
 		<property name="authenticationManager" ref="oauth2AuthenticationManager" />
@@ -139,7 +145,7 @@
 			username-parameter="userName"/>
 		<sec:remember-me services-ref="rememberMeServices" key="eht_token" />
 		<!-- <sec:custom-filter ref="rememberMeFilter" after="REMEMBER_ME_FILTER"/>-->
-		<sec:custom-filter ref="preAuthFilter" position="PRE_AUTH_FILTER"/>
+		<sec:custom-filter ref="preAuthFilter" position="LAST"/>
 	</sec:http>
 
 </beans>

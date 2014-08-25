@@ -53,6 +53,11 @@ public class FilePathUtil {
 		return sb.toString();
 	}
 	
+	/**
+	 * 条目HTML存储路径, 以/结尾
+	 * @param note
+	 * @return
+	 */
 	public static String getNoteHtmlPath(NoteEntity note){
 		StringBuffer savePath=new StringBuffer(webRootPath);
 		savePath.append("notes").append(File.separator);
@@ -61,6 +66,22 @@ public class FilePathUtil {
 		savePath.append(note.getId());
 		savePath.append(File.separator);
 		return savePath.toString();
+	}
+	
+	/**
+	 * 条目HTML打包名称,如果是历史版本, 需要传版本号
+	 * @param noteId
+	 * @param version
+	 * @return
+	 */
+	public static String getNoteZipFileName(String noteId, Integer version){
+		StringBuilder fileName = new StringBuilder(noteId);
+		if(version != null && version.intValue() > 0){
+			fileName.append("_").append(version).append(".zip");
+		}else{
+			fileName.append(".zip");
+		}
+		return fileName.toString();
 	}
 	
 	/**

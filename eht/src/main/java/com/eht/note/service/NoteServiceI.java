@@ -193,8 +193,9 @@ public interface NoteServiceI extends CommonService{
 	 * @param nodeId
 	 * @param userid
 	 * @return
+	 * @throws IOException 
 	 */
-	public String shapeNote(String nodeId,String  userid);
+	public String shapeNote(String nodeId,String  userid) throws IOException;
 	
 	/**
 	 * 保存条目历史版本

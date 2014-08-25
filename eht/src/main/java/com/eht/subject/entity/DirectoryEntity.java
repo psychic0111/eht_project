@@ -79,6 +79,10 @@ public class DirectoryEntity implements java.io.Serializable {
 	/**目录名称生成mht用*/
 	private java.lang.String dirNameTitle;
 	
+	private String operation;
+	
+	private String className;
+	
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -360,6 +364,24 @@ public class DirectoryEntity implements java.io.Serializable {
 
 	public void setDirNameTitle(java.lang.String dirNameTitle) {
 		this.dirNameTitle = dirNameTitle;
+	}
+
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+	
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 	
 	

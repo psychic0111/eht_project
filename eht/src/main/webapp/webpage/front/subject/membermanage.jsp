@@ -115,7 +115,7 @@
                   </c:when>
                   <c:when test="${user.role.roleName ne 'ADMIN' && user.role.roleName ne 'OWNER'}">
                   </c:when>
-                  <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.id}" /></c:otherwise>
+                  <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.userId}" /></c:otherwise>
                   </c:choose>
                   </td>
                   <td align="center">${roleUser.accountEntity.username}</td>

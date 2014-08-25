@@ -67,7 +67,7 @@
 	                </tr>
 	                <tr>
 	                  <td>&nbsp;</td>
-	                  <td><a href="${webpagePath}/register.jsp" class="link1b">立即注册e划通帐户</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${webpagePath}/user/retrievepassword.jsp" class="link1b">忘记密码？</a></td>
+	                  <td><a href="${webpagePath}/register.jsp" class="link1b">立即注册e划通账户</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${webpagePath}/user/retrievepassword.jsp" class="link1b">忘记密码？</a></td>
 	                </tr>
 	              </table>
               </form>

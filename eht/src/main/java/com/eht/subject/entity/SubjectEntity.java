@@ -83,6 +83,10 @@ public class SubjectEntity extends BaseSubjectModel implements java.io.Serializa
 	/**专题名称生成mht用*/
 	private java.lang.String subjectNameTitle;
 	
+	private String operation;
+	
+	private String className;
+	
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -377,6 +381,24 @@ public class SubjectEntity extends BaseSubjectModel implements java.io.Serializa
 
 	public void setSubjectNameTitle(java.lang.String subjectNameTitle) {
 		this.subjectNameTitle = subjectNameTitle;
+	}
+
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 	
 }

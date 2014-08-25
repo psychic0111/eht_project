@@ -51,6 +51,7 @@ import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.DirectoryServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
+import com.eht.webservice.service.util.DataSynchizeUtil;
 
 @Service("noteService")
 @Transactional
@@ -384,13 +385,35 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public String shapeNote(String nodeId, String userid) {
-		NoteVersionEntity noteVersionEntity = getEntity(NoteVersionEntity.class, nodeId);
+	public String shapeNote(String noteId, String userid) throws IOException {
+		NoteVersionEntity noteVersionEntity = getEntity(NoteVersionEntity.class, noteId);
+		// 历史版本的ZIP包
+		String versionZipName = FilePathUtil.getNoteZipFileName(noteId, noteVersionEntity.getVersion());
+		File versionZipFile = new File(versionZipName);
+		
 		NoteEntity noteEntity = getNote(noteVersionEntity.getNoteid());
+		// 当前条目保存为历史版本
+		NoteVersionEntity newVersion = saveNoteHistory(noteEntity, userid);
+		
+		// 从历史版本中恢复
 		noteEntity.setContent(noteVersionEntity.getContent());
 		noteEntity.setUpdateTime(new Date());
 		noteEntity.setUpdateUser(userid);
 		updateNote(noteEntity, true);
+		
+		// 恢复条目HTML文件
+		String htmlPath = FilePathUtil.getNoteHtmlPath(noteEntity);
+		String zipFilePath = htmlPath + FilePathUtil.getNoteZipFileName(noteEntity.getId(), newVersion.getVersion());
+		File zipFile = new File(zipFilePath);
+		String htmlName = htmlPath + noteEntity.getId() + ".html";
+		File htmlFile = new File(htmlName);
+		if(!htmlFile.exists()){
+			saveNoteHtml(noteEntity);
+		}
+		// 将现有条目打包为历史版本
+		DataSynchizeUtil.zipNoteHtml(zipFile, htmlFile);
+		
+		DataSynchizeUtil.unZipNoteHtml(versionZipFile, htmlPath);
 		return noteVersionEntity.getContent();
 	}
 	

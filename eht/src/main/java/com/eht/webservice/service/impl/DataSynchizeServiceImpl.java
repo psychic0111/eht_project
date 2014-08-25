@@ -33,10 +33,12 @@ import org.htmlparser.util.ParserException;
 import org.jeecgframework.core.util.JSONHelper;
 import org.jeecgframework.core.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 
 import com.eht.comment.entity.CommentEntity;
 import com.eht.comment.service.CommentServiceI;
 import com.eht.common.bean.ResponseStatus;
+import com.eht.common.constant.ActionName;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.RoleName;
 import com.eht.common.constant.SynchConstants;
@@ -83,6 +85,8 @@ import com.eht.webservice.service.util.SynchDataCache;
 public class DataSynchizeServiceImpl implements DataSynchizeService {
 
 	private Logger logger = Logger.getLogger(DataSynchizeServiceImpl.class);
+	
+	private boolean needAuth = false;
 
 	@Autowired
 	private AccountServiceI accountService;
@@ -181,8 +185,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					logger.info("服务器存在该文件，直接复制服务器文件！！！");
 					DataSynchizeUtil.copyServerFile(attaServer, attachment);
 					attachmentService.updateAttachment(attachment);
-					String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
-					DataBean bean = new DataBean("", downloadData);
+					String uploadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+					DataBean bean = new DataBean(uploadData, "");
 					return JsonUtil.bean2json(bean);
 				}
 			}
@@ -239,8 +243,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.FILE.toString());
 			
 			res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-			String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
-			DataBean bean = new DataBean("", downloadData);
+			String uploadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			DataBean bean = new DataBean(uploadData, "");
 			return JsonUtil.bean2json(bean);
 		}else{
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
@@ -403,14 +407,17 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Override
 	@POST
 	@Path("/send/attachment/a/{timeStamp}")
-	public String addAttachment(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws ParserException {
+	public String addAttachment(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws ParserException, InsufficientAuthenticationException {
 		logger.info("添加附件信息 : " + data);
 		AccountEntity user = accountService.getUser4Session();
-		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			AttachmentEntity attachment = (AttachmentEntity) JsonUtil.getObject4JsonString(data, AttachmentEntity.class);
 			NoteEntity note = noteService.getNote(attachment.getNoteId());
 			
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), note.getSubjectId(), ActionName.UPDATE_NOTE);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.UPDATE_NOTE + ", 请联系专题管理员。");
+			}
 			//普通附件
 			if (attachment.getFileType().intValue() == Constants.FILE_TYPE_NORMAL) {
 				String filePath = FilePathUtil.getFileUploadPath(note, attachment.getDirectoryId());
@@ -462,8 +469,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 			
-			String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
-			DataBean bean = new DataBean("", downloadData);
+			String uploadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			DataBean bean = new DataBean(uploadData, "");
 			return JsonUtil.bean2json(bean);
 		}
 		DataBean bean = new DataBean("", "");
@@ -475,11 +482,18 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/send/attachment/d/{id}/{timeStamp}")
 	public String deleteAttachment(@PathParam("id") String id, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
 		logger.info("删除附件信息 ！！！");
-		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			AttachmentEntity attachment = attachmentService.getAttachment(id);
 			AccountEntity user = accountService.getUser4Session();
 			if(attachment != null && attachment.getDeleted() == Constants.DATA_NOT_DELETED){
+				if(!StringUtil.isEmpty(attachment.getNoteId())){
+					NoteEntity note = noteService.getNote(attachment.getNoteId());
+					boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), note.getSubjectId(), ActionName.UPDATE_NOTE);
+					if(!hasPermission && needAuth){
+						throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.UPDATE_NOTE + ", 请联系专题管理员。");
+					}
+				}
+				
 				attachment.setUpdateUser(user.getId());
 				attachmentService.markDelAttachment(attachment);
 			}
@@ -663,7 +677,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		String[] dataTypes = SynchDataCache.getDatasSort();
 		if(dataClass.equals(DataType.FILE.toString())){ // 请求下载文件
 			String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
-			DataBean bean = new DataBean("", downloadData);
+			DataBean bean = new DataBean(downloadData, "");
 			return JsonUtil.bean2json(bean);
 		}
 		boolean isDeleteFilter = true;
@@ -705,7 +719,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			//已经到了最后一个数据类型
 			if(dataClass.equals(dataTypes[dataTypes.length - 1]) || dataClass.equals(DataType.ALL.toString())){
 				String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
-				DataBean bean = new DataBean("", downloadData);
+				DataBean bean = new DataBean(downloadData, "");
 				return JsonUtil.bean2json(bean);
 			}else if(dataClass.equals(DataType.ALL.toString())){    //所有数据类型均查询不到需要同步的日志
 				res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.FINISH.toString());
@@ -835,6 +849,11 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		ResponseStatus rs =new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			SubjectEntity subject = (SubjectEntity) JsonUtil.getObject4JsonString(data, SubjectEntity.class);
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subject.getId(), ActionName.UPDATE);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.UPDATE + ", 请联系专题管理员。");
+			}
+			
 			SubjectEntity sub = subjectService.getSubject(subject.getId());
 			SynchLogEntity log = synchLogService.findLogByData(user.getClientId(), user.getId(), subject.getUpdateTimeStamp() + 1, SynchConstants.DATA_CLASS_SUBJECT, sub.getId());
 			if(sub != null && sub.getDeleted() == Constants.DATA_NOT_DELETED){  // 服务器存在此专题，并且不是删除状态
@@ -913,6 +932,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_UPDATE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 					
+					sub.setClassName(DataType.NOTE.toString());
+					sub.setOperation(DataSynchAction.UPDATE.toString());
 					DataBean bean = new DataBean("", JsonUtil.bean2json(sub));
 					return JsonUtil.bean2json(bean);
 				}else {
@@ -943,6 +964,11 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			SubjectEntity subject = subjectService.getSubject(id);
 			if(subject != null && subject.getDeleted() == Constants.DATA_NOT_DELETED){
 				AccountEntity user = accountService.getUser4Session();
+				
+				boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subject.getId(), ActionName.DELETE_SUBJECT);
+				if(!hasPermission && needAuth){
+					throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.DELETE_SUBJECT + ", 请联系专题管理员。");
+				}
 				subject.setUpdateUser(user.getId());
 				subjectService.deleteSubject(subject);
 			}
@@ -964,11 +990,17 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Override
 	@POST
 	@Path("/send/directory/a")
-	public String addDirectory(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+	public String addDirectory(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws InsufficientAuthenticationException{
 		logger.info("添加目录信息 :" + data);
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			DirectoryEntity dir = (DirectoryEntity) JsonUtil.getObject4JsonString(data, DirectoryEntity.class);
 			AccountEntity user = accountService.getUser4Session();
+			
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), dir.getSubjectId(), ActionName.ADD_DIRECTORY);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.ADD_DIRECTORY + ", 请联系专题管理员。");
+			}
+			
 			dir.setCreateUser(user.getId());
 			dir.setDeleted(Constants.DATA_NOT_DELETED);
 			directoryService.addDirectory(dir);
@@ -996,9 +1028,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		logger.info("更新目录信息 ！！！");
 		ResponseStatus rs = new ResponseStatus();
 		if(!action.equals(DataSynchAction.FINISH.toString())){
-			DirectoryEntity directory = (DirectoryEntity) JsonUtil.getObject4JsonString(data, DirectoryEntity.class);
-			DirectoryEntity dir = directoryService.getDirectory(directory.getId());
 			AccountEntity user = accountService.getUser4Session();
+			DirectoryEntity directory = (DirectoryEntity) JsonUtil.getObject4JsonString(data, DirectoryEntity.class);
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), directory.getSubjectId(), ActionName.UPDATE_DIRECTORY);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.UPDATE_DIRECTORY + ", 请联系专题管理员。");
+			}
+			
+			DirectoryEntity dir = directoryService.getDirectory(directory.getId());
 			SynchLogEntity log = synchLogService.findLogByData(user.getClientId(), user.getId(), timeStamp, SynchConstants.DATA_CLASS_DIRECTORY, directory.getId());
 			if (dir != null && dir.getDeleted() == Constants.DATA_NOT_DELETED) {
 				//服务器上不存在该数据其它操作日志，或者有修改操作日志并且操作早于此次操作，才更新数据库数据
@@ -1082,6 +1119,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), SynchConstants.DATA_OPERATE_UPDATE);
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 					
+					dir.setClassName(DataType.NOTE.toString());
+					dir.setOperation(DataSynchAction.UPDATE.toString());
 					DataBean bean = new DataBean("", JsonUtil.bean2json(dir));
 					return JsonUtil.bean2json(bean);
 				}else {
@@ -1112,6 +1151,12 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			DirectoryEntity dir = directoryService.getDirectory(id);
 			if(dir != null && dir.getDeleted() == Constants.DATA_NOT_DELETED){
 				AccountEntity user = accountService.getUser4Session();
+				
+				boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), dir.getSubjectId(), ActionName.DELETE_DIRECTORY);
+				if(!hasPermission && needAuth){
+					throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.DELETE_DIRECTORY + ", 请联系专题管理员。");
+				}
+				
 				dir.setUpdateUser(user.getId());
 				directoryService.markDelDirectory(dir);
 			}
@@ -1153,7 +1198,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	public String addNote(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
 		logger.info("添加条目信息 :" + data);
 		if(!action.equals(DataSynchAction.FINISH.toString())){
+			AccountEntity user = accountService.getUser4Session();
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+			
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), note.getSubjectId(), ActionName.ADD_NOTE);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.ADD_DIRECTORY + ", 请联系专题管理员。");
+			}
+			
 			return addNote(note, res);
 		}else{
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -1190,8 +1242,15 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	public String addNoteHtml(@Multipart("data") String data,@Multipart("noteFile") InputStream ins, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException {
 		logger.info("上传条目HTML数据 :" + data);
 		if(action == null || !action.equals(DataSynchAction.FINISH.toString())){
+			AccountEntity user = accountService.getUser4Session();
 			OutputStream ous = null;
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+			
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), note.getSubjectId(), ActionName.ADD_NOTE);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.ADD_DIRECTORY + ", 请联系专题管理员。");
+			}
+			
 			// 条目HTML存放路径
 			String savePath = FilePathUtil.getNoteHtmlPath(note);
 			String htmlFileName = savePath + note.getId();
@@ -1261,6 +1320,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		logger.info("更新条目基本信息 : " + data);
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+			AccountEntity user = accountService.getUser4Session();
+			
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), note.getSubjectId(), ActionName.UPDATE_NOTE);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.UPDATE_NOTE + ", 请联系专题管理员。");
+			}
+			
 			return updateNote(note, timeStamp, updateContent, res);
 		}else{
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -1355,6 +1421,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				
 				NoteVersionEntity noteHistory = noteService.saveNoteHistory(note, user.getId());   //保存为历史版本
 				note.setVersion(noteHistory.getVersion());
+				note.setClassName(DataType.NOTE.toString());
+				note.setOperation(DataSynchAction.UPDATE.toString());
 				String dataStr = JsonUtil.bean2json(note);
 				DataBean bean = new DataBean("", dataStr);
 				return JsonUtil.bean2json(bean);
@@ -1378,9 +1446,16 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		logger.info("上传条目HTML数据 :" + data);
 		String result = null;
 		if(action == null || !action.equals(DataSynchAction.FINISH.toString())){
-			AccountEntity user = accountService.getUser4Session();
+			
 			OutputStream ous = null;
+			AccountEntity user = accountService.getUser4Session();
 			NoteEntity note = (NoteEntity) JsonUtil.getObject4JsonString(data, NoteEntity.class);
+			
+			boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), note.getSubjectId(), ActionName.UPDATE_NOTE);
+			if(!hasPermission && needAuth){
+				throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.UPDATE_NOTE + ", 请联系专题管理员。");
+			}
+			
 			// 条目HTML存放路径
 			String savePath = FilePathUtil.getNoteHtmlPath(note);
 			String htmlFileName = savePath + note.getId();
@@ -1407,9 +1482,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				while ((n = ins.read(bytes)) != -1) {
 					ous.write(bytes, 0, n);
 				}
+				if(ous != null){
+					ous.flush();
+					ous.close();
+				}
 				NoteEntity oldNote = noteService.getNote(note.getId());
 				if(oldNote != null){
-					if(oldNote.getUpdateTimeStamp() < note.getUpdateTimeStamp()){
+					if(oldNote.getUpdateTimeStamp() == null || oldNote.getUpdateTimeStamp() < note.getUpdateTimeStamp()){
 						file.renameTo(html);
 						String content = DataSynchizeUtil.unZipNoteHtml(html, html.getParent());
 						content = HtmlParser.replaceHtmlImg(content, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
@@ -1427,8 +1506,6 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				e.printStackTrace();
 				return rs.toString();
 			} finally {
-				ous.flush();
-				ous.close();
 				ins.close();
 				if(file.exists()){
 					file.delete();
@@ -1695,8 +1772,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.COMMENT.toString());
 			
 			//准备上传文件
-			String downloadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
-			DataBean bean = new DataBean("", downloadData);
+			String uploadData = DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
+			DataBean bean = new DataBean(uploadData, "");
 			return JsonUtil.bean2json(bean);
 		}
 		DataBean bean = new DataBean("", "");
@@ -1815,6 +1892,11 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@POST
 	@Path("/send/subjectuser/a/{subjectId}/{userId}/{roleId}")
 	public String addSubjectMember(@PathParam("subjectId") String subjectId, @PathParam("userId") String userId, @PathParam("roleId") String roleId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		boolean hasPermission = DataSynchizeUtil.hasPermission(userId, subjectId, ActionName.ASSIGN_MEMBER);
+		if(!hasPermission && needAuth){
+			throw new InsufficientAuthenticationException("用户没有进行此操作的权限：" + ActionName.ASSIGN_MEMBER + ", 请联系专题管理员。");
+		}
+		
 		if (StringUtil.isEmpty(roleId)) {
 			Role role = roleService.findRoleByName(RoleName.READER);
 			roleId = role.getId();

@@ -99,6 +99,11 @@ public class NoteEntity extends BaseSubjectModel implements java.io.Serializable
 	private java.lang.String titleMht;
 	/** 内容 */
 	private java.lang.String contentMht;
+	
+	private String operation;
+	
+	private String className;
+	
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -514,6 +519,24 @@ public class NoteEntity extends BaseSubjectModel implements java.io.Serializable
 
 	public void setTitleMht(java.lang.String titleMht) {
 		this.titleMht = titleMht;
+	}
+	
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+	
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 	
 }
