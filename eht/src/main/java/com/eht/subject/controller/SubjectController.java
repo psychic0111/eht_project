@@ -55,6 +55,7 @@ import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.entity.SubjectMht;
 import com.eht.subject.entity.SujectSchedule;
 import com.eht.subject.entity.ZipEntity;
+import com.eht.subject.service.InviteMememberServiceI;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.template.entity.TemplateEntity;
 import com.eht.template.service.TemplateServiceI;
@@ -97,8 +98,10 @@ public class SubjectController extends BaseController {
 
 	@Autowired
 	private AttachmentServiceI attachmentService;
-
-
+	
+	@Autowired
+	private InviteMememberServiceI inviteMememberService;
+	
 	private String message;
 
 	public String getMessage() {
@@ -196,8 +199,10 @@ public class SubjectController extends BaseController {
 				mv.addObject("user", roleUser);
 			}
 		}
+		List<InviteMememberEntity>  inviteMememberList =inviteMememberService.findInviteMemember(subjectEntity.getId());
 		mv.addObject("subjectEntity", subjectEntity);
 		mv.addObject("list", list);
+		mv.addObject("inviteMememberList", inviteMememberList);
 		return mv;
 	}
 
@@ -439,29 +444,12 @@ public class SubjectController extends BaseController {
 	String addInvitemember(HttpServletRequest request) {
 		SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, request.getParameter("id"));
 		String textarea1[] = request.getParameterValues("textarea1");
-		String textarea2[] = request.getParameterValues("textarea2");
-		String textarea3[] = request.getParameterValues("textarea3");
-		String textarea4[] = request.getParameterValues("textarea4");
+		String types[] = request.getParameterValues("type");
 		StringBuffer sb = new StringBuffer("");
 		try {
-			subjectService.inviteMemember(textarea1, 1, request, subjectEntity);
+			subjectService.inviteMemember(textarea1, types, request, subjectEntity);
 		} catch (Exception e) {
 			sb.append("超级管理员邀请失败,");
-		}
-		try {
-			subjectService.inviteMemember(textarea2, 2, request, subjectEntity);
-		} catch (Exception e) {
-			sb.append("编辑员邀请失败,");
-		}
-		try {
-			subjectService.inviteMemember(textarea3, 3, request, subjectEntity);
-		} catch (Exception e) {
-			sb.append("作者邀请失败,");
-		}
-		try {
-			subjectService.inviteMemember(textarea4, 4, request, subjectEntity);
-		} catch (Exception e) {
-			sb.append("读者邀请失败,");
 		}
 		if (sb.length() > 0) {
 			sb.replace(sb.length() - 1, sb.length(), ".");
@@ -488,16 +476,18 @@ public class SubjectController extends BaseController {
 			} else {
 				try {
 					subjectService.acceptInviteMember(inviteMememberEntity, accountEntity);
+					mv.addObject("msg", "邀请成功");
 				} catch (Exception e) {
 					e.printStackTrace();
 					mv.addObject("msg", "邀请失败");
 				}
-
-				accountEntity.setStatus(Constants.ENABLED);
-				session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, accountEntity);
-				ClientManager.getInstance().addSession(session.getId(), session);
+				mv.addObject("linkname", "登录");
+				mv.addObject("linkpath", "webpage/login.jsp");
+				//accountEntity.setStatus(Constants.ENABLED);
+			    //session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, accountEntity);
+				//ClientManager.getInstance().addSession(session.getId(), session);
 				// 跳转到用户主页面
-				return new ModelAndView(new RedirectView("/indexController/front/index.dht", true));
+				return mv;
 			}
 		} else {
 			mv.addObject("msg", "此链接过期");

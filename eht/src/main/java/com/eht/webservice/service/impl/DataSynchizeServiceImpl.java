@@ -47,6 +47,7 @@ import com.eht.common.enumeration.DataType;
 import com.eht.common.enumeration.HeaderName;
 import com.eht.common.enumeration.ResponseCode;
 import com.eht.common.util.FilePathUtil;
+import com.eht.common.util.FileToolkit;
 import com.eht.common.util.HtmlParser;
 import com.eht.common.util.JsonUtil;
 import com.eht.common.util.MD5FileUtil;
@@ -170,7 +171,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		return DataSynchizeUtil.queryUploadFile(user.getId(), attachmentService, res);
 	}
 
-	@Override
+	@Override	
 	@POST
 	@Path("/upload/{attachmentId}")
 	public String uploadAttachment(@PathParam("attachmentId") String attachmentId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) {
@@ -206,17 +207,19 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if (!folder.exists()) {
 				folder.mkdirs();
 			}
-			File file = new File(attachment.getFilePath() + File.separator + attachment.getFileName() + ".tmp");
+			String zipName = attachment.getFileName().substring(0, attachment.getFileName().lastIndexOf('.')) + ".zip";
+			File savefile = new File(attachment.getFilePath() + File.separator + zipName);
 			try {
 				ins = request.getInputStream();
-				ous = new FileOutputStream(file);
+				transfered = FileToolkit.copyFileFromStreamToZIP(ins, savefile, true, attachment.getFileName());
+				/*ous = new FileOutputStream(file);
 				int n = 0;
 				int buffer = 1024;
 				byte[] bytes = new byte[buffer];
 				while ((n = ins.read(bytes)) != -1) {
 					ous.write(bytes, 0, n);
 					transfered += n;
-				}
+				}*/
 	
 				logger.info("文件传输完成，本次共传输：" + transfered + "字节。");
 				attachment.setStatus(Constants.FILE_TRANS_COMPLETED);
@@ -224,20 +227,20 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				ResponseStatus rs = new ResponseStatus(ResponseCode.SERVER_ERROR);
 				return rs.toString();
 			} finally {
-				try {
+				/*try {
 					ous.flush();
 					ous.close();
 					ins.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
+				}*/
 			}
 			attachment.setTranSfer(transfered);
 			attachmentService.updateAttachment(attachment);
 			logger.info("文件传输完成，更新数据库文件状态！");
 			if (attachment.getStatus() != null && attachment.getStatus() == 1) {
 				// 上传文件完成后，重命名文件为正式文件
-				file.renameTo(new File(attachment.getFilePath() + File.separator + attachment.getFileName()));
+				//file.renameTo(new File(attachment.getFilePath() + File.separator + attachment.getFileName()));
 			}
 			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.FILE.toString());
@@ -362,7 +365,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		//AccountEntity user = accountService.getUser4Session();
 		
 		AttachmentEntity attachment = attachmentService.getAttachment(attachmentId);
-		File file = new File(attachment.getFilePath() + File.separator + attachment.getFileName());
+		String zipName = attachment.getFileName().substring(0, attachment.getFileName().lastIndexOf('.')) + ".zip";
+		File file = new File(attachment.getFilePath() + File.separator + zipName);
 		FileInputStream fis = new FileInputStream(file);
 		int length = fis.available();
 		
@@ -677,7 +681,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		String[] dataTypes = SynchDataCache.getDatasSort();
 		if(dataClass.equals(DataType.FILE.toString())){ // 请求下载文件
 			String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
-			DataBean bean = new DataBean(downloadData, "");
+			DataBean bean = new DataBean("", downloadData);
 			return JsonUtil.bean2json(bean);
 		}
 		boolean isDeleteFilter = true;
@@ -719,7 +723,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			//已经到了最后一个数据类型
 			if(dataClass.equals(dataTypes[dataTypes.length - 1]) || dataClass.equals(DataType.ALL.toString())){
 				String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), synchLogService, res);
-				DataBean bean = new DataBean(downloadData, "");
+				DataBean bean = new DataBean("", downloadData);
 				return JsonUtil.bean2json(bean);
 			}else if(dataClass.equals(DataType.ALL.toString())){    //所有数据类型均查询不到需要同步的日志
 				res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.FINISH.toString());

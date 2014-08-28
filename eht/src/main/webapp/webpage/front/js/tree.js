@@ -93,25 +93,34 @@ function onNodeClick(e, treeId, node) {
 //树节点click事件
 function onNodeClickDo(e, treeId, node) {
 			if(!onclickAndBefore)return;
+			var showD = true;
 			if(node.dataType == "SUBJECT"){   //专题条目检索
 				//-1：个人专题    -2
 				var subjectId = (node.id == '-1' || node.id == '-2')&&  node.children.length>0 ? node.children[0].id : node.id;
-				if(node!=null&&node.name=="多人专题" &&  node.children.length>0){
-					zTree_Menu.selectNode(node.children[0]);
-					zTree_Menu.expandNode(node.children[0],true);
-					node=node.children[0];
-					subjectId = node.id;
+				if(node!=null&&node.name=="多人专题"/* && node.children.length>0*/){
+					/*zTree_Menu.selectNode(node.children[0]);
+					zTree_Menu.expandNode(node.children[0],true);*/
+					if(node.children.length>0){
+						node=node.children[0];
+						subjectId = node.id;	
+					}
+					showD = false;
 				}
-				if(node!=null&&node.name=="个人专题" &&  node.children.length>0){
-					zTree_Menu.selectNode(node.children[0]);
-					zTree_Menu.expandNode(node.children[0],true);
-					node=node.children[0];
-					subjectId = node.id;
+				if(node!=null&&node.name=="个人专题"/* &&  node.children.length>0*/){
+					/*zTree_Menu.selectNode(node.children[0],false);
+					zTree_Menu.expandNode(node.children[0],true);*/
+					if(node.children.length>0){
+						node=node.children[0];
+						subjectId = node.id;	
+					}
+					showD = false;
 				}
 				selectInfo = new SelectInfo();
 				selectInfo.curMenu = node;
 				selectInfo.subjectId = subjectId; 
-				showSearchDiv();
+				if(showD){
+					showSearchDiv();
+				}
 			}else if(node.dataType == "DIRECTORY"&&!isDocumentFolder(node)){   //专题条目检索
 				selectInfo = new SelectInfo();
 				var dirId = node.id.replace("_deleted", "");  // 回收站中的目录ID都加了 _deleted后缀
@@ -183,6 +192,7 @@ function onNodeClickDo(e, treeId, node) {
 					var parentNode = zTree_Menu.getNodeByParam("id", "-102", zTree_Menu.getNodes()[2]);
 					zTree_Menu.selectNode(parentNode);
 				}
+				changeCss(node);
 				var url = webRoot+"/messageController/front/messageList.dht?pageNo=1&pageSize=20&msgType=" + msgType;
 				AT.load("iframepage",url,function() {});
 			}else{
@@ -205,6 +215,13 @@ function onNodeClickDo(e, treeId, node) {
 				zTree_Menu.editName(newNode[0]);
 			}
 }
+//个人标签  多人标签 消息标签 点击时候修改样式
+function changeCss(node){
+	var picId = node.tId;
+	picId = picId+"_ico";
+	$("#"+picId).removeClass("button").addClass("newPriSubjectPic");
+	
+}
 //销毁已经构建好的树，如果已经构建了的话。
 function destoryTree(){
 	if (zTree_Menu!=null){
@@ -218,7 +235,7 @@ function destoryTree(){
 }
 
 
-function beforeNodeClickDo(treeId, node) {
+function beforeNodeClick(treeId, node) {
 	 if(isNoteStats()){//判断是否编辑状态
 		   var submit = function (v, h, f) {
 			if (v == true){ 
@@ -234,7 +251,7 @@ function beforeNodeClickDo(treeId, node) {
 }
 
 //点击节点前
-function beforeNodeClick(treeId, node) { 
+function beforeNodeClickDo(treeId, node) { 
 	if (node.isParent) {
 		if (node.level === 0) {
 			var pNode = selectInfo.curMenu;
@@ -247,14 +264,17 @@ function beforeNodeClick(treeId, node) {
 						var a = $("#" + pNode.tId + "_a");
 						a.removeClass("cur");
 					}
-				}catch(e){
-					
-				}
-				zTree_Menu.expandNode(pNode, false);
+				}catch(e){} 
 			}
 			a = $("#" + node.tId + "_a");
-			a.addClass("cur");
-			zTree_Menu.expandNode(node, true);
+			
+			//点击根节点判断效果
+			if(node.open){
+				zTree_Menu.expandNode(node, false);	
+			}else{
+				zTree_Menu.expandNode(node, true);	
+			}
+			changeCss(node);
 		} else {
 			zTree_Menu.expandNode(node, true, false, false, true);
 		}

@@ -1,6 +1,7 @@
 package com.eht.message.service.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
 import org.jeecgframework.core.util.oConvertUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +21,15 @@ import com.eht.common.constant.Constants;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.entity.MessageUserEntity;
 import com.eht.message.service.MessageServiceI;
+import com.eht.user.entity.AccountEntity;
+import com.eht.user.service.AccountServiceI;
 
 @Service("messageService")
 @Transactional
 public class MessageServiceImpl extends CommonServiceImpl implements MessageServiceI {
+	
+	@Autowired
+	private AccountServiceI accountServiceI;
 
 	@Override
 	public List<MessageEntity> findUserMessages(String userId, Integer msgType, String content, String orderField, String orderType, int pageSize, int page) {
@@ -236,6 +243,34 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 	public void deleteUserMessage(String messageId, String userId) {
 		MessageUserEntity mu = getUserMessage(userId, messageId);
 		delete(mu);
+	}
+
+	@Override
+	public void saveMessages(String content, List<String> username,String userId) throws Exception{
+		MessageEntity  m=new MessageEntity();
+		 m.setContent(content);
+		 m.setCreateTime(new Date());
+		 m.setCreateUser(userId);
+		 m.setMsgType(Constants.MSG_USER_TYPE);
+		 m.setUserIsRead(Constants.NOT_READ_OBJECT);
+		 save(m);
+		 List<String> list=username;
+		 if(list!=null){
+			 for (String string : list) {
+				 if(string.indexOf("@")!=-1){
+					 string=string.substring(1).trim();
+				 }
+				 AccountEntity a=	 accountServiceI.findUserByAccount(string);
+				 if(a!=null){
+					 MessageUserEntity k=new MessageUserEntity();
+					 k.setIsRead(Constants.NOT_READ_OBJECT);
+					 k.setMessageId(m.getId());
+					 k.setUserId(a.getId());
+					 save(k);
+				 }
+				}
+		 }
+		
 	}
 
 }

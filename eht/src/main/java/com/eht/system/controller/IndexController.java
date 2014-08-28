@@ -4,7 +4,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
+
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.util.JSONHelper;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+
 import com.eht.common.constant.Constants;
 import com.eht.common.util.JsonUtil;
 import com.eht.common.util.TreeUtils;
@@ -108,7 +111,6 @@ public class IndexController extends BaseController {
 			
 			//消息中心菜单部分
 			dataList.addAll(treeMenuService.buildMessageCenter(user.getId()));
-			System.out.println("+++++++++++++++end++++++++++++++++++++"+new Date());
 			return JSONHelper.collection2json(TreeUtils.buildTreeData(dataList));
 		} 
 		return "";

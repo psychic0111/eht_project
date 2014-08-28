@@ -40,10 +40,6 @@
 <script type="text/javascript" src="${frontPath}/js/userAutoTips.js"></script>
 <script type="text/javascript" src="${frontPath}/js/json2.js"></script>
 <script type="text/javascript" src="${frontPath}/js/jBox/jquery.jBox.src.js"></script>
-<!-- jquery-UI tooltip -->
-<link rel="stylesheet" href="${frontPath}/js/jquery-ui-tooltip/jquery-ui.css">
-<script src="${frontPath}/js/jquery-ui-tooltip/jquery-ui.js"></script> 
-
 
 <script type="text/javascript"  >
 var webRoot = "${webRoot}";

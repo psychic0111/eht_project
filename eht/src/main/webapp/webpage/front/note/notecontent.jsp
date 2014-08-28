@@ -136,15 +136,17 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
         <div class="Edit_input">
           <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;display:none;"></script>
         </div>
-        <div id="parentHtmlViewDiv" style="width: 100%;overflow-y: scroll;overflow-x: auto; height:440px;bottom: 0;box-sizing: border-box;">
-        	<div id="htmlViewDiv" style="box-sizing: border-box;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;padding-bottom: 0px;padding-top:0px;background-color: white;">
-    		 	<iframe id="htmlViewFrame"  frameborder="0" border="0" style="overflow-y: auto;border:0;outline:0;border-bottom:0px;border-top:0px;border-right:0px;border-left:0px; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;" >
+        <div id="parentHtmlViewDiv" >
+        	<div id="htmlViewDiv" >
+    		 	<iframe id="htmlViewFrame"  frameborder="0" border="0" style="height:440px;overflow-y:hidden;border:0;outline:0;border-bottom:0px;border-top:0px;border-right:0px;border-left:0px; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;" >
    				</iframe>
     		</div>
     		<!-- Begin comments-->
-		       <div class="comments" id="comments_div" style="height:40px;display:none;">
+		       <div class="comments" id="comments_div" style="display:none;height:200px;overflow-y:auto;">
 		        <div class="top" style="cursor:pointer;" ><img src="${imgPath}/comments1a.png" id="comment_img" onclick="togComment()" height="35px"/></div>
-		        <div class="comments_list" style="display:none;" id="comments_list"></div>
+		        <div class="comments_list" style="display:none;" id="comments_list">
+		        
+		        </div>
 		      </div>
 		    <!-- End comments--> 
         </div>

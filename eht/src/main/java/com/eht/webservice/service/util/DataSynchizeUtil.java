@@ -51,8 +51,9 @@ public class DataSynchizeUtil {
 	 */
 	public static ResponseStatus copyServerFile(AttachmentEntity attaServer, AttachmentEntity attachment){
 		ResponseStatus res = new ResponseStatus(); //上传文件操作结果
+		String zipName = attaServer.getFileName().substring(0, attaServer.getFileName().lastIndexOf('.')) + ".zip";
 		try {
-			FileToolkit.copyFile(attaServer.getFilePath() + File.separator + attaServer.getFileName(), attachment.getFilePath());
+			FileToolkit.copyFile(attaServer.getFilePath() + File.separator + zipName, attachment.getFilePath());
 		} catch (IOException e) {
 			logger.error("服务器复制文件失败！！！");
 			e.printStackTrace();
@@ -61,7 +62,8 @@ public class DataSynchizeUtil {
 			return res;
 		}
 		if(!attaServer.getFileName().equals(attachment.getFileName())){
-			FileToolkit.renameFile(attachment.getFilePath() + File.separator + attaServer.getFileName(), attachment.getFilePath() + attachment.getFileName());
+			String newZipName = attachment.getFileName().substring(0, attachment.getFileName().lastIndexOf('.')) + ".zip";
+			FileToolkit.renameFile(attachment.getFilePath() + File.separator + zipName, attachment.getFilePath() + File.separator + newZipName);
 		}
 		
 		attachment.setStatus(Constants.FILE_TRANS_COMPLETED);

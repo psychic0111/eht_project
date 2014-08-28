@@ -69,9 +69,10 @@ public final class FileToolkit {
 	 * @param desc
 	 * @param closeStream
 	 */
-	public static void copyFileFromStreamToZIP(InputStream in, File desc, boolean closeStream, String fileName) {
+	public static long copyFileFromStreamToZIP(InputStream in, File desc, boolean closeStream, String fileName) {
 		byte[] cache = new byte[10240];
 		int len = 0;
+		long transfered = 0l;
 		BufferedOutputStream bos = null;
 		BufferedInputStream bis = null;
 		ZipOutputStream zos = null;
@@ -87,6 +88,7 @@ public final class FileToolkit {
 			zos.putNextEntry(entry);
 			while ((len = bis.read(cache)) > 0) {
 				zos.write(cache, 0, len);
+				transfered += len;
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -112,6 +114,7 @@ public final class FileToolkit {
 				e.printStackTrace();
 			}
 		}
+		return transfered;
 	}
 	/**
 	 * 复制文件或者目录,复制前后文件完全一样。

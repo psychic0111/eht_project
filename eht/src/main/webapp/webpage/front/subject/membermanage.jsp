@@ -13,10 +13,6 @@
 	 	 $("#checkbox2").attr("checked",tep.length==tep.filter(':checked').length);
 	});
 
-	function viewInvitemember(){
-		AT.load("iframepage","${webRoot}/subjectController/front/viewInvitemember.dht?id=${subjectEntity.id}",function() {});	
-	}
-
 	function delInvitemember(){
          if($("[name=ids]:checked").length==0){
              MSG.alert("请选择用户");
@@ -63,6 +59,37 @@
 		}
 		hideInvitememberMenu();
 		}
+		
+function viewInvitemember(){
+	var urllink='get:${webRoot}/subjectController/front/viewInvitemember.dht?id=${subjectEntity.id}';
+    $.jBox(urllink, {
+    title: "邀请新成员",
+    width: 600,
+    height: 400,
+   buttons: { '发送': 1, '关闭': 0 },
+   submit: function (v, h, f) {
+            if (v == 1) {
+              var mail=$("#textarea1").val();
+					if(mail!=''){
+					if(!mail.match(/^\w+([\.\-]\w+)*\@\w+([\.\-]\w+)*\.\w+$/)){
+					 MSG.alert("邮箱格式不正确");
+					  return false;
+					}
+					addemail(mail,"textarea1");
+					}
+				
+					AT.postFrm("addInvitemember",function(data){
+						if(data==''){
+								 MSG.alert('操作成功');
+							}
+							AT.load("iframepage","${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}",function() {});
+					},true);
+            return true; 
+            } 
+            return true;
+        }
+	});
+	}
 </script>
 		
  		<div class="right_top mainer_right">
@@ -75,7 +102,7 @@
 		<xd:hasPermission subjectId="${subjectEntity.id }" action="<%=ActionName.ASSIGN_MEMBER %>" resource="<%=Constants.SUBJECT_MODULE_NAME %>">          
           <div class="function">
             <div class="others">
-              <input class="Button2" type="button" name="button" id="button" value="邀请新成员" onclick="viewInvitemember();" />
+              <input class="Button2" type="button" name="button" id="button"  onclick="viewInvitemember();" value="邀请新成员" />
               <input class="Button3" type="button" name="button4" id="button3" onclick="delInvitemember();" value="删除成员" />
               <input class="Button4" type="button" name="button4" id="button4" onclick="invitememberRole(this);" value="更改角色" />
               <div class="rightMenu" id="invitememberMenu">
@@ -104,6 +131,7 @@
                   </td>
                   <td align="center" class="tdTitle">用户</td>
                   <td align="center" class="tdTitle">角色</td>
+                  <td align="center" class="tdTitle">状态</td>
                 </tr>
                 <c:forEach items="${list}" var="roleUser">
                 <tr class="TD3">
@@ -115,11 +143,31 @@
                   </c:when>
                   <c:when test="${user.role.roleName ne 'ADMIN' && user.role.roleName ne 'OWNER'}">
                   </c:when>
-                  <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.userId}" /></c:otherwise>
+                  <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.id}" /></c:otherwise>
                   </c:choose>
                   </td>
                   <td align="center">${roleUser.accountEntity.username}</td>
                   <td align="center">${roleUser.role.description}</td>
+                   <td align="center">已激活</td>
+                </tr>
+                </c:forEach>
+                 <c:forEach items="${inviteMememberList}" var="inviteMemember">
+                <tr class="TD3">
+                  <td align="center">
+               		
+                  </td>
+                  <td align="center">
+                   <c:choose>
+                  <c:when test="${empty  inviteMemember.username}">
+                  		${inviteMemember.email}
+                  </c:when>
+                  <c:otherwise>
+                        ${inviteMemember.username}
+                  </c:otherwise>
+                  </c:choose>
+                  </td>
+                  <td align="center">${inviteMemember.role.description}</td>
+                   <td align="center">未激活</td>
                 </tr>
                 </c:forEach>
               </table>

@@ -2,12 +2,19 @@ package com.eht.subject.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
+
+import com.eht.role.entity.Role;
 
 
 /**   
@@ -41,6 +48,9 @@ public class InviteMememberEntity  implements java.io.Serializable {
 	 * */
 	private String email;
    
+	private Role role;
+	
+	private String username;
 	@Id
 	@GenericGenerator(name = "idGenerator", strategy = "uuid")
 	@GeneratedValue(generator = "idGenerator")
@@ -77,6 +87,25 @@ public class InviteMememberEntity  implements java.io.Serializable {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+    
+	@Transient
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "roleid",insertable=false,updatable=false)
+	public Role getRole() {
+		return role;
+	}
+	
+	public void setRole(Role role) {
+		this.role = role;
 	}
 	
 	

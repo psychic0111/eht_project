@@ -12,6 +12,7 @@
 		url = "${webRoot}/subjectController/front/memberManage.dht?id="+obj;
 		AT.load("iframepage",url,function() {});	
 	}
+	
 	function toExportSubject(obj){
 	var urllink='get:${webRoot}/subjectController/front/treeSuject.dht?subjectId='+obj;
     $.jBox(urllink, {
@@ -58,24 +59,8 @@
 		url = "${webRoot}/subjectController/front/leadingSuject.dht";
 		AT.load("iframepage",url,function() {});		
 		}
-		
-if(actionSchedule){
 
-}else{
- actionSchedule=setInterval(
- function(){
-  AT.post("${webRoot}/subjectController/front/sujectSchedule.dht",null,function(data){
-			if(data.success){
-			   var c='专题正在导出('+data.attributes.cout+'/'+data.attributes.couts+')';
-			   $("#"+data.attributes.subjectId + "_schedule").text(c);
-			}else{
-			   $(".schedulesubjects").text("");
-			}
-		},true);
- },10000);
 
-}		
- 
 </script>
     <div class="right_top">
        <div class="Nav" id="nav_div" style="padding-top:8px;">
@@ -84,6 +69,7 @@ if(actionSchedule){
        </div>
     </div>
          <div class="right_index" >
+         <input id="schedule_1409022827875" type="hidden"/>
 	<!-- Begin Subjects-->
 	<div class="Subjects">
 		<ul>
@@ -129,4 +115,28 @@ if(actionSchedule){
 	</div>
 	<!-- End Subjects-->
 </div>
+<script type="text/javascript">
+		
+if(actionSchedule!=null){
 
+}else{
+ actionSchedule=setInterval(
+ function(){
+ if(!document.getElementById("schedule_1409022827875")){
+ 	clearInterval(actionSchedule);
+ 	actionSchedule=null;
+ 	return;
+ }
+  AT.post("${webRoot}/subjectController/front/sujectSchedule.dht",null,function(data){
+			if(data.success){
+			   var c='专题正在导出('+data.attributes.cout+'/'+data.attributes.couts+')';
+			   $("#"+data.attributes.subjectId + "_schedule").text(c);
+			}else{
+			   $(".schedulesubjects").text("");
+			}
+		},true);
+ },10000);
+
+}		
+
+</script>

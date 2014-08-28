@@ -1,17 +1,14 @@
 package com.eht.comment.service.impl;
 
 import java.util.List;
-
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.eht.comment.entity.CommentEntity;
 import com.eht.comment.service.CommentServiceI;
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
-import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.message.entity.MessageEntity;

@@ -85,4 +85,11 @@ public interface MessageServiceI extends CommonService{
 	 * @param messageId
 	 */
 	public void deleteUserMessage(String messageId, String userId);
+	
+
+	/**
+	 * 删除消息-用户关系
+	 * @param messageId
+	 */
+	public void saveMessages(String content, List<String> username,String userId) throws Exception;
 }

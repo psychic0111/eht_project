@@ -327,12 +327,8 @@ function viewNote(id,ishiden){
 			}
 			
 	},false);
-	 var params = {'noteId':id};
-	 //显示评论
-	 AT.post(webRoot+"/commentController/front/findCommentByNote.dht",params,function(data){
-		 $("#comments_list").empty();
-		 $("#comments_list").append(data);
-	});
+	 $("#comments_list").empty();
+	$("#comment_img").attr("src", imgPath+ "/comments1a.png");
 	setTimeout('hideLoading_edit()',100);
 }
 //附件【更多】按钮
@@ -499,13 +495,13 @@ function setHtmlDivHeight(){
 	var iframe = document.getElementById("htmlViewFrame");
 	var idoc = iframe.contentWindow && iframe.contentWindow.document || iframe.contentDocument; 
 	var height = Math.max(idoc.body.scrollHeight, idoc.documentElement.scrollHeight);
-	if(UE.browser.ie){
-		$("#htmlViewFrame").height(height+550);
-		$("#htmlViewDiv").height(height+570);
-	}else{
-		$("#htmlViewFrame").height(height+50);
-		$("#htmlViewDiv").height(height+70);
-	}
+	//if(UE.browser.ie){
+		//$("#htmlViewFrame").height(height+550);
+		//$("#htmlViewDiv").height(height+570);
+	//}else{
+	   //$("#htmlViewFrame").height(height+50);
+		//$("#htmlViewDiv").height(height+70);
+	//}
 }
 
 //条目编辑时候页面显示和按钮状态

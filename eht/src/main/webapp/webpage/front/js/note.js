@@ -1,12 +1,20 @@
 var followNodeId='';
 //显示、隐藏评论
 function togComment(){
-	$("#comments_list").toggle();
 	var src = $("#comment_img").attr("src");
 	if(src.indexOf("comments1a.png") != -1){
 		$("#comment_img").attr("src",imgPath+ "/comments1b.png");
+		 //显示评论
+		var id=$("#noteForm_id").val();
+		var params = {'noteId':id};
+		 AT.post(webRoot+"/commentController/front/findCommentByNote.dht",params,function(data){
+			 $("#comments_list").empty();
+			 $("#comments_list").append(data);
+		});
+		 $("#comments_list").show();
 	}else{
 		$("#comment_img").attr("src", imgPath+ "/comments1a.png");
+		 $("#comments_list").hide();
 	}
 }
 

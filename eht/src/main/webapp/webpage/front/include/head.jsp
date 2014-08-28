@@ -3,9 +3,9 @@
 <!-- Begin header-->
 <div class="header" style="width:100%;">
   <div class="left1"><a href="${webRoot}/indexController/front/index.dht"> <img  src="<%=imgPath %>/logo.png"  height="40" /></a></div>
-  <div class="left1">
+  <!-- <div class="left1">
   	 <input style="width:80px;margin-left:33px;margin-top:10px;float:left;" id="subject_manage" onclick="subjectManage()" class="Button1" type="button" value="专题管理" name="subject_manage"/>
-  </div>
+  </div> -->
   <div class="right1">
 		<div id="dd" class="wrapper-dropdown-5" tabindex="1" >
   	        <img  src="<%=imgPath %>/Sline.png"  height="40" onclick="window.location.href='${webRoot}/accountController/front/viewEditUser.dht'" />

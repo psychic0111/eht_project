@@ -330,10 +330,14 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		//个人专题
 		if(subject.getSubjectType() ==  Constants.SUBJECT_TYPE_P){
 			//查找默认专题
-			SubjectEntity defaultPersonSubject = (SubjectEntity) this.findByDetached(DetachedCriteria.forClass(SubjectEntity.class).add(Restrictions.eq("createUser", subject.getCreateUser())).add(Restrictions.eq("subjectName", "默认专题"))).get(0);
-			//将专题下所条目状态修改为1
-			super.executeHql("update AttachmentEntity set directoryId = null where noteId in (select id from NoteEntity where subjectId = ? )" ,  new Object[]{subject.getId()});
-			super.executeHql("update NoteEntity set deleted = ? ,subjectId = ? , dirId = null where subjectId = ? ", new Object[]{Constants.DATA_DELETED,defaultPersonSubject.getId(),subject.getId()});
+			List<SubjectEntity> list = this.findByDetached(DetachedCriteria.forClass(SubjectEntity.class).add(Restrictions.eq("createUser", subject.getCreateUser())).add(Restrictions.eq("subjectName", "默认专题")));
+			SubjectEntity defaultPersonSubject = null;
+			if(list != null && !list.isEmpty()){
+				defaultPersonSubject = list.get(0);
+				//将专题下所条目状态修改为1
+				super.executeHql("update AttachmentEntity set directoryId = null where noteId in (select id from NoteEntity where subjectId = ? )" ,  new Object[]{subject.getId()});
+				super.executeHql("update NoteEntity set deleted = ? ,subjectId = ? , dirId = null where subjectId = ? ", new Object[]{Constants.DATA_DELETED,defaultPersonSubject.getId(),subject.getId()});
+			}
 		}else{
 			//多人专题
 			//把条目放到每个创建人员的回收站
@@ -372,11 +376,11 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 			DataSynchAction.DELETE }, keyIndex = { 0, 0 }, targetUser = {
 			1, -1 }, timeStamp = { "", "" }, keyMethod = { "", "" })
 	
-	public void removeSubjectMember(String subjectId, String userId) {
-		Group group = groupService.findGroup(SubjectEntity.class.getName(),
-				subjectId);
-		groupService.removeGroupUser(group.getGroupId(), userId);
-		roleService.removeRoleUser(subjectId, userId);
+	public void removeSubjectMember(String subjectId, String userRoleId) {
+		Group group = groupService.findGroup(SubjectEntity.class.getName(),subjectId);
+		RoleUser u=roleService.get(RoleUser.class, Long.valueOf(userRoleId));
+		groupService.removeGroupUser(group.getGroupId(), u.getUserId());
+		roleService.removeRoleUser(u);
 	}
 
 	@Override
@@ -453,7 +457,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
-	public void inviteMemember(String email[], int type,
+	public void inviteMemember(String email[], String types[],
 			HttpServletRequest request, SubjectEntity SubjectEntity)
 			throws Exception {
 		if (email != null) {
@@ -461,10 +465,23 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 			for (int i = 0; i < email.length; i++) {
 				InviteMememberEntity inviteMemember = new InviteMememberEntity();
 				inviteMemember.setEmail(email[i]);
-				inviteMemember.setRoleid(type + "");
+				Role ownerRole = null;
+				String type=types[i];
+				if(type==null){
+					continue;
+				}
+				if (type.equals("1")) {
+					ownerRole = roleService.findRoleByName(RoleName.ADMIN);
+				} else if (type.equals("2")) {
+					ownerRole = roleService.findRoleByName(RoleName.EDITOR);
+				} else if (type.equals("3")) {
+					ownerRole = roleService.findRoleByName(RoleName.AUTHOR);
+				} else {
+					ownerRole = roleService.findRoleByName(RoleName.READER);
+				}
+				inviteMemember.setRoleid(ownerRole.getId());
 				inviteMemember.setSubjectid(SubjectEntity.getId());
-				String id = inviteMememberServiceI
-						.addInviteMemember(inviteMemember);
+				String id = inviteMememberServiceI.addInviteMemember(inviteMemember);
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("subject", SendMailUtil.getSubject());
 				map.put("content", SendMailUtil.getContent());
@@ -483,24 +500,14 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	@Override
 	public void acceptInviteMember(InviteMememberEntity inviteMememberEntity,
 			AccountEntity user) throws Exception {
-		Role ownerRole = null;
-		String type = inviteMememberEntity.getRoleid();
-		if (type.equals("1")) {
-			ownerRole = roleService.findRoleByName(RoleName.ADMIN);
-		} else if (type.equals("2")) {
-			ownerRole = roleService.findRoleByName(RoleName.EDITOR);
-		} else if (type.equals("3")) {
-			ownerRole = roleService.findRoleByName(RoleName.AUTHOR);
-		} else {
-			ownerRole = roleService.findRoleByName(RoleName.READER);
-		}
+		String roleid = inviteMememberEntity.getRoleid();
 		SubjectEntity SubjectEntity = getSubject(inviteMememberEntity.getSubjectid());
 		RoleUser ru = roleService.findUserRole(user.getId(),SubjectEntity.getId());
 		if (ru != null) {
-			ru.setRoleId(ownerRole.getId());
+			ru.setRoleId(roleid);
 			roleService.updateRoleUser(ru);
 		} else {
-			addSubjectMember(SubjectEntity.getId(), user.getId(),ownerRole.getId());
+			addSubjectMember(SubjectEntity.getId(), user.getId(),roleid);
 		}
 		delete(inviteMememberEntity);
 	}

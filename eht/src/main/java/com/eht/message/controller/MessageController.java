@@ -1,5 +1,12 @@
 package com.eht.message.controller;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
@@ -21,8 +28,10 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
+import com.eht.common.util.UUIDGenerator;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.service.MessageServiceI;
+import com.eht.subject.entity.SubjectEntity;
 import com.eht.user.entity.AccountEntity;
 
 
@@ -137,6 +146,52 @@ public class MessageController extends BaseController {
 		return new ModelAndView(new RedirectView("/center/login.dht", true));
 	}
 	
+	
+	/**
+	 * 标记消息已读
+	 * @param id
+	 * @param msgType
+	 * @param content
+	 * @param orderField
+	 * @param orderType
+	 * @param request
+	 * @param pageResult
+	 * @return
+	 */
+	@RequestMapping(value="/front/sendMessag.dht")
+	public ModelAndView messageMark() {
+		ModelAndView mv = new ModelAndView("front/message/commentList");
+		return mv;
+	}
+	
+	/**
+	 * 前台添加专题
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/front/sendMessagDo.dht")
+	@ResponseBody
+	public AjaxJson sendMessagDo(HttpServletRequest request) {
+		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		AjaxJson j = new AjaxJson();
+		try {
+			String content=request.getParameter("content");
+			Pattern p = Pattern.compile("@[^@&&[^\\s]]+[\\s]");
+	        Matcher m = p.matcher(content);  
+	        List<String> list=new ArrayList<String>();
+	        while(m.find()) {  
+	        	list.add(m.group());
+	        }  
+	        messageService.saveMessages(content, list, user.getId());
+		} catch (Exception e) {
+			e.printStackTrace();
+			j.setMsg("操作失败");
+			j.setSuccess(false);
+			return j;
+		}
+		return j;
+
+	}
 	/**
 	 * 前台删除系统消息
 	 * 

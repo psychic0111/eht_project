@@ -8,29 +8,17 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>e划通</title>  
 <%@  include file="/webpage/front/include/front_common.jsp" %> 
-<script type="text/javascript" src="${frontPath}/js/tree.js"></script>
-<script type="text/javascript" src="${frontPath}/js/treeRightFunction.js"></script>
-<script type="text/javascript" src="${frontPath}/js/notesearch.js"></script>
-<script type="text/javascript"> 
-window.UEDITOR_HOME_URL = "${frontPath}/js/ueditor/";
-window.UEDITOR_IMG_URL = "${webRoot}";
-window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
-window.imgPath = imgPath;
-</script>
-<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
-<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
-<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
 <style type="text/css">
 .ztree li a.level0 {
-	width:200px;
-	margin-bottom:1px;
-	height:32px;
-	padding-left:10px;
-	padding-top:10px;
-	background:url(${webRoot}/webpage/front/images/bg_menu1a.png) repeat-x;
-	border:1px #d5d5d5 solid;
-	text-decoration:none;
-	color:#333;
+	width:200px!important;
+	margin-bottom:1px!important;
+	height:32px!important;
+	padding-left:10px!important;
+	padding-top:10px!important;
+	background:url(${webRoot}/webpage/front/images/bg_menu1a.png) repeat-x!important;
+	border:1px #d5d5d5 solid!important;
+	text-decoration:none!important;
+	color:#333!important;
 }
 .ztree li a.level0.cur {
 	width:200px;
@@ -60,8 +48,7 @@ window.imgPath = imgPath;
 }
 
 .numb{
-	background-color: #5BA6FF;
-    color: #FFFFFF;
+    color: red;
     float: right;
     height: 20px;
     margin-right: 10px !important;
@@ -69,7 +56,30 @@ window.imgPath = imgPath;
     text-align: center;
     width: 21px;
 }
-
+.gear{
+	background:url(${imgPath}/gear.png) no-repeat !important;
+    color: #FFFFFF;
+    float: right;
+    height: 24px;
+    margin-right: 10px !important;
+    margin-top: -17px !important;
+    text-align: center;
+    width: 24px;
+}
+.newPriSubjectPic{ 
+    border: 0 none;
+    cursor: pointer;
+    display: inline-block;
+    height: 32px;
+    line-height: 0;
+    margin: -7px 0 0!important;
+    outline: medium none;
+    vertical-align: middle;
+    width: 32px;
+    float: left;
+    margin-left: 10px;
+    visibility: visible;
+}
 .numa{
 	background-color: #5B6368;
     color: #FFFFFF;
@@ -82,35 +92,35 @@ window.imgPath = imgPath;
 }
 
 .msg_ico_open{
-	background:url(${imgPath}/ling1b.png) no-repeat !important;
+	background:url(${imgPath}/20140821042246434_easyicon_net_32.png) no-repeat !important;
 	margin-right:5px !important; 
-	width:21px !important;
-	height:21px !important;
+	width:32px !important;
+	height:32px !important;
 	padding-top:5px !important;
 }
 .msg_ico_close{
-	background:url(${imgPath}/ling1a.png) no-repeat !important;
+	background:url(${imgPath}/20140821042246434_easyicon_net_32.png) no-repeat !important;
 	margin-right:5px !important; 
-	width:21px !important;
-	height:21px !important;
+	width:32px !important;
+	height:32px !important;
 	padding-top:6px !important;
 }
 
 .psub_ico_open{
-	background:url(${imgPath}/icon1b.png) no-repeat !important;
+	background:url(${imgPath}/easyicon_net_32.png) no-repeat !important;
 	margin-right:5px !important; 
 }
 .psub_ico_close{
-	background:url(${imgPath}/icon1a.png) no-repeat !important;
+	background:url(${imgPath}/easyicon_net_32.png) no-repeat !important;
 	margin-right:5px !important; 
 }
 
 .msub_ico_open{
-	background:url(${imgPath}/icon1b.png) no-repeat !important;
+	background:url(${imgPath}/20140821042241790_easyicon_net_32.png) no-repeat !important;
 	margin-right:5px !important; 
 }
 .msub_ico_close{
-	background:url(${imgPath}/icon1a.png) no-repeat !important;
+	background:url(${imgPath}/20140821042241790_easyicon_net_32.png) no-repeat !important;
 	margin-right:5px !important; 
 }
 
@@ -129,6 +139,18 @@ window.imgPath = imgPath;
 #pageloading_search{position:absolute; left:0px; top:0px;background:white url('${imgPath}/loading.gif') no-repeat center; width:100%; height:100%;z-index:9998;}
 #pageloading_edit{position:absolute; left:0px; top:0px;background:white url('${imgPath}/loading.gif') no-repeat center; width:100%; height:100%;z-index:9998;}
 </style>
+<script type="text/javascript" src="${frontPath}/js/tree.js"></script>
+<script type="text/javascript" src="${frontPath}/js/treeRightFunction.js"></script>
+<script type="text/javascript" src="${frontPath}/js/notesearch.js"></script>
+<script type="text/javascript"> 
+window.UEDITOR_HOME_URL = "${frontPath}/js/ueditor/";
+window.UEDITOR_IMG_URL = "${webRoot}";
+window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
+window.imgPath = imgPath;
+</script>
+<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
+<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
 </head>
 <body style="width: auto;min-width: 1024px;position:relative;top:0"> 
 		<div id="pageloading_tree" style="display:none"></div> 
@@ -212,10 +234,12 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 				if(nodes[i].dataType == 'DIRECTORY' || nodes[i].dataType == 'TAG'){
 					zTree_Menu.removeNode(nodes[i]);
 					i--;
+				}else{
+					alert(zTree_Menu.getNodes()[2].tId);
+					//$("#" + zTree_Menu.getNodes()[2].tId + "_a").append('<span id="noReadMsgNum" class="numb">'+ json.totalCount +'</span>');
 				}
 			}
 		}
-		
 		/* 计算消息数量 */
 		countMessage();
 		/* 添加【新建目录】 节点 */
@@ -224,9 +248,8 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 		var nodes = zTree_Menu.getNodes();
 		var curMenu = nodes[selectFirstNodeIndex];
 		zTree_Menu.selectNode(curMenu, true);
-		var a = $("#" + curMenu.tId + "_a");
-		a.addClass("cur");
-		
+		//var a = $("#" + curMenu.tId + "_a");
+		//a.addClass("cur");
 		if(selectNode2Id!=null && selectNode2Id!=''){
 			var subjectNode=zTree_Menu.getNodesByParam("id", selectNode2Id, curMenu);
 			if(subjectNode.length>0){
@@ -251,8 +274,24 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 		}
 
 		setTimeout('hideLoading_tree()',800);
+		zTree_Menu.expandNode(zTree_Menu.getNodes()[0], true);	
+		zTree_Menu.expandNode(zTree_Menu.getNodes()[1], true);	
+		zTree_Menu.expandNode(zTree_Menu.getNodes()[2], true);	
+		
+		$("#"+zTree_Menu.getNodes()[0].tId+"_a").append('<span id="-1"  class="gear"></span>');
+		$("#"+zTree_Menu.getNodes()[1].tId+"_a").append('<span id="-2"  class="gear"></span>');
+		$("#"+zTree_Menu.getNodes()[0].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
+		$("#"+zTree_Menu.getNodes()[1].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
+		$("#"+zTree_Menu.getNodes()[0].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
+		$("#"+zTree_Menu.getNodes()[2].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
+
+		$(".gear").click(function(){
+			subjectManage();
+		});
+		
 	});
 }
+	 
 /* 计算消息数量 */
 function countMessage(){
 	AT.get("${webRoot}/indexController/front/messageCount.dht",function(json){
@@ -418,7 +457,7 @@ $(document).ready(function(){
 	buildMainMenu(0,null,true);
 });
 //专题导出进度任务句柄
-var actionSchedule;
+var actionSchedule=null;
 /* $( document ).tooltip({
 	track: true
 }); */
