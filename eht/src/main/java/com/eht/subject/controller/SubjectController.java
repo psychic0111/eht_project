@@ -206,6 +206,21 @@ public class SubjectController extends BaseController {
 		return mv;
 	}
 
+	@RequestMapping("/front/viewMembers.dht")
+	public ModelAndView viewMembers(String subjectId, HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView("front/subject/viewmembers");
+		SubjectEntity subjectEntity = subjectService.getSubject(subjectId);
+		List<RoleUser> list = roleService.findSubjectUsers(subjectId);
+		for(RoleUser ru : list){
+			long count = noteService.countNotesBySubjectUser(subjectId, ru.getUserId());
+			ru.setNoteCount(count);
+		}
+		
+		mv.addObject("subjectEntity", subjectEntity);
+		mv.addObject("list", list);
+		return mv;
+	}
+	
 	/**
 	 * 前台添加专题 页面跳转
 	 * 

@@ -74,19 +74,6 @@ function searchNotes(deleted,unloadfirst){
 			}
 			
 		}
-		$("#contentListUl").find("div.state").each(function(index,obj){
-			var noteid = obj.id.replace("note_status_","");
-			AT.get(webRoot+"/noteController/front/noteStatus.dht?id="+noteid,function(json){
-				if(json.isRead == 'true'){
-					$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/read.png\" /> <span>已读</span> ");
-				}else{
-					$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/readno.png\" /> <span>未读</span> ");
-				}
-				if(parseInt(json.attachmentCount) > 0){
-					$("#"+obj.id).append("<img src=\""+imgPath+"/attachment.png\" />有附件");
-				}
-			},false);
-		});
 		setTimeout('hideLoading_search()',100);
 	});
 }

@@ -26,9 +26,9 @@ public interface Constants {
 	 */
 	public static final String SUBJECT_TAG_DIRNAME = "专题标签";
 	/**
-	 * 专题文档资料目录名称
+	 * 回收站名称
 	 */
-	public static final String SUBJECT_RECYCLE_DIRNAME = "回收站";
+	public static final String RECYCLE_NODE_NAME = "回收站";
 	/**
 	 * 专题模板
 	 */

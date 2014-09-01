@@ -227,9 +227,9 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public long countNoReadNoteBySubject(String subjectId, String userName) {
+	public long countNoReadNoteBySubject(String subjectId, String userId) {
 		String sql = "SELECT count(*) FROM eht_note WHERE subjectId=? and id in(SELECT noteid from eht_note_user WHERE userid=?)";
-		long count = getCountForJdbcParam(sql, new String[] {subjectId, userName});
+		long count = getCountForJdbcParam(sql, new String[] {subjectId, userId});
 		return count;
 	}
 
@@ -284,7 +284,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public List<NoteEntity> findNotesInRecycleByParams(String userId, String subjectId, String dirId, String title, String tagId, String orderField) {
+	public List<NoteEntity> findNotesInRecycleByParams(String userId, String subjectId, String dirId, String title, String tagId, String orderField, int subjectType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
 		if (!StringUtil.isEmpty(title)) {
 			dc.add(Restrictions.like("note.title", title, MatchMode.ANYWHERE));
@@ -339,6 +339,16 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 
 		dc.addOrder(Order.desc(orderField));
 		List<NoteEntity> list = findByDetached(dc);
+		
+		if(subjectType == Constants.SUBJECT_TYPE_M){
+			List<NoteEntity> resultList = new ArrayList<NoteEntity>();
+			for(NoteEntity note : list){
+				if(!inNoteBlackList(userId, note.getId())){
+					resultList.add(note);
+				}
+			}
+			return resultList;
+		}
 		return list;
 	}
 
@@ -505,13 +515,20 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
+	public long countNotesBySubjectUser(String subjectId, String userId) {
+		String sql = "SELECT count(*) FROM eht_note WHERE subjectId=? and createUser=?";
+		long count = getCountForJdbcParam(sql, new String[] {subjectId, userId});
+		return count;
+	}
+	
+	@Override
 	public List<NoteEntity> findNotesBySubject(String subjectId, String userId) {
 		String query="select d.* from eht_note d where  d.subjectId='"+subjectId+"' and d.deleted="+Constants.DATA_NOT_DELETED+"  and d.id not in(select p.classpk from eht_group p , eht_group_user u where u.userid='"+userId +"' and  u.groupid=p.groupid )";
 		return  this.commonDao.findListbySql(query, NoteEntity.class);
 	}
 
 	@Override
-	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String title, String tagId, String orderField) {
+	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String title, String tagId, String orderField, String userId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		if (!StringUtil.isEmpty(title)) {
@@ -549,7 +566,15 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 
 		dc.addOrder(Order.desc(orderField));
 		List<NoteEntity> list = findByDetached(dc);
-		return list;
+		
+		//去除黑名单中的条目
+		List<NoteEntity> resultList = new ArrayList<NoteEntity>();
+		for(NoteEntity note : list){
+			if(!inNoteBlackList(userId, note.getId())){
+				resultList.add(note);
+			}
+		}
+		return resultList;
 	}
 
 	@Override

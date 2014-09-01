@@ -216,7 +216,7 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 			TreeData recycle = new TreeData();
 			recycle.setDataType("RECYCLE");
 			recycle.setId("recycle_subject_" + subject.getId());
-			recycle.setName("回收站");
+			recycle.setName(Constants.RECYCLE_NODE_NAME);
 			recycle.setIsParent("true");
 			recycle.setpId(subject.getId());
 			recycle.setSubjectId(subject.getId());

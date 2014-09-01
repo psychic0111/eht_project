@@ -1,3 +1,25 @@
+
+function subjectMember(){
+	var subjectId = rightClickNode.id;
+	var dataParam = "subjectId=" + subjectId;
+	url = webRoot+"/subjectController/front/viewMembers.dht?" + dataParam;
+	AT.load("teamMember",url,function(){
+		var obj = $("#" + rightClickNode.tId + "_a");
+		var left = obj.offset().left;
+		var top = obj.offset().top - ($("#teamMember").height() / 2);
+		$("#teamMember").css({position: "absolute",'top': top + 25,'left':left + 148});
+		$("#teamMember").show();
+		$("body").bind("mousedown", _member_onbodyDown);//绑定鼠标点击隐藏树窗口事件
+	});
+	hideRightMenu();
+}
+
+//鼠标页面点击事件
+function _member_onbodyDown(event) {  
+	$("#teamMember").fadeOut("fast");
+	$("body").unbind("mousedown", _member_onbodyDown);
+}
+
 //右键菜单增加目录、子目录
 function addChildDir(){
 	var subjectId = rightClickNode.id;

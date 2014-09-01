@@ -105,10 +105,6 @@ public class TreeUtils {
 				ReflectionUtils.setFieldValue(treeData, "pId", parentValue+"");
 			}
 			
-			if (object instanceof DirectoryEntity) {
-				DirectoryEntity dir = (DirectoryEntity) object;
-			}
-			
 			Object subjectIdObj = null;
 			try {
 				subjectIdObj = ReflectionUtils.getFieldValue(object, "subjectId");

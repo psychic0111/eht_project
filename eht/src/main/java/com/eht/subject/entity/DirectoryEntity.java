@@ -384,5 +384,4 @@ public class DirectoryEntity implements java.io.Serializable {
 		this.className = className;
 	}
 	
-	
 }

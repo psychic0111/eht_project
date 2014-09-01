@@ -74,6 +74,10 @@ public class TagEntity extends BaseSubjectModel implements java.io.Serializable 
 	/**修改者,接口使用*/
 	private java.lang.String updateUserId;
 	
+	private String operation;
+	
+	private String className;
+	
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -322,5 +326,23 @@ public class TagEntity extends BaseSubjectModel implements java.io.Serializable 
 	@Override
 	public String findOwnSubjectId() {
 		return this.subjectId;
+	}
+	
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+	
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 }

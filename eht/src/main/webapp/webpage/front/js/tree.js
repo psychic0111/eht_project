@@ -45,6 +45,7 @@ var treeSetting = {
 	
 	view: {
 		showLine: false,
+		showTitle: false,
 		selectedMulti: true,
 		dblClickExpand: false,
 		nameIsHTML: true,
@@ -76,15 +77,16 @@ var treeSetting = {
 	}
 }; 
 function onNodeClick(e, treeId, node) {
+	
 	 if(isNoteStats()){//判断是否编辑状态
-		   var submit = function (v, h, f) {
-			if (v == true){ 
-				onNodeClickDo(e, treeId, node); 
-			} 
-			return true;
-		};
-		// 自定义按钮
-		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
+	   var submit = function (v, h, f) {
+		if (v == true){ 
+			onNodeClickDo(e, treeId, node); 
+		} 
+		return true;
+	};
+	// 自定义按钮
+	$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
 	 }else{
 		 onNodeClickDo(e, treeId, node);
 	 }
@@ -92,128 +94,128 @@ function onNodeClick(e, treeId, node) {
 
 //树节点click事件
 function onNodeClickDo(e, treeId, node) {
-			if(!onclickAndBefore)return;
-			var showD = true;
-			if(node.dataType == "SUBJECT"){   //专题条目检索
-				//-1：个人专题    -2
-				var subjectId = (node.id == '-1' || node.id == '-2')&&  node.children.length>0 ? node.children[0].id : node.id;
-				if(node!=null&&node.name=="多人专题"/* && node.children.length>0*/){
-					/*zTree_Menu.selectNode(node.children[0]);
-					zTree_Menu.expandNode(node.children[0],true);*/
-					if(node.children.length>0){
-						node=node.children[0];
-						subjectId = node.id;	
-					}
-					showD = false;
-				}
-				if(node!=null&&node.name=="个人专题"/* &&  node.children.length>0*/){
-					/*zTree_Menu.selectNode(node.children[0],false);
-					zTree_Menu.expandNode(node.children[0],true);*/
-					if(node.children.length>0){
-						node=node.children[0];
-						subjectId = node.id;	
-					}
-					showD = false;
-				}
-				selectInfo = new SelectInfo();
-				selectInfo.curMenu = node;
-				selectInfo.subjectId = subjectId; 
-				if(showD){
-					showSearchDiv();
-				}
-			}else if(node.dataType == "DIRECTORY"&&!isDocumentFolder(node)){   //专题条目检索
-				selectInfo = new SelectInfo();
-				var dirId = node.id.replace("_deleted", "");  // 回收站中的目录ID都加了 _deleted后缀
-				selectInfo.dirId = dirId;
-				if(node.branchId != 'RECYCLEP' && node.branchId != 'RECYCLE'){//拼接所有子目录的id
-					var nodes = zTree_Menu.getNodesByParam("dataType", "DIRECTORY", node);
-					var ids = getSonIds(nodes);
-					var strids = node.id;
-					if(ids!=null){
-						strids = strids + ","+ids.join(",");
-					}
-					selectInfo.searchDirIds = strids;
-					selectInfo.subjectId = node.subjectId;
-				}else{
-					selectInfo.isDeleted = 1;   // 查询回收站条目
-					selectInfo.searchDirIds = dirId;
-					selectInfo.dirIds = node.id;
-					selectInfo.newEnable = false;
-				}
-				selectInfo.curMenu = node;
-				if(node.name != '文档资料'){
-					selectInfo.dirId = dirId;
-					showSearchDiv();
-				}
-			}else if(node.dataType == 'RECYCLEP' || node.dataType == 'RECYCLE'){
-				selectInfo = new SelectInfo();
-				selectInfo.curMenu = node;
-				selectInfo.dirIds =  "recycle_personal";
-				selectInfo.searchDirIds = "recycle_personal";
-				selectInfo.newEnable = false;
-				var parentNode = node.getParentNode();
-				var subjectId = "";				
-				if(node.dataType == 'RECYCLEP'){
-					subjectId = ""; //个人回收，包括所有个人专题
-				}else{
-					subjectId = parentNode.id;
-				}
-				selectInfo.isDeleted = 1;
-				selectInfo.subjectId = subjectId;
-				showSearchDiv();
-			}else if(node.dataType == "TAG"){
-				selectInfo = new SelectInfo();
-				selectInfo.curMenu = node;
-				selectInfo.newEnable = false;
-				//选择专题树下的标签时查询当前标签下的数据
-				 if(node.name!='我的标签' || node.name!='专题标签'){
-					 selectInfo.tagId = node.id;
-				 }else{
-					 selectInfo.tagId = "";
-				 }
-				 selectInfo.isDeleted = 0;
-				 if(node.subjectId){
-					 selectInfo.subjectId = node.subjectId;
-				 }
-				 showSearchDiv();
-			}else if(node.dataType == "MSG"){   //消息中心
-				selectInfo = new SelectInfo();
-				selectInfo.curMenu = node;
-				var msgType = "";
-				var dataId = node.id;
-				if(dataId == '-101'){
-					msgType = '1';
-				}
-				if(dataId == '-103'){
-					msgType = '2';
-				} 
-				//默认选中未读信息
-				if(msgType==''){
-					var parentNode = zTree_Menu.getNodeByParam("id", "-102", zTree_Menu.getNodes()[2]);
-					zTree_Menu.selectNode(parentNode);
-				}
-				changeCss(node);
-				var url = webRoot+"/messageController/front/messageList.dht?pageNo=1&pageSize=20&msgType=" + msgType;
-				AT.load("iframepage",url,function() {});
-			}else{
-				selectInfo = new SelectInfo();
-				selectInfo.newEnable = false;
+	if(!onclickAndBefore)return;
+	var showD = true;
+	if(node.dataType == "SUBJECT"){   //专题条目检索
+		//-1：个人专题    -2
+		var subjectId = (node.id == '-1' || node.id == '-2')&&  node.children.length>0 ? node.children[0].id : node.id;
+		if(node!=null&&node.name=="多人专题"/* && node.children.length>0*/){
+			/*zTree_Menu.selectNode(node.children[0]);
+			zTree_Menu.expandNode(node.children[0],true);*/
+			if(node.children.length>0){
+				node=node.children[0];
+				subjectId = node.id;	
 			}
-			
-			//处理文档类
-			if(isDocumentFolder(node)){ 
-				//currentSubjectId = currentSubjectId==null?node.subjectId:currentSubjectId;
-				currentDirId = node.id; 
-				dirAttachmentManage(node.subjectId);
+			showD = false;
+		}
+		if(node!=null&&node.name=="个人专题"/* &&  node.children.length>0*/){
+			/*zTree_Menu.selectNode(node.children[0],false);
+			zTree_Menu.expandNode(node.children[0],true);*/
+			if(node.children.length>0){
+				node=node.children[0];
+				subjectId = node.id;	
 			}
-			
-			//添加目录
-			if(node.id == "addDirectory"){
-				var parentNode = node.getParentNode();
-				var newNode = {id:"",name:"新目录",icon:imgPath+"/tree/folder.png"};
-				newNode = zTree_Menu.addNodes(parentNode, newNode, true);
-				zTree_Menu.editName(newNode[0]);
+			showD = false;
+		}
+		selectInfo = new SelectInfo();
+		selectInfo.curMenu = node;
+		selectInfo.subjectId = subjectId; 
+		if(showD){
+			showSearchDiv();
+		}
+	}else if(node.dataType == "DIRECTORY"&&!isDocumentFolder(node)){   //专题条目检索
+		selectInfo = new SelectInfo();
+		var dirId = node.id.replace("_deleted", "");  // 回收站中的目录ID都加了 _deleted后缀
+		selectInfo.dirId = dirId;
+		if(node.branchId != 'RECYCLEP' && node.branchId != 'RECYCLE'){//拼接所有子目录的id
+			var nodes = zTree_Menu.getNodesByParam("dataType", "DIRECTORY", node);
+			var ids = getSonIds(nodes);
+			var strids = node.id;
+			if(ids!=null){
+				strids = strids + ","+ids.join(",");
 			}
+			selectInfo.searchDirIds = strids;
+			selectInfo.subjectId = node.subjectId;
+		}else{
+			selectInfo.isDeleted = 1;   // 查询回收站条目
+			selectInfo.searchDirIds = dirId;
+			selectInfo.dirIds = node.id;
+			selectInfo.newEnable = false;
+		}
+		selectInfo.curMenu = node;
+		if(node.name != '文档资料'){
+			selectInfo.dirId = dirId;
+			showSearchDiv();
+		}
+	}else if(node.dataType == 'RECYCLEP' || node.dataType == 'RECYCLE'){
+		selectInfo = new SelectInfo();
+		selectInfo.curMenu = node;
+		selectInfo.dirIds =  "recycle_personal";
+		selectInfo.searchDirIds = "recycle_personal";
+		selectInfo.newEnable = false;
+		var parentNode = node.getParentNode();
+		var subjectId = "";				
+		if(node.dataType == 'RECYCLEP'){
+			subjectId = ""; //个人回收，包括所有个人专题
+		}else{
+			subjectId = parentNode.id;
+		}
+		selectInfo.isDeleted = 1;
+		selectInfo.subjectId = subjectId;
+		showSearchDiv();
+	}else if(node.dataType == "TAG"){
+		selectInfo = new SelectInfo();
+		selectInfo.curMenu = node;
+		selectInfo.newEnable = false;
+		//选择专题树下的标签时查询当前标签下的数据
+		 if(node.name!='我的标签' || node.name!='专题标签'){
+			 selectInfo.tagId = node.id;
+		 }else{
+			 selectInfo.tagId = "";
+		 }
+		 selectInfo.isDeleted = 0;
+		 if(node.subjectId){
+			 selectInfo.subjectId = node.subjectId;
+		 }
+		 showSearchDiv();
+	}else if(node.dataType == "MSG"){   //消息中心
+		selectInfo = new SelectInfo();
+		selectInfo.curMenu = node;
+		var msgType = "";
+		var dataId = node.id;
+		if(dataId == '-101'){
+			msgType = '1';
+		}
+		if(dataId == '-103'){
+			msgType = '2';
+		} 
+		//默认选中未读信息
+		if(msgType==''){
+			var parentNode = zTree_Menu.getNodeByParam("id", "-102", zTree_Menu.getNodes()[2]);
+			zTree_Menu.selectNode(parentNode);
+		}
+		changeCss(node);
+		var url = webRoot+"/messageController/front/messageList.dht?pageNo=1&pageSize=20&msgType=" + msgType;
+		AT.load("iframepage",url,function() {});
+	}else{
+		selectInfo = new SelectInfo();
+		selectInfo.newEnable = false;
+	}
+	
+	//处理文档类
+	if(isDocumentFolder(node)){ 
+		//currentSubjectId = currentSubjectId==null?node.subjectId:currentSubjectId;
+		currentDirId = node.id; 
+		dirAttachmentManage(node.subjectId);
+	}
+	
+	//添加目录
+	if(node.id == "addDirectory"){
+		var parentNode = node.getParentNode();
+		var newNode = {id:"",name:"新目录",icon:imgPath+"/tree/folder.png"};
+		newNode = zTree_Menu.addNodes(parentNode, newNode, true);
+		zTree_Menu.editName(newNode[0]);
+	}
 }
 //个人标签  多人标签 消息标签 点击时候修改样式
 function changeCss(node){

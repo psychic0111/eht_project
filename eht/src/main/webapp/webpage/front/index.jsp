@@ -210,6 +210,8 @@ window.imgPath = imgPath;
   <!-- Begin footer-->
 <!-- End footer-->
 </div>
+<div id="teamMember" style="min-height:250px;width:120px;border:2px solid burlywood;background:white;display:none;">
+</div>
 <!-- End mainer--> 
 <jsp:include page="./include/footer.jsp" />
 <script type="text/javascript">

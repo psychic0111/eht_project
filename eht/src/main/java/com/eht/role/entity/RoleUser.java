@@ -44,6 +44,9 @@ public class RoleUser implements Serializable {
 	private Role role;
 	
 	private boolean blackList;
+	
+	private long noteCount;
+	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	public Long getId() {
@@ -110,7 +113,6 @@ public class RoleUser implements Serializable {
 		this.accountEntity = accountEntity;
 	}
 
-    
 	@Transient
 	public boolean isBlackList() {
 		return blackList;
@@ -118,6 +120,15 @@ public class RoleUser implements Serializable {
 
 	public void setBlackList(boolean blackList) {
 		this.blackList = blackList;
+	}
+
+	@Transient
+	public long getNoteCount() {
+		return noteCount;
+	}
+
+	public void setNoteCount(long noteCount) {
+		this.noteCount = noteCount;
 	}
 	
 }

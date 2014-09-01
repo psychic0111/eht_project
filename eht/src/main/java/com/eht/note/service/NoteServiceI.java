@@ -105,7 +105,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param orderField
 	 * @return
 	 */
-	public List<NoteEntity> findNotesInRecycleByParams(String userId, String subjectId, String dirId, String title, String tagId, String orderField);
+	public List<NoteEntity> findNotesInRecycleByParams(String userId, String subjectId, String dirId, String title, String tagId, String orderField, int subjectType);
 	
 	/**
 	 * 查询专题目录下条目，标题包含指定字符串
@@ -255,7 +255,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param orderField
 	 * @return
 	 */
-	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String searchInput, String tagId, String orderField);
+	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String searchInput, String tagId, String orderField, String userId);
 	
 	
 	/**
@@ -270,4 +270,12 @@ public interface NoteServiceI extends CommonService{
 	 * @return
 	 */
 	public String generateMD5Html(NoteEntity note, boolean update);
+	
+	/**
+	 * 查询用户在专题中创建的条目数量
+	 * @param subjectId
+	 * @param userId
+	 * @return
+	 */
+	public long countNotesBySubjectUser(String subjectId, String userId);
 }

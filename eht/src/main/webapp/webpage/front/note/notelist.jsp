@@ -31,22 +31,22 @@
    		<c:set var="firstNoteId" value=""/>
 		<ul id="contentListUl" style="width:100%;">
 			<c:forEach items="${noteList }" var="note">
-			<xd:inBlackList primaryKey="${note.id}" resource="note">
+			
 				<c:if test="${first==true }">
-				<c:set var="firstNoteId" value="${note.id}"/>
-				<c:set var="first" value="false"></c:set>
+					<c:set var="firstNoteId" value="${note.id}"/>
+					<c:set var="first" value="false"></c:set>
 				</c:if>
 				<li style="width:100%;">
 				<div class="title">
 					<a href="#" onclick="viewNoteclick('${note.id}')">
 						<img src="${imgPath}/note.png" />
 						<c:choose>
-    						 <c:when test="${fn:length(note.title) > 50}">
-    						  <c:out value="${fn:substring(note.title, 0, 50)}......" />
+    						<c:when test="${fn:length(note.title) > 50}">
+    							<c:out value="${fn:substring(note.title, 0, 50)}......" />
      						</c:when>
-   						  <c:otherwise>
-    					 ${note.title }
-    					 </c:otherwise>
+   						  	<c:otherwise>
+    					 		${note.title }
+    					 	</c:otherwise>
     					</c:choose>
 					</a>
 					<span onclick="restoreNote('${note.id}')" class="recycle_png" style="float:right;cursor:pointer;display:none;">
@@ -60,7 +60,9 @@
 							${note.summary}
 							<br/>
 							<div class="Font1">
-								- <c:if test="${note.updateTime != null}">
+								<span class="createUser" style="font-weight:normal;color:cadetblue;font-size:12px;">${note.accountCreateUser.username }</span>
+								&nbsp;&nbsp;
+								- &nbsp;&nbsp;<c:if test="${note.updateTime != null}">
 									<fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss" value="${note.updateTime }" type="both"/>
 								</c:if>
 								<c:if test="${note.updateTime == null}">
@@ -74,7 +76,6 @@
 					</div>
 				</div>
 				</li>
-			</xd:inBlackList>
 			</c:forEach>
 		</ul>
 		<input type="hidden" value="${firstNoteId }" id="firstNodeId" />
@@ -90,5 +91,19 @@ $(document).ready(function(){
 	if($("#note_deleted").val()==1){
 		$("span.recycle_png").show();
 	}
+	
+	$("#contentListUl").find("div.state").each(function(index,obj){
+		var noteid = obj.id.replace("note_status_","");
+		AT.get(webRoot+"/noteController/front/noteStatus.dht?id="+noteid,function(json){
+			if(json.isRead == 'true'){
+				$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/read.png\" /> <span>已读</span> ");
+			}else{
+				$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/readno.png\" /> <span>未读</span> ");
+			}
+			if(parseInt(json.attachmentCount) > 0){
+				$("#"+obj.id).append("<img src=\""+imgPath+"/attachment.png\" />有附件");
+			}
+		},false);
+	});
 });
 </script>
