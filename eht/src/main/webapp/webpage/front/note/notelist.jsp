@@ -72,7 +72,6 @@
 						</div>
 					</a>
 					<div class="state" id="note_status_${note.id}">
-						
 					</div>
 				</div>
 				</li>

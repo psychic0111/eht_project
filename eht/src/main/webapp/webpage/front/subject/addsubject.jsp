@@ -256,7 +256,7 @@ function resetTree() {
 		        <td width="100">专题名称：</td>
 		        <td>
 		         <span class="tags">
-		           <input name="subjectName" id="subjectName" class="InputTxt2" style="width:80%;height:28px;line-height:28px;" type="text"/>
+		           <input name="subjectName" id="subjectName" class="InputTxt2" style="width:70%;height:28px;line-height:28px;" type="text"/>
 		          </span>
 		         </td>
 		       </tr>
@@ -288,7 +288,7 @@ function resetTree() {
 		      <tr>
 		        <td>专题介绍：</td>
 		        <td>
-		        	<textarea  name="description" cols="80" rows="5"></textarea>
+		        	<textarea  name="description" cols="70" rows="5"></textarea>
 		        </td>
 		      </tr>
 		    </table>

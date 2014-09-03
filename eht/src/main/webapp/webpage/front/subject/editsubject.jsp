@@ -64,7 +64,7 @@ function toShowSubject(obj){
 		               ${subject.subjectName}
 		            </c:when>
 		            <c:otherwise>
-		            <input name="subjectName" id="subjectName" class="InputTxt2" style=" width:80%; height:28px;line-height:28px;" value="${subject.subjectName}" type="text"/>
+		            <input name="subjectName" id="subjectName" class="InputTxt2" style=" width:70%; height:28px;line-height:28px;" value="${subject.subjectName}" type="text"/>
 		            </c:otherwise>
 		            </c:choose>
 		            
@@ -97,7 +97,7 @@ function toShowSubject(obj){
 		      <tr>
 		        <td>专题介绍：</td>
 		        <td>
-		        	<textarea style="width:95%; height:100px" name="description" cols="" rows="">${subject.description}
+		        	<textarea cols="70" rows="5" name="description" >${subject.description}
 		        	</textarea>
 		        </td>
 		      </tr>

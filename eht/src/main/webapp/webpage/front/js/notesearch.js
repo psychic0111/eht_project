@@ -703,26 +703,18 @@ function hideLoading_tree(){
  
 //----------------logging search----------
 function showLoading_search(){
-	if(document.getElementById("pageloading_search").style.display=='none'){
-		$("#pageloading_search").show(); 
-	}
+	$("#pageloading_search").show(); 
 }
 function hideLoading_search(){
-	if(document.getElementById("pageloading_search").style.display!='none'){
-		$("#pageloading_search").hide(); 
-	}
+	$("#pageloading_search").hide(); 
 }
 
 //----------------logging edit----------
 function showLoading_edit(){
-	if(document.getElementById("pageloading_edit").style.display=='none'){
-		$("#pageloading_edit").show(); 
-	}
+	$("#pageloading_edit").show(); 
 }
 function hideLoading_edit(){
-	if(document.getElementById("pageloading_edit").style.display!='none'){
-		$("#pageloading_edit").hide(); 
-	}
+	$("#pageloading_edit").hide(); 
 }
 
 

@@ -142,28 +142,30 @@
 <script type="text/javascript" src="${frontPath}/js/tree.js"></script>
 <script type="text/javascript" src="${frontPath}/js/treeRightFunction.js"></script>
 <script type="text/javascript" src="${frontPath}/js/notesearch.js"></script>
+<script type="text/javascript" src="${frontPath}/js/jquery.sinaEmotion.js"></script>
 <script type="text/javascript"> 
 window.UEDITOR_HOME_URL = "${frontPath}/js/ueditor/";
 window.UEDITOR_IMG_URL = "${webRoot}";
 window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
 window.imgPath = imgPath;
+var context='${imgPath}/biaoqing/';
 </script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
 </head>
-<body style="width: auto;min-width: 1024px;position:relative;top:0"> 
+<body id="mainBody" style="width: auto;min-width: 1024px;position:relative;top:0;overflow:hidden;"> 
 		<div id="pageloading_tree" style="display:none"></div> 
 <!-- Begin header-->
 <%@ include file="./include/head.jsp"%>
 <!-- End header--> 
 
 <!-- Begin mainer-->
-<div class="mainer" id="page_mainer">
+<div class="mainer" id="page_mainer" style="height:100%;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0">
     <tr>
-      <td valign="top" class="Directory" id="treeMenu_td" style="position:relative;top:0;left:0;padding-top: 0px;">
-        <div class="items">
+      <td valign="top" class="Directory" id="treeMenu_td" style="position:relative;top:0;left:0;padding-top: 0px;width:230px;">
+        <div id="mainTreeDiv" class="items" style="overflow:auto;width:100%;">
         	<ul id="treeMenu" class="ztree"></ul>
         	<div class="rightMenu" id="treeRightMenu">
         		<ul id="treeRightMenu_ul_subject">
@@ -198,22 +200,54 @@ window.imgPath = imgPath;
         </div>
         
         </td>
-      <td class="Fold">
-        <a href="#" onclick="hideTreeMenu()"><img id="hideTree_img" src="<%=imgPath %>/button_fold.png" width="8" height="110" /></a>
+      <td class="Fold" style="text-align:center;">
+        <div style="height:100%;position:absolute;top:210px;cursor:pointer;" onclick="hideTreeMenu()">
+        	<img id="hideTree_img" src="<%=imgPath %>/button_fold.png" width="8" height="110" />
+        	</div>
       </td>
-      <td id="iframepage" valign="top" class="mainer_right">
+      <td id="iframepage" valign="top" class="mainer_right" style="width:350px;">
         <!-- Begin mainer_index-->
         <!-- End mainer_index-->
-        </td>
+      </td>
+      <td id="noteEditor_td" class="mainer_right" valign="top" align="left">
+      	<!-- Begin notes_new-->
+      	
+		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
+		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
+		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+		
+		<!-- 附件上传 -->
+		<link rel="stylesheet" type="text/css" href="<%=frontPath %>/js/uploadify3/uploadify.css"/>
+		<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/jquery.uploadify.js"></script>
+		<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/uploadify_api.js" charset="utf-8"></script>
+		<!-- 附件上传 -->
+		<script type="text/javascript" src="<%=frontPath %>/js/uploadfile.js" charset="utf-8"></script>
+		
+		
+		<script type="text/javascript" src="${frontPath}/js/note.js"></script>
+		<script type="text/javascript" src="${frontPath}/js/tag.js"></script>
+		<script type="text/javascript" src="${frontPath}/js/noteshare.js"></script>
+      	
+      	<div class="right_index" id="right_index" style="margin-bottom:1px;width:99%;height:100%;">
+		    <div id="notes_new" class="notes_new" style="position:relative;top:0;left:0;padding-top:0px;float:right;width:100%;">
+				<div id="pageloading_edit" style="display:block"></div>
+		      	<jsp:include page="./note/notecontent.jsp"></jsp:include>
+		      	<script type="text/javascript">$("#pageloading_edit").show();</script>
+		    </div>
+	    </div>
+	    <!-- End notes_new-->
+      </td>  
     </tr>
   </table>
   <!-- Begin footer-->
 <!-- End footer-->
 </div>
+<div class="clear"></div>
+<!-- End mainer--> 
 <div id="teamMember" style="min-height:250px;width:120px;border:2px solid burlywood;background:white;display:none;">
 </div>
-<!-- End mainer--> 
 <jsp:include page="./include/footer.jsp" />
+
 <script type="text/javascript">
 //构造左边整棵树 
 //selectNode1 需要默认选中的一级节点的序号 0=个人专题 1=多人专题 3=消息中心
@@ -280,17 +314,13 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 		zTree_Menu.expandNode(zTree_Menu.getNodes()[1], true);	
 		zTree_Menu.expandNode(zTree_Menu.getNodes()[2], true);	
 		
-		$("#"+zTree_Menu.getNodes()[0].tId+"_a").append('<span id="-1"  class="gear"></span>');
-		$("#"+zTree_Menu.getNodes()[1].tId+"_a").append('<span id="-2"  class="gear"></span>');
+		$("#"+zTree_Menu.getNodes()[0].tId+"_a").append('<span id="-1"  class="gear" onclick="subjectManage()"></span>');
+		$("#"+zTree_Menu.getNodes()[1].tId+"_a").append('<span id="-2"  class="gear" onclick="subjectManage()"></span>');
 		$("#"+zTree_Menu.getNodes()[0].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 		$("#"+zTree_Menu.getNodes()[1].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 		$("#"+zTree_Menu.getNodes()[0].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 		$("#"+zTree_Menu.getNodes()[2].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 
-		$(".gear").click(function(){
-			subjectManage();
-		});
-		
 	});
 }
 	 
@@ -442,7 +472,7 @@ function isDocumentFolder(node){
 
 function hideTreeMenu(){
 	$("#treeMenu_td").toggle();
-	var rect = $("#treeMenu_td")[0].getBoundingClientRect();;
+	var rect = $("#treeMenu_td")[0].getBoundingClientRect();
 	var isVisible = !!(rect.bottom - rect.top);
 	if(isVisible){
 		$("#hideTree_img").attr("src", "${imgPath}/button_fold.png");
@@ -453,8 +483,27 @@ function hideTreeMenu(){
 	reloadEditor();
 }
 
+//隐藏条目内容页
+function hideNotePage(){
+	var w = $("#noteEditor_td").width();
+	$("#noteEditor_td").hide();
+	$("#iframepage").width(w + 350);
+}
+
+//显示条目内容页
+function showNotePage(){
+	$("#iframepage").width(350);
+	$("#noteEditor_td").show();
+}
+
 //打开页面 加载树
 $(document).ready(function(){
+	var contentHeight = (document.documentElement.clientHeight - 72);
+	/* if(UE.browser.ie){
+		contentHeight = contentHeight - 0;
+	} */
+	document.getElementById("mainBody").style.height = contentHeight + "px";
+	document.getElementById("mainTreeDiv").style.height = contentHeight + "px";
 	rightMenu = $("#treeRightMenu").html();
 	buildMainMenu(0,null,true);
 });

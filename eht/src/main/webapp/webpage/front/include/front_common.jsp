@@ -82,7 +82,7 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 					func(data);
 				},
 				error : function(XMLHttpRequest, textStatus, errorThrown) {
-					MSG.alert("请求出错！");
+					//MSG.alert("请求出错！");
 				}
 			};
 			$.ajax(options);
@@ -94,7 +94,7 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 			} else {
 				url += "?_rad=" + new Date().getTime();
 			}
-			$("#progressBar").show();
+			//$("#progressBar").show();
 			var options = {
 				async : true,
 				cache : false,
@@ -103,11 +103,11 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 				success : function(data, textStatus) {
 					$("#"+divID).html(data);
 					func();
-					$("#progressBar").hide();
+					//$("#progressBar").hide();
 				},
 				error : function(XMLHttpRequest, textStatus, errorThrown) {
-					$("#progressBar").hide();
-					MSG.alert("请求出错！");
+					//$("#progressBar").hide();
+					//MSG.alert("请求出错！");
 				}
 			};
 			$.ajax(options);
@@ -139,8 +139,8 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 					$("#progressBar").hide();
 				},
 				error : function(XMLHttpRequest, textStatus, errorThrown) {
-					$("#progressBar").hide();
-					MSG.alert("请求出错！");
+					//$("#progressBar").hide();
+					//MSG.alert("请求出错！");
 				}
 			};
 			$.ajax(options);
@@ -180,8 +180,8 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 					$("#progressBar").hide();
 				},
 				error : function(XMLHttpRequest, textStatus, errorThrown) {
-					$("#progressBar").hide();
-					MSG.alert("请求出错！");
+					//$("#progressBar").hide();
+					//MSG.alert("请求出错！");
 				}
 			};
 			$.ajax(options);
@@ -210,8 +210,8 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 							$("#progressBar").hide();
 						},
 						error : function(XMLHttpRequest, textStatus, errorThrown) {
-							$("#progressBar").hide();
-							MSG.alert("请求出错！");
+							//$("#progressBar").hide();
+							//MSG.alert("请求出错！");
 						}
 				};
 				$.ajax(options);

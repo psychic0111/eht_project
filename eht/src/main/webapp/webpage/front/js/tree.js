@@ -84,9 +84,9 @@ function onNodeClick(e, treeId, node) {
 			onNodeClickDo(e, treeId, node); 
 		} 
 		return true;
-	};
-	// 自定义按钮
-	$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
+	   };
+		// 自定义按钮
+		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
 	 }else{
 		 onNodeClickDo(e, treeId, node);
 	 }
@@ -96,6 +96,7 @@ function onNodeClick(e, treeId, node) {
 function onNodeClickDo(e, treeId, node) {
 	if(!onclickAndBefore)return;
 	var showD = true;
+
 	if(node.dataType == "SUBJECT"){   //专题条目检索
 		//-1：个人专题    -2
 		var subjectId = (node.id == '-1' || node.id == '-2')&&  node.children.length>0 ? node.children[0].id : node.id;
@@ -121,9 +122,15 @@ function onNodeClickDo(e, treeId, node) {
 		selectInfo.curMenu = node;
 		selectInfo.subjectId = subjectId; 
 		if(showD){
+			if(!$("#noteEditor_td").is(":visible")){
+				showNotePage();
+			}
 			showSearchDiv();
 		}
 	}else if(node.dataType == "DIRECTORY"&&!isDocumentFolder(node)){   //专题条目检索
+		if(!$("#noteEditor_td").is(":visible")){
+			showNotePage();
+		}
 		selectInfo = new SelectInfo();
 		var dirId = node.id.replace("_deleted", "");  // 回收站中的目录ID都加了 _deleted后缀
 		selectInfo.dirId = dirId;
@@ -148,6 +155,9 @@ function onNodeClickDo(e, treeId, node) {
 			showSearchDiv();
 		}
 	}else if(node.dataType == 'RECYCLEP' || node.dataType == 'RECYCLE'){
+		if(!$("#noteEditor_td").is(":visible")){
+			showNotePage();
+		}
 		selectInfo = new SelectInfo();
 		selectInfo.curMenu = node;
 		selectInfo.dirIds =  "recycle_personal";
@@ -164,6 +174,9 @@ function onNodeClickDo(e, treeId, node) {
 		selectInfo.subjectId = subjectId;
 		showSearchDiv();
 	}else if(node.dataType == "TAG"){
+		if(!$("#noteEditor_td").is(":visible")){
+			showNotePage();
+		}
 		selectInfo = new SelectInfo();
 		selectInfo.curMenu = node;
 		selectInfo.newEnable = false;
@@ -195,8 +208,12 @@ function onNodeClickDo(e, treeId, node) {
 			zTree_Menu.selectNode(parentNode);
 		}
 		changeCss(node);
+		if($("#noteEditor_td").is(":visible")){
+			hideNotePage();
+		}
 		var url = webRoot+"/messageController/front/messageList.dht?pageNo=1&pageSize=20&msgType=" + msgType;
-		AT.load("iframepage",url,function() {});
+		AT.load("iframepage",url,function() {
+		});
 	}else{
 		selectInfo = new SelectInfo();
 		selectInfo.newEnable = false;
@@ -205,6 +222,9 @@ function onNodeClickDo(e, treeId, node) {
 	//处理文档类
 	if(isDocumentFolder(node)){ 
 		//currentSubjectId = currentSubjectId==null?node.subjectId:currentSubjectId;
+		if($("#noteEditor_td").is(":visible")){
+			hideNotePage();
+		}
 		currentDirId = node.id; 
 		dirAttachmentManage(node.subjectId);
 	}
@@ -493,7 +513,7 @@ function nodeOnRename(e, treeId, node){
 					node.pId = data.Pid;
 					zTree_Menu.updateNode(node);
 					beforeNodeClick("treeMenu",node);
-					onNodeClick(null,"treeMenu",node);
+					k(null,"treeMenu",node);
 				}
 			}, true);
 		}

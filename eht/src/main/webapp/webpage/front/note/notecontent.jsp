@@ -42,27 +42,8 @@ li.over {background-color: #bcd4ec;}
 
 -->
 </style> 
-<script type="text/javascript"> 
-window.UEDITOR_HOME_URL = "${frontPath}/js/ueditor/";
-window.UEDITOR_IMG_URL = "";
-window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
-</script>
-<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
-<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
-<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
 
-<!-- 附件上传 -->
-<link rel="stylesheet" type="text/css" href="<%=frontPath %>/js/uploadify3/uploadify.css"/>
-<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/jquery.uploadify.js"></script>
-<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/uploadify_api.js" charset="utf-8"></script>
-<!-- 附件上传 -->
-<script type="text/javascript" src="<%=frontPath %>/js/uploadfile.js" charset="utf-8"></script>
-
-
-<script type="text/javascript" src="${frontPath}/js/note.js"></script>
-<script type="text/javascript" src="${frontPath}/js/tag.js"></script>
-<script type="text/javascript" src="${frontPath}/js/noteshare.js"></script>
-<!-- Begin function-->
+	<!-- Begin function-->
 	<form id="noteForm" name="noteForm" action="${webRoot}/noteController/front/saveNote.dht" method="post" onsubmit="return false;">
 		<input type="hidden" id="noteForm_id" name="id" value="${id}"/>
 		<input type="hidden" id="noteForm_subjectId" name="subjectId" value="${subjectId}"/>
@@ -87,9 +68,9 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
         <div class="clear"></div>
       </div>
       <!-- End function--> 
-      <div id="noteContentDiv">
+      <div id="noteContentDiv" style="height:100%;">
       <!-- Begin new_edit-->
-      <div class="new_edit" id="new_edit">
+      <div class="new_edit" id="new_edit" style="height:100%;">
         <div class="title">
           <div class="left" style="margin-top:-5px;width:60%;">
           	<input id="noteTitleField" class="InputTxt3" type="text" value="${title}" name="title" style=" width:100%;line-height:29px;" maxlength="200">
@@ -136,9 +117,9 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
         <div class="Edit_input">
           <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;display:none;"></script>
         </div>
-        <div id="parentHtmlViewDiv" >
-        	<div id="htmlViewDiv" >
-    		 	<iframe id="htmlViewFrame"  frameborder="0" border="0" style="height:440px;overflow-y:hidden;border:0;outline:0;border-bottom:0px;border-top:0px;border-right:0px;border-left:0px; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;" >
+        <div id="parentHtmlViewDiv" style="height:100%;">
+        	<div id="htmlViewDiv">
+    		 	<iframe id="htmlViewFrame"  frameborder="0" border="0" style="overflow-y:hidden;border:1px solid #d9d9d9;outline:0; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;height:100%;" >
    				</iframe>
     		</div>
     		<!-- Begin comments-->
@@ -158,7 +139,6 @@ window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
     <!-- End notes_new-->
     <div class="clear"></div>
 	</form>
-	   
 <div id="emailMsgDiv" style="font-size:14px;color: rgb(68, 68, 68);display:none;z-index:10001;background:#FFFFFF;border:1px solid rgb(213, 213, 213);width: 300px;position: absolute;top: 0px;left: 0px;">
     <ul style="display:none;" class="floattishi" id="flttishi" ></ul>
 	<input type="hidden" name="prevTrIndex" id="prevTrIndex" value="-1" />    
@@ -186,15 +166,22 @@ function reloadEditor(){
 
 $(document).ready(function() {
 	showLoading_edit(); 
+	if(editorheight==null){
+		editorheight = document.body.clientHeight;
+	}
+	var frameHeight = editorheight - 275;
+	editorheight = frameHeight - $("#edui1_toolbarbox").outerHeight() - 53;
 	if(UE.browser.ie){
 		editorheight = editorheight -10;
 	}
-	editorWidth = $("#notes_new").width()-20; 
+	editorWidth = $("#notes_new").width() - 4; 
 	noteEditor = UE.getEditor('note_editor', {initialFrameWidth:editorWidth, initialFrameHeight:editorheight,autoHeightEnabled:false});
 	noteEditor.addListener("ready", function(){
 		noteEditor.hide();
 	});
-	//$("#htmlViewDiv").height(editorheight);
+	
+	$("#htmlViewDiv").height(frameHeight);
+	//$("#htmlViewFrame").height(editorheight);
 	//$("#notes_new").height($("#right_index").height()+100);
 	var downloadPath = webRoot+"/noteController/front/downloadNodeAttach.dht";
 	var upLoadPath =webRoot+"/noteController/front/uploadNodeAttach.dht";

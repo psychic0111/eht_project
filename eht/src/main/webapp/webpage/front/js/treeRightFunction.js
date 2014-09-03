@@ -57,8 +57,12 @@ function subjectManage() {
 
 //专题管理跳转
 function subjectManageDo(){
+	if($("#noteEditor_td").is(":visible")){
+		hideNotePage();
+	}
 	url = webRoot+"/subjectController/front/subjectManage.dht?pageNo=1&pageSize=20";
-	AT.load("iframepage",url,function() {});
+	AT.load("iframepage",url,function() {
+	});
 	hideRightMenu();
 }
 

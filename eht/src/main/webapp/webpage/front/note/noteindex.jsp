@@ -18,10 +18,10 @@
 <c:set var="imgPath" value="<%=imgPath%>" />
 
 <link rel="stylesheet" href="${cssPath}/zTreeStyle/tagTree.css" type="text/css"/>
-<script type="text/javascript" src="${frontPath}/js/jquery.sinaEmotion.js"></script>
-   <div class="right_index" id="right_index" style="margin-bottom:1px">
+
+   <div class="right_index" id="right_index_mid" style="margin-bottom:1px;width:99%;">
 	<!-- Begin notes--> 
-    <div class="notes" style="width:33%;">
+    <div class="notes" style="width:100%;height:100%;">
       <!-- Begin function-->
       <div id="topFuncDiv" class="function" style="height:70px;width:95%;position:relative">
         <div class="search" style="width:97%;">
@@ -38,7 +38,7 @@
             </tr>
           </table>
         </div>
-        <div  style="width:93%;">
+        <div style="width:93%;">
 	        <div class="others" style="float:left;margin-top:4px;height:30px;width:70%">
 				<input type="hidden" name="tagId" id="note_tagId" value="${tagId }"/>
 				<input type="hidden" name="parentTag" id="note_parentTag" value="${parentTag }"/>
@@ -50,10 +50,10 @@
 	        <div class="others" style="float:right;margin-top:5px;width:30%">
 		         <style> 
 					.box{border:1px solid 
-					#C0C0C0;width:75px;height:23px;clip:rect(0px,181px,18px,0px);overflow:hidden;} 
+					#C0C0C0;width:85px;height:23px;clip:rect(0px,181px,18px,0px);overflow:hidden;} 
 					.box2{border:1px solid 
-					#F4F4F4;width:75px;height:23px;clip:rect(0px,179px,16px,0px);overflow:hidden;} 
-					select{position:relative;left:-2px;top:-2px;font-size:12px;width:76px;height:25px;line-height:14px;bo 
+					#F4F4F4;width:85px;height:23px;clip:rect(0px,179px,16px,0px);overflow:hidden;} 
+					select{position:relative;left:-2px;top:-2px;font-size:12px;width:86px;height:25px;line-height:14px;bo 
 					rder:0px;color:#909993;} 
 				</style> 
 				<div class=box>
@@ -70,8 +70,8 @@
       </div>
       <!-- End function--> 
       <!-- Begin notes_list-->
-      <div style="position:relative;top:0;left:0;padding-top: 0px;">
-			<div id="pageloading_search" style="display:block"></div> 
+      <div id="noteList_div" style="position:relative;top:0;left:0;padding-top: 0px;">
+			<div id="pageloading_search" style="display:block"></div>
       		<div class="notes_list" id="noteListIframe" style="width:93%;padding-left:10px;padding-top:10px;padding-right:5px;height:100%"></div>
       		<script type="text/javascript">$("#pageloading_search").show();</script>
       </div>
@@ -79,14 +79,6 @@
     </div>
     <!-- End notes--> 
     
-    <!-- Begin notes_new-->
-    
-    <div id="notes_new" class="notes_new" style="position:relative;top:0;left:0;padding-top: 0px;">
-		<div id="pageloading_edit" style="display:block"></div> 
-      	<jsp:include page="./notecontent.jsp"></jsp:include>
-      	<script type="text/javascript">$("#pageloading_edit").show();</script>
-    </div>
-    <!-- End notes_new-->
     <div class="clear"></div>
    </div>   
     <div id="tagContent" class="menuContent" style="background:#FFFFFF;font-size:13px;border:1px solid #3C85BA;display:none; position: absolute;z-index:2003">
@@ -108,5 +100,9 @@ window.onscroll = function(){
         top_div.removeClass("topDiv");
     }
 };
+
+var contentHeight = (document.documentElement.clientHeight - 72);
+document.getElementById("right_index_mid").style.height = contentHeight + "px";
+document.getElementById("noteList_div").style.height = (contentHeight - 100) + "px";
 </script>
 	

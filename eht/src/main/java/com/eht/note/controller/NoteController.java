@@ -550,7 +550,6 @@ public class NoteController extends BaseController {
 	 */
 	@RequestMapping("/front/noteList.dht")
 	public ModelAndView noteList(String searchInput, String subjectId, String dirId, String tagId, String orderField, int deleted, String topNodeId, HttpServletRequest request) {
-		long t1 = System.currentTimeMillis();
 		AccountEntity user = accountService.getUser4Session();
 		if (StringUtil.isEmpty(orderField)) {
 			orderField = "createTime";
@@ -562,8 +561,6 @@ public class NoteController extends BaseController {
 				noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_M);
 			} else {
 				noteList = noteService.findMNotesByParams(subjectId, dirId, searchInput, tagId, orderField, user.getId());
-				long t2 = System.currentTimeMillis();
-				System.out.println("多人查询耗时：" + (t2 - t1));
 			}
 		} else {
 			// 个人专题

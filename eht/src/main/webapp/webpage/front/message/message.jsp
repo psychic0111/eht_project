@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
@@ -106,8 +108,8 @@ function sendmessages(obj){
 	<div class="right_top">
           <div class="Nav">消息中心</div>
     </div>
-    <div class="right_index"> 
-	<form action="${webRoot}/messageController/front/messageList.dht" method="post" id="messageListForm" name="messageListForm"> 
+    <div class="right_index" style="padding-right:5px;"> 
+	<form action="${webRoot}/messageController/front/messageList.dht" method="post" id="messageListForm" name="messageListForm" onsubmit="return false;"> 
 		<input type="hidden" name="msgType" value="${msgType }">
 		<div class="function">
             <div class="search">
@@ -153,7 +155,7 @@ function sendmessages(obj){
 	                  				${msg.content}<br />
 	                  			</c:if>
                   			</font>
-                    		<span class="Font1">${msg.createTime}</span>
+                    		<span class="Font1"><fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss" value="${msg.createTime}" type="both"/></span>
                     	</td>
                     	<td width="80" align="center">
 	                  		<span class="others">

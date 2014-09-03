@@ -38,7 +38,7 @@ function removeCurrAttachment(obj){
 	<input type="hidden" id="wdzl_dirId" value="" />
 	
 	 
-	              <table  width="100%" border="0" cellspacing="1" cellpadding="0">
+	              <table  width="100%" border="0" cellspacing="1" cellpadding="0" style="padding-right:4px;">
 					<tr id="trFirst"  class="TD1"> 
 						<th  width="20%" align="center">附件名</th>
 						<th  width="10%" align="center">所属目录</th>
