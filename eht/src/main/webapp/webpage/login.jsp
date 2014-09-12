@@ -33,7 +33,7 @@
 	                <tr>
 	                  <td width="100">用户名：</td>
 	                  <td>
-	                  	<input class="InputTxt2"  style=" width:40%; height:28px;line-height:28px; " type="text" name="username" id="username" autocomplete="off" value="${username}"/><c:if test="${sendmail eq '1'}"><input class="Button1" type="button" onclick="repeat('${username}');" value="账号未激活,重发邮件" style="display:inline" /></c:if>
+	                  	<input class="InputTxt2"  style=" width:40%; height:28px;line-height:28px; " type="text" name="username" id="username" autocomplete="off" value="${username}"/><c:if test="${sendmail eq '1'}"><input class="Button1" type="button" onclick="repeat('${username}');" value="账号未激活,重发邮件？" style="display:inline" /></c:if>
                   	  </td>
 	                </tr>
 	                <tr>

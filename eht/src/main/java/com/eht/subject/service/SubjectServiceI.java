@@ -111,6 +111,12 @@ public interface SubjectServiceI extends CommonService{
 	public void inviteMemember(String email[],String type[],HttpServletRequest request,SubjectEntity SubjectEntity)throws Exception;
 	
 	/**
+	 * 多人专题邀请成员
+	 * @return
+	 */
+	public void inviteMemember(String  inviteMememberId,HttpServletRequest request)throws Exception;
+	
+	/**
 	 * 多人专题接受成员
 	 * @return
 	 */

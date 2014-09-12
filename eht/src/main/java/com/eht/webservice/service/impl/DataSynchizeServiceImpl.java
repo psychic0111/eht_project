@@ -38,6 +38,7 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import com.eht.comment.entity.CommentEntity;
 import com.eht.comment.service.CommentServiceI;
 import com.eht.common.bean.ResponseStatus;
+import com.eht.common.cache.DataCache;
 import com.eht.common.constant.ActionName;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.RoleName;
@@ -61,6 +62,11 @@ import com.eht.note.entity.NoteEntity;
 import com.eht.note.entity.NoteVersionEntity;
 import com.eht.note.service.AttachmentServiceI;
 import com.eht.note.service.NoteServiceI;
+import com.eht.resource.entity.ClassName;
+import com.eht.resource.entity.ResourceAction;
+import com.eht.resource.entity.ResourcePermission;
+import com.eht.resource.service.ResourceActionService;
+import com.eht.resource.service.ResourcePermissionService;
 import com.eht.role.entity.Role;
 import com.eht.role.entity.RoleUser;
 import com.eht.role.service.RoleService;
@@ -121,7 +127,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 
 	@Autowired
 	private RoleService roleService;
+	
+	@Autowired
+	private ResourceActionService resourceActionService;
 
+	@Autowired
+	private ResourcePermissionService resourcePermissionService;
+	
 	@Autowired
 	private SynchLogServiceI synchLogService;
 	
@@ -756,6 +768,72 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		SynchLogEntity log = synchLogService.getSynchLog(logId);
 		Map<String, Object> map = DataSynchizeUtil.parseLog(log);
 		return JsonUtil.map2json(map);
+	}
+	
+	@Override
+	@GET
+	@Path("/get/role")
+	public String initRole(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		List<Role> list = roleService.findAllRoles();
+		
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.RESOURCE.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+		res.setHeader(HeaderName.DATATYPE.toString(), DataType.ROLE.toString());
+		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+		
+		
+		return JsonUtil.list2json(list);
+	}
+	
+	@Override
+	@GET
+	@Path("/get/resource")
+	public String initResouce(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		ClassName cn = DataCache.getSubjectResource();
+		
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.RESOURCEACTION.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+		res.setHeader(HeaderName.DATATYPE.toString(), DataType.RESOURCE.toString());
+		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+		
+		return JsonUtil.bean2json(cn);
+	}
+	
+	@Override
+	@GET
+	@Path("/get/resourceaction")
+	public String initResouceAction(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		List<ResourceAction> actionList = resourceActionService.findActionsByName(Constants.SUBJECT_MODULE_NAME);
+		
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.RESOURCEPERMISSION.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+		res.setHeader(HeaderName.DATATYPE.toString(), DataType.RESOURCEACTION.toString());
+		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+		
+		return JsonUtil.list2json(actionList);
+	}
+	
+	@Override
+	@GET
+	@Path("/get/resourcepermission")
+	public String initResoucePermission(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) {
+		ClassName cn = DataCache.getSubjectResource();
+		List<ResourcePermission> list = resourcePermissionService.findResourcePermission(Constants.SUBJECT_MODULE_NAME, String.valueOf(cn.getClassNameId()));
+		
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.RESOURCEPERMISSION.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+		res.setHeader(HeaderName.DATATYPE.toString(), DataType.RESOURCEACTION.toString());
+		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+		
+		return JsonUtil.list2json(list);
 	}
 	
 	@Override

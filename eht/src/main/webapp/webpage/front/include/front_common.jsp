@@ -72,7 +72,9 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 			} else {
 				url += "?_rad=" + new Date().getTime();
 			}
-			
+			if(async == null  || async == 'undefined'){
+				async = true;
+			}
 			var options = {
 				async : async,
 				cache : false,

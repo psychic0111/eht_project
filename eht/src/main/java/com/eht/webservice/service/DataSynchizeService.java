@@ -559,5 +559,43 @@ public interface DataSynchizeService {
 	public String updateNoteHtml(String data, InputStream ins, long timeStamp,
 			boolean updateContent, String action, HttpServletRequest request,
 			HttpServletResponse res) throws IOException;
+	
+	/**
+	 * 初始化资源操作
+	 * @param clientId
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String initResouceAction(String clientId, String action,
+			HttpServletResponse res);
+
+	/**
+	 * 初始化资源权限
+	 * @param clientId
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String initResoucePermission(String clientId, String action,
+			HttpServletResponse res);
+
+	/**
+	 * 初始化资源
+	 * @param clientId
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String initResouce(String clientId, String action, HttpServletResponse res);
+
+	/**
+	 * 初始化角色
+	 * @param clientId
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String initRole(String clientId, String action, HttpServletResponse res);
 
 }

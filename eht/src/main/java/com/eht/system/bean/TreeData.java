@@ -40,6 +40,9 @@ public class TreeData {
 	private String subjectId;
 	
 	private String checked;
+	
+	private String selected;
+	
 	//子节点集合
 	private List<TreeData> children;
 	
@@ -180,6 +183,14 @@ public class TreeData {
 
 	public void setChecked(String checked) {
 		this.checked = checked;
+	}
+
+	public String getSelected() {
+		return selected;
+	}
+
+	public void setSelected(String selected) {
+		this.selected = selected;
 	}
 
 }

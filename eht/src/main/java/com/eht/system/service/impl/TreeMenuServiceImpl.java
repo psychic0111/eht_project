@@ -12,6 +12,8 @@ import com.eht.common.util.AppContextUtils;
 import com.eht.common.util.TreeUtils;
 import com.eht.message.service.MessageServiceI;
 import com.eht.note.service.NoteServiceI;
+import com.eht.role.entity.RoleUser;
+import com.eht.role.service.RoleService;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.DirectoryServiceI;
@@ -36,6 +38,10 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 	
 	@Autowired
 	private DirectoryServiceI directoryService;
+	
+	@Autowired
+	private RoleService roleService;
+	
 	
 	@Autowired
 	private NoteServiceI noteService;
@@ -204,6 +210,30 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 			tagMap.put("branchId", subject.getId());
 			
 			// 每个多人专题一组标签
+			TreeData remenber = new TreeData();
+			remenber.setDataType("REMENBER");
+			remenber.setId("remenber_subject_" + subject.getId());
+			remenber.setName("团队成员");
+			remenber.setBranchId(subject.getId());
+			remenber.setpId(subject.getId());
+			remenber.setSubjectId(subject.getId());
+			remenber.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/remenber.png");
+			dataList.add(remenber);
+			
+			List<RoleUser> roleUserList=roleService.findSubjectUsers(subject.getId());
+			for (RoleUser roleUser : roleUserList) {
+				TreeData remenberchild = new TreeData();
+				remenberchild.setDataType("REMENBERCHILD");
+				remenberchild.setId(roleUser.getUserId());
+				remenberchild.setName(roleUser.getAccountEntity().getUserName());
+				remenberchild.setBranchId(subject.getId());
+				remenberchild.setpId(remenber.getId());
+				remenberchild.setSubjectId(subject.getId());
+				remenberchild.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/remenberchild.png");
+				dataList.add(remenberchild);
+			}
+			
+			// 每个多人专题一组标签
 			TreeData tag = new TreeData();
 			tag.setDataType("TAG");
 			tag.setId("tag_subject_" + subject.getId());
@@ -223,7 +253,7 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 			recycle.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/arrow_refresh.png");
 			
 			dataList.add(tag);
-			dataList.add(recycle);
+			dataList.add(recycle);//
 			
 			// 回收站目录
 			List<DirectoryEntity> dirDelList = directoryService.findDeletedDirs(userId, subject.getId());
@@ -232,6 +262,7 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 				dirMap.put("pId", recycle.getId());
 				dataList.addAll(TreeUtils.transformObjectList2TreeDataList(dirDelList, "id", "dirName", "pId", dirMap));
 			}
+			
 			
 			List<TagEntity> subTagList = tagService.findTagBySubject(subject.getId());
 			// 转换为TreeData格式 标签

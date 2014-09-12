@@ -3,12 +3,10 @@ package com.eht.system.controller;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.log4j.Logger;
 import org.apache.ws.security.util.UUIDGenerator;
 import org.jeecgframework.core.common.controller.BaseController;
@@ -25,8 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import com.eht.common.constant.Constants;
+import com.eht.common.util.AppRequstUtiles;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.system.bean.SendEmailSession;
@@ -65,7 +63,7 @@ public class LogonController extends BaseController {
 		if(username!=null&&password!=null){
 			u = accountService.findUserByAccount(username);
 		}
-		if(u!=null&&u.getPassword()==null){
+		if(u!=null&&u.getStatus()!=null&&u.getStatus()==Constants.ACTIVATE){
 			mv = new ModelAndView("login");
 			mmp.put("username", username);
 			mmp.put("password", request.getParameter("password"));
@@ -112,7 +110,7 @@ public class LogonController extends BaseController {
 		String linkpath = null;
 		try {
 			msg = "注册成功！请查看邮件并激活账号！";
-			AccountEntity account = accountService.findUserByAccount(request.getParameter("username"));
+			AccountEntity account = accountService.findUserByEmail(request.getParameter("username"));
 			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
 			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 		  } catch (Exception e) {
@@ -199,10 +197,11 @@ public class LogonController extends BaseController {
 		String linkpath = null;
 		try {
 			msg = "注册成功！请查看邮件并激活账号！";
-			account.setStatus(Constants.DISABLED);
+			account.setStatus(Constants.ACTIVATE);
 			account.setDeleted(Constants.DATA_NOT_DELETED);
 			account.setCreatetime(new Date());
 			account.setUpdatetime(new Date());
+			account.setPassword(Md5Utils.makeMD5(account.getPassword()));
 			accountService.save(account);
 			if(request.getParameter("id") != null && !request.getParameter("id").equals("")){
 				InviteMememberEntity inviteMememberEntity=subjectService.get(InviteMememberEntity.class,  request.getParameter("id"));
@@ -210,16 +209,14 @@ public class LogonController extends BaseController {
 					subjectService.acceptInviteMember(inviteMememberEntity,account);
 				}
 			}
-			
-			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
-			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
+			String path = AppRequstUtiles.getAppUrl(request);
+			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"/center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 			//绑定账号信息
 			String openid = request.getParameter("reg_openid"),
 				   openuser = request.getParameter("reg_openuser"),
 				   opentype = request.getParameter("reg_opentype"),
 				   uid = account.getId();
 			saveGadUser(openid,openuser,opentype,uid);
-			systemService.addLog(msg, Globals.Log_Type_INSERT, Globals.Log_Leavel_INFO);
 		  } catch (Exception e) {
 	     	e.printStackTrace();
 	     	msg = "注册失败！";
@@ -353,11 +350,10 @@ public class LogonController extends BaseController {
 	public @ResponseBody String checkUserStats(HttpServletRequest request,HttpServletResponse response) {
 		String bool = "true";
 		String username = request.getParameter("username");
-		AccountEntity u = accountService.findUserByAccount(username);
-		if(u!=null&&u.getPassword()==null){
+		AccountEntity u = accountService.findUserByEmail(username);
+		if(u!=null&&u.getStatus()!=null&&u.getStatus()==Constants.ACTIVATE){
 			  bool = "false";
 		}
-		
 		return bool;
 	}
 
@@ -410,7 +406,7 @@ public class LogonController extends BaseController {
 	@RequestMapping("/register.dht") 
 	public ModelAndView register(HttpServletRequest request) {
 		AccountEntity account = accountService.getEntity(AccountEntity.class,request.getParameter("id"));
-		if(account.getPassword()!=null){
+		if(account.getStatus()!=null&&account.getStatus()!=Constants.ACTIVATE){
 			String msg="此账号已经完成注册";
 			return linkLoginMessage(msg,null,null,null,null);
 		}else{
@@ -430,7 +426,6 @@ public class LogonController extends BaseController {
 		try{
 				String id = request.getParameter("id");
 				AccountEntity account = accountService.getEntity(AccountEntity.class,id);
-				account.setPassword(Md5Utils.makeMD5(request.getParameter("password")));
 				List<String> l=null;
 				String msg = "";
 				try {
@@ -444,6 +439,7 @@ public class LogonController extends BaseController {
 					account.setPhoto(l.get(0));
 				}
 				//注册session 并跳转到首页
+				account.setStatus(Constants.ENABLED);
 				mv = linkIndex(session,account);
 		}catch(Exception e){
 			mv = linkLoginMessage(msg,null,null,null,null); 
@@ -477,7 +473,6 @@ public class LogonController extends BaseController {
 	 * @return
 	 */
 	private ModelAndView linkIndex(HttpSession session,AccountEntity account){
-		account.setStatus(Constants.ENABLED);
 		session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, user);
 		ClientManager.getInstance().addSession(session.getId(), session);
 		accountService.activeUser(account,session.getId());

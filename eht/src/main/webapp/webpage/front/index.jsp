@@ -149,6 +149,11 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
 window.imgPath = imgPath;
 var context='${imgPath}/biaoqing/';
+function loadDefaultPhoto(obj){
+	var img = $(obj);
+	img.attr("src", '${imgPath}/headphoto.jpg');
+	img.attr("onerror", null);
+}
 </script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
@@ -165,7 +170,7 @@ var context='${imgPath}/biaoqing/';
   <table width="100%" border="0" cellspacing="0" cellpadding="0">
     <tr>
       <td valign="top" class="Directory" id="treeMenu_td" style="position:relative;top:0;left:0;padding-top: 0px;width:230px;">
-        <div id="mainTreeDiv" class="items" style="overflow:auto;width:100%;">
+        <div id="mainTreeDiv" class="items" style="overflow:auto;width:230px;height:100%;">
         	<ul id="treeMenu" class="ztree"></ul>
         	<div class="rightMenu" id="treeRightMenu">
         		<ul id="treeRightMenu_ul_subject">
@@ -314,13 +319,18 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 		zTree_Menu.expandNode(zTree_Menu.getNodes()[1], true);	
 		zTree_Menu.expandNode(zTree_Menu.getNodes()[2], true);	
 		
-		$("#"+zTree_Menu.getNodes()[0].tId+"_a").append('<span id="-1"  class="gear" onclick="subjectManage()"></span>');
-		$("#"+zTree_Menu.getNodes()[1].tId+"_a").append('<span id="-2"  class="gear" onclick="subjectManage()"></span>');
+		$("#"+zTree_Menu.getNodes()[0].tId+"_a").append('<span id="-1"  class="gear"></span>');
+		$("#"+zTree_Menu.getNodes()[1].tId+"_a").append('<span id="-2"  class="gear" ></span>');
 		$("#"+zTree_Menu.getNodes()[0].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 		$("#"+zTree_Menu.getNodes()[1].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 		$("#"+zTree_Menu.getNodes()[0].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 		$("#"+zTree_Menu.getNodes()[2].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 
+		$(".gear").click(function(){
+			subjectManage();
+			return false;
+		});
+		
 	});
 }
 	 
@@ -485,6 +495,7 @@ function hideTreeMenu(){
 
 //隐藏条目内容页
 function hideNotePage(){
+	$("#iframepage").empty();
 	var w = $("#noteEditor_td").width();
 	$("#noteEditor_td").hide();
 	$("#iframepage").width(w + 350);
@@ -492,6 +503,7 @@ function hideNotePage(){
 
 //显示条目内容页
 function showNotePage(){
+	$("#iframepage").empty();
 	$("#iframepage").width(350);
 	$("#noteEditor_td").show();
 }
@@ -512,6 +524,7 @@ var actionSchedule=null;
 /* $( document ).tooltip({
 	track: true
 }); */
+
 </script>
 </body>
 </html>

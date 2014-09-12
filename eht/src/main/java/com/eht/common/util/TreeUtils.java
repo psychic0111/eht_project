@@ -132,6 +132,79 @@ public class TreeUtils {
 					ReflectionUtils.setFieldValue(treeData, entry.getKey(), entry.getValue());
 				}
 			}
+			
+			treeDataList.add(treeData);
+		}
+		
+		return treeDataList;
+	}
+	
+	/**
+	 * 从原始对象映射转换成TreeData对象列表
+	 * @param objectList
+	 * @param idPro
+	 * @param textPro
+	 * @param parentField
+	 * @param otherMap 其它自定义字段赋值
+	 * @param checkedIdList 选中节点ID
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	public static List<TreeData> transformObjectList2TreeDataList(List objectList,String idPro, String textPro, String parentField, Map<String, String> otherMap, List<String> checkedIdList) {
+		List<TreeData> treeDataList = new ArrayList<TreeData>(objectList.size());
+		for (Iterator iterator = objectList.iterator(); iterator.hasNext();) {
+			TreeData treeData = new TreeData();
+			Object object = (Object) iterator.next();
+			Object idValueObj = ReflectionUtils.getFieldValue(object, idPro);
+			String idValue = idValueObj==null? null : idValueObj.toString();
+			Object textValueObj = ReflectionUtils.getFieldValue(object, textPro);
+			String textValue = textValueObj==null? null : textValueObj.toString();
+			Object parentValueObj = ReflectionUtils.invokeGetterMethod(object, parentField);
+			String parentValue = parentValueObj==null? null : parentValueObj.toString(); 
+			
+			if(idValue!=null && textValue!=null) {//原对象对应的 id 和 text 对应的属性的值不为空才是有效的值
+				ReflectionUtils.setFieldValue(treeData, "id", idValue+"");
+				ReflectionUtils.setFieldValue(treeData, "name", textValue);
+			}
+			if(StringUtils.isNotBlank(parentValue)) {//只有原对象对应的parentId
+				ReflectionUtils.setFieldValue(treeData, "pId", parentValue+"");
+			}
+			
+			Object subjectIdObj = null;
+			try {
+				subjectIdObj = ReflectionUtils.getFieldValue(object, "subjectId");
+			} catch (Exception e) {
+			}
+			Object deletedObj = null;
+			try {
+				deletedObj = ReflectionUtils.getFieldValue(object, "deleted");
+			} catch (Exception e) {
+			}
+			
+			String subjectId = subjectIdObj == null ? null : subjectIdObj.toString();
+			treeData.setSubjectId(subjectId);
+			
+			int deleted = deletedObj == null ? Constants.DATA_NOT_DELETED : Integer.parseInt(deletedObj.toString());
+			if(deleted == Constants.DATA_DELETED){
+				treeData.setId(treeData.getId() + "_deleted");
+			}
+			
+			if(otherMap != null){
+				Set<Entry<String, String>> set = otherMap.entrySet();
+				Iterator<Entry<String, String>> it = set.iterator();
+				while(it.hasNext()){
+					Entry<String, String> entry = it.next();
+					ReflectionUtils.setFieldValue(treeData, entry.getKey(), entry.getValue());
+				}
+			}
+			
+			//设置节点是否checked
+			for(String id : checkedIdList){
+				if(id.equals(treeData.getId())){
+					treeData.setSelected("true");
+					break;
+				}
+			}
 			treeDataList.add(treeData);
 		}
 		

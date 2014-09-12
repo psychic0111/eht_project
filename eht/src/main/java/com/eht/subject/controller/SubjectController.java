@@ -27,7 +27,6 @@ import org.jeecgframework.core.util.MyBeanUtils;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.core.util.oConvertUtils;
 import org.jeecgframework.tag.core.easyui.TagUtil;
-import org.jeecgframework.web.system.manager.ClientManager;
 import org.jeecgframework.web.system.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,7 +35,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.AppRequstUtiles;
@@ -464,14 +462,29 @@ public class SubjectController extends BaseController {
 		try {
 			subjectService.inviteMemember(textarea1, types, request, subjectEntity);
 		} catch (Exception e) {
-			sb.append("超级管理员邀请失败,");
-		}
-		if (sb.length() > 0) {
-			sb.replace(sb.length() - 1, sb.length(), ".");
+			sb.append("邀请失败");
 		}
 		return sb.toString();
 	}
 
+	
+	/**
+	 * 前台邀请成员页面跳转
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/front/sendInvitemember.dht", produces = { "text/html;charset=UTF-8" })
+	public @ResponseBody String sendInvitemember(HttpServletRequest request){ 
+		StringBuffer sb = new StringBuffer("");
+		try {
+			subjectService.inviteMemember(request.getParameter("id"), request);
+		} catch (Exception e) {
+			sb.append("发送失败");
+		}
+		return sb.toString();
+	}
+
+	
 	/**
 	 * 前台接受邀请成员
 	 * 
@@ -486,7 +499,7 @@ public class SubjectController extends BaseController {
 			if (accountEntity == null) {
 				mv.addObject("msg", "请先注册");
 				mv.addObject("linkname", "注册");
-				mv.addObject("linkpath", "webpage/register.jsp?id=" + inviteMememberEntity.getId());
+				mv.addObject("linkpath", "webpage/register.jsp?id=" + inviteMememberEntity.getId()+"&email="+inviteMememberEntity.getEmail());
 
 			} else {
 				try {

@@ -255,7 +255,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param orderField
 	 * @return
 	 */
-	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String searchInput, String tagId, String orderField, String userId);
+	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String searchInput, String tagId, String orderField, String userId,String userIdl);
 	
 	
 	/**

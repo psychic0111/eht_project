@@ -1,36 +1,27 @@
 package com.eht.system.controller;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.util.JSONHelper;
 import org.jeecgframework.core.util.StringUtil;
-import org.jeecgframework.web.system.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-
 import com.eht.common.constant.Constants;
 import com.eht.common.util.JsonUtil;
 import com.eht.common.util.TreeUtils;
 import com.eht.message.service.MessageServiceI;
-import com.eht.note.service.NoteServiceI;
-import com.eht.resource.service.ResourceActionService;
 import com.eht.resource.service.ResourcePermissionService;
-import com.eht.role.service.RoleService;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.system.bean.TreeData;
 import com.eht.system.service.TreeMenuService;
-import com.eht.template.service.TemplateServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
 
@@ -54,19 +45,7 @@ public class IndexController extends BaseController {
 	private MessageServiceI messageService;
 	
 	@Autowired
-	private SystemService systemService;
-	
-	@Autowired
 	private SubjectServiceI subjectService;
-	
-	@Autowired
-	private RoleService roleService;
-	
-	@Autowired
-	private NoteServiceI noteService;
-	
-	@Autowired
-	private TemplateServiceI templateService;
 	
 	@Autowired
 	private AccountServiceI accountService;
@@ -76,9 +55,6 @@ public class IndexController extends BaseController {
 	
 	@Autowired
 	private ResourcePermissionService resourcePermissionService;
-	
-	@Autowired
-	private ResourceActionService resourceActionService;
 	
 	private String message;
 	

@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -25,7 +26,6 @@ import org.springframework.util.FileCopyUtils;
 import com.eht.comment.service.CommentServiceI;
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
-import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.page.PageResult;
@@ -271,11 +271,23 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 
 		if (!StringUtil.isEmpty(tagId)) {
 			String[] ids = tagId.split(",");
-			if (ids.length > 1) {
+			String hql = "select noteId from NoteTag where tagId in(";
+			for(String id : ids){
+				hql += "'" + id + "',";
+			}
+			hql = hql.substring(0,hql.length() - 1);
+			hql += ")";
+			List<String> list = findByQueryString(hql);
+			if(!list.isEmpty()){
+				dc.add(Restrictions.in("id", list));
+			}else{
+				return new ArrayList<NoteEntity>();
+			}
+			/*if (ids.length > 1) {
 				dc.add(Restrictions.in("tagId", ids));
 			} else if (ids.length == 1) {
 				dc.add(Restrictions.eq("tagId", ids[0]));
-			}
+			}*/
 		}
 
 		dc.addOrder(Order.desc(orderField));
@@ -528,11 +540,15 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String title, String tagId, String orderField, String userId) {
+	public List<NoteEntity> findMNotesByParams(String subjectId, String dirId,String title, String tagId, String orderField, String userId,String userIdl) {
 		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		if (!StringUtil.isEmpty(title)) {
 			dc.add(Restrictions.or( Restrictions.like("note.title", title, MatchMode.ANYWHERE),Restrictions.like("note.content", title, MatchMode.ANYWHERE)));
+		}
+		if (!StringUtil.isEmpty(userIdl))
+		{
+			dc.add(Restrictions.eq("note.createUser",userIdl));	
 		}
 		dc.add(Restrictions.eq("note.subjectId", subjectId));
 		
@@ -557,10 +573,28 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 					}
 				}
 			}
-			if (ids.length > 1) {
-				dc.add(Restrictions.in("tagId", ids));
-			} else if (ids.length == 1) {
-				dc.add(Restrictions.eq("tagId", ids[0]));
+			if(ids.length > 0){
+				String hql = "select noteId from NoteTag where tagId in(";
+				for(String id : ids){
+					hql += "'" + id + "',";
+				}
+				hql = hql.substring(0,hql.length() - 1);
+				hql += ")";
+				List<String> list = findByQueryString(hql);
+				if(!list.isEmpty()){
+					dc.add(Restrictions.in("id", list));
+				}else{
+					return new ArrayList<NoteEntity>();
+				}
+				/*if (ids.length > 1) {
+					dc.createCriteria("NoteTag", "t", JoinType.INNER_JOIN);
+					dc.add(Restrictions.eq("note.id", "t.noteId"));
+					dc.add(Restrictions.in("t.tagId", ids));
+				} else if (ids.length == 1) {
+					dc.createCriteria("NoteTag", "t", JoinType.INNER_JOIN);
+					dc.add(Restrictions.eq("note.id", "t.noteId"));
+					dc.add(Restrictions.eq("t.tagId", ids[0]));
+				}*/
 			}
 		}
 

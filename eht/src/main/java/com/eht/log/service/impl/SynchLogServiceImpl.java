@@ -47,7 +47,7 @@ import com.eht.webservice.service.util.SynchDataCache;
 @Transactional
 public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogServiceI {
 	
-	private Logger logger = Logger.getLogger(DataSynchizeServiceImpl.class);
+	private Logger logger = Logger.getLogger(SynchLogServiceImpl.class);
 	
 	@Autowired
 	private DataInitService dataInitService;

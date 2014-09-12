@@ -50,8 +50,7 @@ public class AccountEntity extends User implements java.io.Serializable {
 	private java.lang.String updateuser;
 	/**修改时间*/
 	private java.util.Date updatetime;
-	
-
+  
 	private java.lang.String photo;
 	
 	/** 用户正在使用的客户端ID */
@@ -242,5 +241,6 @@ public class AccountEntity extends User implements java.io.Serializable {
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
 	}
+
 	
 }

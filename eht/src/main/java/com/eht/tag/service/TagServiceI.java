@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.jeecgframework.core.common.service.CommonService;
 
+import com.eht.note.entity.NoteTag;
 import com.eht.system.bean.TreeData;
 import com.eht.tag.entity.TagEntity;
 
@@ -13,7 +14,17 @@ public interface TagServiceI extends CommonService{
 	 * @param tagid
 	 * @return
 	 */
-	public List<TreeData> buildTagTreeJson(String tagid,List<TagEntity>  tagList); 
+	public List<TreeData> buildTagTreeJson(String tagid, List<TagEntity> tagList);
+	
+	/**
+	 * 查询标签树
+	 * @param tagid
+	 * @param tagList
+	 * @param checkedList 选中标签集合
+	 * @return
+	 */
+	public List<TreeData> buildTagTreeJson(String tagid, List<TagEntity> tagList, List<String> checkedList);
+	
 	/**
 	 * 条目选择标签
 	 * @param tag
@@ -59,5 +70,83 @@ public interface TagServiceI extends CommonService{
 	 * 查询标签下有多少条目
 	 * @return
 	 */
-	public  long findCoutNoteforTags(String tagId);
+	public long findCoutNoteforTags(String tagId);
+	
+	/**
+	 * 保存条目标签关系
+	 * @param noteId
+	 * @param tagIds
+	 * @return
+	 */
+	public String saveNoteTag(String uuid, String noteId, String tagId);
+	
+	/**
+	 * 保存条目标签关系
+	 * @param noteId
+	 * @param tagIds
+	 * @return
+	 */
+	public String saveNoteTags(String noteId, String[] tagIds);
+	
+	/**
+	 * 删除条目标签关系
+	 * @param id
+	 * @return
+	 */
+	public String deleteNoteTag(String noteId, String tagId);
+	
+	/**
+	 * 删除条目标签关系
+	 * @param id
+	 * @return
+	 */
+	public String deleteNoteTag(NoteTag noteTag);
+	
+	/**
+	 * 删除条目标签关系
+	 * @param id
+	 * @return
+	 */
+	public String deleteNoteTag(String id);
+	
+	/**
+	 * 删除条目标签关系
+	 * @param id
+	 * @return
+	 */
+	public void deleteNoteTagByNoteId(String noteId);
+	
+	/**
+	 * 删除条目标签关系
+	 * @param id
+	 * @return
+	 */
+	public void deleteNoteTagByTagId(String tagId);
+	
+	/**
+	 * 根据条目ID、标签ID查找关系
+	 * @param noteId
+	 * @param tagId
+	 * @return
+	 */
+	public NoteTag findNoteTag(String noteId, String tagId);
+	
+	/**
+	 * 根据条目所有标签
+	 * @param noteId
+	 * @param tagId
+	 * @return
+	 */
+	public List<String> findTagIdsByNote(String noteId);
+
+	public List<TagEntity> findTagByNote(String noteId);
+
+	public String saveNoteTag(NoteTag noteTag);
+	
+	
+	/**
+	 * 查询标签下有多少条目
+	 * @return
+	 */
+	public  long findCoutNoteforRemenber(String subejectId,String userId);
 }

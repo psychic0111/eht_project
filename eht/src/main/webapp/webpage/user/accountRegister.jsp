@@ -26,25 +26,13 @@
         <div class="right_index"> 
           <!-- Begin Information-->
           <div class="Information" style="padding:50px; padding-top:20px;">
-            <div class="title">设置密码</div>
+            <div class="title">修改用户信息</div>
             <div class="Table">
             <form id="setpwdForm" action="<c:url value="/center/registerSave.dht"/>"  enctype="multipart/form-data" name="setpwdForm" method="post" >
             	<input type="hidden" name="id" value="<%=request.getParameter("id")%>"/>
 	              <table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="100">密码：</td>
-	                  <td>
-	                   <input class="InputTxt2"  style=" width:40%; height:28px; " id="password" name="password" type="password" autocomplete="off" >
-	               	  </td>
-	                </tr>
-	                <tr>
-	                  <td>确认密码：</td>
-	                  <td>
-	                  	<input class="InputTxt2" style=" width:40%; height:28px; " id="passwordConf" name="passwordConf"  recheck="password" type="password" autocomplete="off"  />
-	                  </td>
-	                </tr>
-	                <tr>
-	                  <td>手机：</td>
+	                  <td width="100">手机：</td>
 	                  <td>
 	                  	<input class="InputTxt2" style=" width:40%; height:28px; " type="text" name="mobile" id="mobile"  autocomplete="off"/>
 	                  </td>
@@ -86,13 +74,11 @@
 $().ready(function() {
 	$("#setpwdForm").validate({
  	   rules:{
- 		  	password:{required:true,maxlength:20,minlength:6},
-			passwordConf:{required:true,maxlength:20,minlength:6,equalTo:'#password'},
 			mobile:{required:false,isMobile : true},
 			file:{required:false,img_1:true}
 		},
 		messages:{
-			passwordConf:{equalTo:'* 确认密码要和密码一致!'},
+			
 		}
 	}
 	);

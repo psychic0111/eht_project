@@ -17,6 +17,7 @@ var noteContent_Tag_TreeSetting = {
 		nameIsHTML : false
 	},
 	callback : {
+		beforeClick: beforeTagClick,
 		onClick : current_noteContent_Tag,
 		beforeRightClick : this.tagSelectNodeBeforeRightClick,
 		onRename : this.tagSelectNodeOnRename,
@@ -24,40 +25,43 @@ var noteContent_Tag_TreeSetting = {
 	}
 };
 function tagnodeOnRightClick(){}
-//选择当前tag标签
-function current_noteContent_Tag(event, treeId, treeNode) {
-	var temp = new Array();
-	if(treeNode!=null&&treeNode.id=="tag_personal"){
-		var newNode = {
-				id : "",
-				name : "新标签",
-				icon : imgPath + "/tree/tag_blue.png"
-			};
-			newNode = tag_zTree_Menu.addNodes(null, newNode);
-			tagSelectHideRightMenu();
-			tag_zTree_Menu.editName(newNode[0]);
-			return false;
-	}
-	//如果节点下有子节点 则展开
-	if (treeNode.children != null && treeNode.children.length != 0) {
-		tag_zTree_Menu.expandNode(treeNode, true, true, true);
-	} else {
-		$("#noteForm_tagId").val(treeNode.id);
-		do {
-			temp.unshift(treeNode);
-			if(treeNode!=null){
-				treeNode = treeNode.getParentNode();
-			}
-		} while (treeNode != null && treeNode.isParent);
 
-		var test = '';
-		$.each(temp, function(i, node) { //遍历对象数组，index是数组的索引号，objVal是遍历的一个对象。  
-			test += "-><span style='border: 2px solid rgb(213, 213, 213);'>"
-					+ node.name + "</span>";
-		});
-		$("#tagSelectNode").html(test);
-		hideTagMenu();
+//判断节点是否为选中状态
+function isSelected(treeId, treeNode){
+	if(!!$("#" + treeId + "_" +treeNode.tId + "_a")){
+		if($("#" + treeNode.tId + "_a").hasClass("curSelectedNode")){
+			return true;
+		}
 	}
+	return false;
+}
+
+var selectTags = [];
+function beforeTagClick(treeId, treeNode, clickFlag){
+	var selected = isSelected(treeId, treeNode);
+	if(selected){
+		//取消选中当前tag
+		tag_zTree_Menu.cancelSelectedNode(treeNode);
+		$("#li_" + treeNode.id).remove();
+		$("#" + treeNode.id).remove();
+		return false;
+	}
+	selectTags = tag_zTree_Menu.getSelectedNodes();
+	return true;
+}
+//追加选择当前tag标签
+function current_noteContent_Tag(event, treeId, treeNode, clickFlag) {
+	for(var i= 0; i< selectTags.length; i++){
+		tag_zTree_Menu.selectNode(selectTags[i], true);
+	}
+	// 标签显示
+	var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ treeNode.name +"</li>");
+	$("#tagSelectNode").append(tagLbl);
+	
+	// 条目form中添加隐藏域
+	var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
+	$("#noteForm").append(tagObj);
+	
 }
 
 //隐藏标签树功能
@@ -71,24 +75,32 @@ function onBodyTagDown(event) {
 		return;
 	}
 	if (event.target.id != "tagSelectContent"
-			&& event.target.id != "tagSelectTreeRightMenu") {
+			&& event.target.id != "tagSelectTreeRightMenu"
+				&& $(event.target).parents("#tagSelectContent").attr("id") == null) {
 		hideTagMenu();
 	}
 }
-//在弹出区域不需要隐藏树
-$("#tagSelectContent").mouseover(function() {
-	$("body").unbind("mousedown", onBodyTagDown);
-}).mouseout(function() {
-	$("body").bind("mousedown", onBodyTagDown);
-});
+
 //显示标签树
 function selectTagTree() {
 	var params = {
-		"subjectid" : $('#noteForm_subjectId').val()
+		"subjectid" : $('#noteForm_subjectId').val(),
+		"noteId" : $('#noteForm_id').val()
 	};
 	var url = webRoot + "/noteController/front/treeDataEdit.dht";
 	AT.post(url, params,function(data) {
-		$.fn.zTree.init($("#tagSelectTree"),noteContent_Tag_TreeSetting, data);tag_zTree_Menu = $.fn.zTree.getZTreeObj("tagSelectTree");
+		$.fn.zTree.init($("#tagSelectTree"),noteContent_Tag_TreeSetting, data);
+		tag_zTree_Menu = $.fn.zTree.getZTreeObj("tagSelectTree");
+		tag_zTree_Menu.expandAll(true);
+		var nodes = tag_zTree_Menu.transformToArray(tag_zTree_Menu.getNodes());
+		var index = 0;
+		for(var i = 0; i < nodes.length; i++){
+			if(nodes[i].selected == 'true'){
+				tag_zTree_Menu.selectNode(nodes[i], true);
+				selectTags[index] = nodes[i];
+				index ++;
+			}
+		}
 	});
 	$("#tagSelectTree").html("");
 	$("#tagSelectContent").css({
@@ -120,6 +132,7 @@ function tagSelectMouseMenu(treeId, node) {
 
 //鼠标注右键点击前, 准备菜单
 function tagSelectNodeBeforeRightClick(treeId, node,event) { 
+	selectTags = tag_zTree_Menu.getSelectedNodes();
 	tagRightClickNode = node; 
 	tagSelectMouseMenu(treeId, node); 
 	return true;
@@ -127,6 +140,9 @@ function tagSelectNodeBeforeRightClick(treeId, node,event) {
 //判断当前元素是否是confirm
 function isShowConfirm(event) {
 	var classname = $(event.target).attr("class");
+	if(typeof(classname) == 'undefined'){
+		classname = '';
+	}
 	var bool = (classname.indexOf("jbox") >-1);
 	return bool;
 }
@@ -174,8 +190,9 @@ function tagDeleteNode() {
 	} 
 	var submit = function(v, h, f) {
 		if (v == true) {
-			if(tagRightClickNode.id==$("#noteForm_tagId").val()){
-				$("#tagSelectNode").html("");
+			if(!!$("#li_" + tagRightClickNode.id)){
+				$("#li_" + tagRightClickNode.id).remove();
+				$("#" + tagRightClickNode.id).remove();
 			} 
 			AT.post(url, dataParam, function(data) {
 				if (data == true) {
@@ -284,6 +301,11 @@ function tagSelectNodeOnRename(e, treeId, node) {
 				zTree_Menu.updateNode(treeNode); 
 			}
 			tag_zTree_Menu.updateNode(node);
+			tag_zTree_Menu.cancelSelectedNode(node);
+			
+			for(var i= 0; i< selectTags.length; i++){
+				tag_zTree_Menu.selectNode(selectTags[i], true);
+			}
 		}
 	}, true);
 }

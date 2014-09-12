@@ -5,7 +5,6 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -15,11 +14,9 @@ import javax.persistence.Transient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
 import org.jeecgframework.core.util.StringUtil;
 
 import com.eht.common.annotation.ClientJsonIgnore;
-import com.eht.common.bean.BaseSubjectModel;
 import com.eht.user.entity.AccountEntity;
 
 /**   
@@ -34,8 +31,9 @@ import com.eht.user.entity.AccountEntity;
 @Table(name = "eht_tag", schema = "")
 @DynamicUpdate(true)
 @DynamicInsert(true)
-@SuppressWarnings("serial")
-public class TagEntity extends BaseSubjectModel implements java.io.Serializable {
+public class TagEntity implements java.io.Serializable {
+
+	private static final long serialVersionUID = 1L;
 	/**id*/
 	private java.lang.String id;
 	/**name*/
@@ -315,7 +313,7 @@ public class TagEntity extends BaseSubjectModel implements java.io.Serializable 
 	public Long getUpdateTimeStamp() {
 		return updateTimeStamp;
 	}
-
+	
 	public void setUpdateTimeStamp(Long updateTimeStamp) {
 		this.updateTimeStamp = updateTimeStamp;
 		if(this.updateTimeStamp != null && this.updateTime == null){
@@ -323,11 +321,6 @@ public class TagEntity extends BaseSubjectModel implements java.io.Serializable 
 		}
 	}
 
-	@Override
-	public String findOwnSubjectId() {
-		return this.subjectId;
-	}
-	
 	@Transient
 	public String getOperation() {
 		return operation;

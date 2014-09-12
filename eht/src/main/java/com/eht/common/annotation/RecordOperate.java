@@ -27,6 +27,7 @@ public @interface RecordOperate {
 	 *	用户	USER
 	 *	角色	ROLE
 	 *	标签	TAG
+	 *	条目标签	NOTETAG
 	 *	模板	TEMPLATE
 	 *	评论	COMMENT
 	 *	专题	SUBJECT

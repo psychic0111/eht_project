@@ -27,6 +27,22 @@ public enum DataType {
 	ROLE,
 	
 	/**
+	 * 同步数据类别：资源
+	 */
+	RESOURCE,
+	
+	/**
+	 * 同步数据类别：资源操作
+	 */
+	RESOURCEACTION,
+	
+	/**
+	 * 同步数据类别：资源权限
+	 */
+	RESOURCEPERMISSION,
+	
+	
+	/**
 	 * 同步数据类别：标签
 	 */
 	TAG,
@@ -50,6 +66,11 @@ public enum DataType {
 	 * 同步数据类别：条目黑名单
 	 */
 	NOTEBLACK,
+	
+	/**
+	 * 同步数据类别：条目标签
+	 */
+	NOTETAG,
 	
 	/**
 	 * 同步数据类别：目录黑名单

@@ -100,7 +100,7 @@ $(document).ready(function(){
 				$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/readno.png\" /> <span>未读</span> ");
 			}
 			if(parseInt(json.attachmentCount) > 0){
-				$("#"+obj.id).append("<img src=\""+imgPath+"/attachment.png\" />有附件");
+				$("#"+obj.id).append("<img src=\""+imgPath+"/attachment.png\" />附件");
 			}
 		},false);
 	});

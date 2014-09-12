@@ -13,6 +13,29 @@
 	 	 $("#checkbox2").attr("checked",tep.length==tep.filter(':checked').length);
 	});
 
+$().ready(function() {
+	 $('input[id^=textarea]').bind("keyup",function(event){
+		 var obj=$(this);
+		if(obj.val()!=''){
+		 AT.post("${webRoot}/subjectController/front/subjectTemember.dht","email="+obj.val()+"&textarea="+obj.attr("id"),function(data){
+		 	 $("#invitememberAuto").find('ul').remove();
+		 	 if($(data).find('li').length>0){
+		 		$("#invitememberAuto").append(data);
+		 			 var top = obj.offset().top+30;
+			 		var left = obj.offset().left;
+					$("#invitememberAuto").css({position: "absolute",'top':top ,'left':left});
+			 		$("#invitememberAuto").show();
+			 	 }else{
+			 		$("#invitememberAuto").hide();
+				 	 }
+		 });
+		}else{
+			 $("#invitememberAuto").find('ul').remove();
+			 $("#invitememberAuto").hide();
+			}
+		});
+});
+
 	function delInvitemember(){
          if($("[name=ids]:checked").length==0){
              MSG.alert("请选择用户");
@@ -38,9 +61,29 @@
 		}
 
 	//右键菜单关闭方法ids=0&ids=1&ids=3&ids=4
-	function hideInvitememberMenu(){
+	function hideInvitememberMenu(){ 
 		$("#invitememberMenu").hide();
+		
 	}
+	//-------------------鼠标离开关闭角色选择窗口--------------start---------
+	//在弹出区域不需要隐藏树
+	$("#invitememberMenu").mouseover(function() {
+		$("body").unbind("mousedown", onBodyTagDown);
+	}).mouseout(function() {
+		$("body").bind("mousedown", onBodyTagDown);
+	});
+	//鼠标页面点击事件
+	function onBodyTagDown(event) { 
+		if (event.target.id != "invitememberMenu"
+				&& event.target.id != "invitememberMenu") {
+			$("#invitememberMenu").hide();
+		}
+	}
+	//-------------------鼠标离开关闭角色选择窗口---------------end--------
+	
+	
+	
+	
 	function updateInvitememberRole(obj){
 		if($("[name=ids]:checked").length==0){
             MSG.alert('请选择用户!');
@@ -61,21 +104,14 @@
 		}
 		
 function viewInvitemember(){
-	var urllink='get:${webRoot}/subjectController/front/viewInvitemember.dht?id=${subjectEntity.id}';
-    $.jBox(urllink, {
-    title: "邀请新成员",
-    width: 600,
-    height: 400,
-   buttons: { '发送': 1, '关闭': 0 },
-   submit: function (v, h, f) {
-            if (v == 1) {
               var mail=$("#textarea1").val();
 					if(mail!=''){
 					if(!mail.match(/^\w+([\.\-]\w+)*\@\w+([\.\-]\w+)*\.\w+$/)){
 					 MSG.alert("邮箱格式不正确");
 					  return false;
 					}
-					addemail(mail,"textarea1");
+					}else{
+					MSG.alert("请填写邮箱");
 					}
 				
 					AT.postFrm("addInvitemember",function(data){
@@ -85,10 +121,22 @@ function viewInvitemember(){
 							AT.load("iframepage","${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}",function() {});
 					},true);
             return true; 
-            } 
-            return true;
-        }
-	});
+	}
+	
+	function addemail(value,id){
+	 $("#textarea1").val(value);
+	 $("#invitememberAuto").hide();
+	 $("#invitememberAuto").find('ul').remove();
+}
+
+function sendInvitemember(obj){
+					 AT.post("${webRoot}/subjectController/front/sendInvitemember.dht","id="+obj,function(data){
+						if(data==''){
+								 MSG.alert('操作成功');
+							}
+							AT.load("iframepage","${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}",function() {});
+					},true);
+            return true; 
 	}
 </script>
 		
@@ -96,13 +144,24 @@ function viewInvitemember(){
           <div class="Nav">专题${subjectEntity.subjectName}&gt; <a href="#">成员管理</a></div>
         </div>
         <!-- Begin mainer_index-->
-        
-        <div class="right_index">
+         <div class="right_index">
           <!-- Begin function-->
 		<xd:hasPermission subjectId="${subjectEntity.id }" action="<%=ActionName.ASSIGN_MEMBER %>" resource="<%=Constants.SUBJECT_MODULE_NAME %>">          
           <div class="function">
+         	 <div style="float:left;">
+         	   <form action="${webRoot}/subjectController/front/addInvitemember.dht" method="post" id="addInvitemember" name="addInvitemember" onsubmit="return false;" > 
+               <input type="hidden" name="id" value="${subjectEntity.id }">
+              <input class="InputTxt2" style="width:200px;height:27px;float:left;padding-left:12px;margin-right:10px;" name="textarea1" autocomplete="off" id="textarea1"  type="text"/>
+         	  <select id="textareatype" style="width:100px;float:left;height:28px;margin-right:10px;" name="type">
+			                  <option value="1">超级管理员</option>
+			                  <option value="2">编辑</option>
+			                  <option value="3">作者</option>
+			                  <option value="4">读者</option>
+              </select>
+         	  <input style="width:100px;float:left;padding-left:12px" class="Button2" type="button" name="button" id="button"  onclick="viewInvitemember();" value="邀请新成员" />
+              </form>          	
+			</div>
             <div class="others">
-              <input class="Button2" type="button" name="button" id="button"  onclick="viewInvitemember();" value="邀请新成员" />
               <input class="Button3" type="button" name="button4" id="button3" onclick="delInvitemember();" value="删除成员" />
               <input class="Button4" type="button" name="button4" id="button4" onclick="invitememberRole(this);" value="更改角色" />
               <div class="rightMenu" id="invitememberMenu">
@@ -113,7 +172,7 @@ function viewInvitemember(){
        				<li  onclick="updateInvitememberRole('2')">编辑</li>
        				<li  onclick="updateInvitememberRole('3')">作者</li>
        				<li  onclick="updateInvitememberRole('4')">读者</li>
-       				<li  onclick="hideInvitememberMenu()">关闭</li>
+       				<!-- <li  onclick="hideInvitememberMenu_close(); ">关闭</li>  -->
         		</ul>
         	</div>
             </div>
@@ -126,16 +185,19 @@ function viewInvitemember(){
             <div class="Data_list">
               <table width="100%" border="0" cellspacing="1" cellpadding="0">
                 <tr>
-                  <td align="center" class="tdTitle">
+                  <td align="center" class="tdTitle" style="width:20%">用户</td>
+                  <td align="center" class="tdTitle" style="width:20%">角色</td>
+                  <td align="center" class="tdTitle" style="width:15%">状态</td>
+                  <td align="center" class="tdTitle" style="width:10%">
                   	<input type="checkbox"  id="checkbox2" />
                   </td>
-                  <td align="center" class="tdTitle">用户</td>
-                  <td align="center" class="tdTitle">角色</td>
-                  <td align="center" class="tdTitle">状态</td>
                 </tr>
                 <c:forEach items="${list}" var="roleUser">
                 <tr class="TD3">
-                  <td align="center">
+                  <td align="center">${roleUser.accountEntity.username}</td>
+                  <td align="center">${roleUser.role.description}</td>
+                   <td align="center">已激活</td>
+                    <td align="center">
                   <c:choose>
                   <c:when test="${roleUser.accountEntity.id eq user.userId}">
                   </c:when>
@@ -146,16 +208,10 @@ function viewInvitemember(){
                   <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.id}" /></c:otherwise>
                   </c:choose>
                   </td>
-                  <td align="center">${roleUser.accountEntity.username}</td>
-                  <td align="center">${roleUser.role.description}</td>
-                   <td align="center">已激活</td>
                 </tr>
                 </c:forEach>
                  <c:forEach items="${inviteMememberList}" var="inviteMemember">
                 <tr class="TD3">
-                  <td align="center">
-               		
-                  </td>
                   <td align="center">
                    <c:choose>
                   <c:when test="${empty  inviteMemember.username}">
@@ -168,10 +224,15 @@ function viewInvitemember(){
                   </td>
                   <td align="center">${inviteMemember.role.description}</td>
                    <td align="center">未激活</td>
+                    <td align="center">
+                    <input class="Button2" type="button" onclick="sendInvitemember('${inviteMemember.id}');" value="再次发送" />
+                  </td>
                 </tr>
                 </c:forEach>
               </table>
             </div>
           </div>
           <!-- End Data--> 
+        </div>
+        <div class="rightMenu"  id="invitememberAuto">
         </div>

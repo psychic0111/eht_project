@@ -13,8 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -30,19 +32,18 @@ import org.jeecgframework.web.system.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
+
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.AppContextUtils;
 import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.FileToolkit;
-import com.eht.common.util.HtmlParser;
 import com.eht.common.util.JsonUtil;
 import com.eht.common.util.MD5FileUtil;
 import com.eht.common.util.TreeUtils;
@@ -50,6 +51,7 @@ import com.eht.common.util.UUIDGenerator;
 import com.eht.group.service.GroupService;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
+import com.eht.note.entity.NoteTag;
 import com.eht.note.service.AttachmentServiceI;
 import com.eht.note.service.NoteServiceI;
 import com.eht.resource.service.ResourcePermissionService;
@@ -78,6 +80,9 @@ public class NoteController extends BaseController {
 	 * Logger for this class
 	 */
 	private static final Logger logger = Logger.getLogger(NoteController.class);
+	
+	@Autowired
+	private TagServiceI tagService;
 
 	@Autowired
 	private NoteServiceI noteService;
@@ -123,8 +128,7 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/front/removeAttach.dht")
-	public @ResponseBody
-	String removeAttach(String id) {
+	public @ResponseBody String removeAttach(String id) {
 		String json = "";
 		if (id != null && !id.isEmpty()) {
 			AttachmentEntity attachment = attachmentService.getAttachment(id);
@@ -149,8 +153,7 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/front/getNodeAttach.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String getNodeAttach(String noteid) {
+	public @ResponseBody String getNodeAttach(String noteid) {
 		String json = "[";
 		List<AttachmentEntity> dataList = new ArrayList<AttachmentEntity>();
 		if (noteid != null && !noteid.isEmpty()) {
@@ -176,13 +179,32 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/front/uploadNodeAttach.dht")
-	public void uploadNodeAttach(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public void uploadNodeAttach(HttpServletRequest request, String[] noteTagId, HttpServletResponse response) throws Exception {
 		String json = "";
 		// 存放路径
-		String noteid = request.getParameter("noteid");
+		String noteid = request.getParameter("noteid"); 
+		//处理session
+		AccountEntity user = accountService.getUser4Session(request.getParameter("jsessionid"));
+		request.setAttribute("jsessionid", request.getParameter("jsessionid"));
+		
+		 request.getSession(false).setAttribute(Constants.SESSION_USER_ATTRIBUTE, user);
+		
+		
 		// 来自
 		String dirId = request.getParameter("dirId");
+		String subjectId = request.getParameter("subjectId");
 		NoteEntity nodeEntity = null;
+		
+		//如果没有node数据则新插入一条
+		nodeEntity = noteService.getNote(noteid);
+		if(nodeEntity==null){
+			nodeEntity = new NoteEntity();
+			nodeEntity.setId(noteid);
+			nodeEntity.setContent("");
+			nodeEntity.setSubjectId(subjectId);
+			this.saveNote(nodeEntity, noteTagId, request);
+		}
+		
 		if (noteid != null && !noteid.isEmpty()) {
 			nodeEntity = noteService.getNote(noteid);
 			if (nodeEntity != null) {
@@ -193,8 +215,6 @@ public class NoteController extends BaseController {
 		}
 		String realPath = FilePathUtil.getFileUploadPath(nodeEntity, dirId);
 		try {
-			AccountEntity user = accountService.getUser4Session(request.getParameter("jsessionid"));
-			request.setAttribute("jsessionid", request.getParameter("jsessionid"));
 			MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
 			Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
 			for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
@@ -317,16 +337,17 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/front/treeDataEdit.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String treeDataEdit(String subjectid, String parentid) {
+	public @ResponseBody String treeDataEdit(String subjectid, String parentid, String noteId) {
 		List<TreeData> dataList = new ArrayList<TreeData>();
 		// 取当前专题判断是否多人
 		SubjectEntity subject = subjectService.getSubject(subjectid);
 		AccountEntity user = accountService.getUser4Session();
 		if (subject != null) {
 			List<TagEntity> list = tagServiceI.findTagByisGroup(subject.getSubjectType(), user.getId(), subjectid);
-			// 个人专题菜单部分
-			dataList = tagServiceI.buildTagTreeJson(null, list);
+			
+			List<String> tagList = tagServiceI.findTagIdsByNote(noteId);
+			
+			dataList = tagServiceI.buildTagTreeJson(null, list, tagList);
 		}
 
 		List<TreeData> treeDataList = TreeUtils.buildTreeData(dataList);
@@ -339,27 +360,6 @@ public class NoteController extends BaseController {
 		treeDataList.add(0, tagP);
 
 		return JSONHelper.collection2json(treeDataList);
-	}
-
-	/**
-	 * 根据专题id查询专题树路径
-	 * 
-	 * @return
-	 */
-	@RequestMapping(value = "/front/getTreePath.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String getTreePath(String tagId, String subjectid) {
-		List<TreeData> dataList = new ArrayList<TreeData>();
-		if (tagId != null && !tagId.isEmpty() && subjectid != null && !subjectid.isEmpty()) {
-			// 取当前专题判断是否多人
-			SubjectEntity subject = subjectService.getSubject(subjectid);
-			AccountEntity user = accountService.getUser4Session();
-			List<TagEntity> list = tagServiceI.findTagByisGroup(subject.getSubjectType(), user.getId(), subjectid);
-			// 组装tree对象
-			dataList = tagServiceI.buildTagTreeJson(null, list);
-			dataList = TreeUtils.getTreePath(dataList, tagId);
-		}
-		return JSONHelper.collection2json(dataList);
 	}
 
 	/**
@@ -530,7 +530,7 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/front/noteIndex.dht")
-	public ModelAndView noteIndex(String searchInput, String subjectId, String dirId, String selectDirId, String tagId, String deleted, String topNodeId, boolean newEnable) {
+	public ModelAndView noteIndex(String searchInput, String subjectId, String dirId, String selectDirId, String tagId, String deleted, String topNodeId, boolean newEnable,String userId) {
 		ModelAndView mv = new ModelAndView("front/note/noteindex");
 		mv.addObject("subjectId", subjectId);
 		mv.addObject("dirId", dirId);
@@ -539,6 +539,7 @@ public class NoteController extends BaseController {
 		mv.addObject("deleted", deleted);
 		mv.addObject("topNodeId", topNodeId);
 		mv.addObject("newEnable", newEnable);
+		mv.addObject("userId", userId);
 		return mv;
 	}
 
@@ -560,7 +561,7 @@ public class NoteController extends BaseController {
 			if (deleted == Constants.DATA_DELETED) {
 				noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_M);
 			} else {
-				noteList = noteService.findMNotesByParams(subjectId, dirId, searchInput, tagId, orderField, user.getId());
+				noteList = noteService.findMNotesByParams(subjectId, dirId, searchInput, tagId, orderField, user.getId(),request.getParameter("userId"));
 			}
 		} else {
 			// 个人专题
@@ -586,8 +587,7 @@ public class NoteController extends BaseController {
 	}
 
 	@RequestMapping(value = "/front/saveNote.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String saveNote(NoteEntity note, HttpServletRequest request) throws IOException {
+	public @ResponseBody String saveNote(NoteEntity note, String[] noteTagId, HttpServletRequest request) throws IOException {
 		NoteEntity oldNote = noteService.getNote(note.getId());
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		noteService.saveNoteHtml(note);
@@ -604,6 +604,11 @@ public class NoteController extends BaseController {
 				note.setMd5(MD5FileUtil.getMD5String(note.getContent()));
 			}
 			noteService.addNote(note);
+			
+			//保存条目标签关系
+			if(noteTagId != null && noteTagId.length > 0){
+				tagServiceI.saveNoteTags(note.getId(), noteTagId);
+			}
 			return JsonUtil.bean2json(note);
 		} else {
 			oldNote.setTitle(note.getTitle());
@@ -620,6 +625,54 @@ public class NoteController extends BaseController {
 			oldNote.setUpdateUser(user.getId());
 			oldNote.setUpdateTime(new Date());
 			noteService.updateNote(oldNote, true);
+			
+			//保存条目标签关系
+			//原标签集合
+			List<String> tagList = tagServiceI.findTagIdsByNote(note.getId());
+			if(tagList != null && !tagList.isEmpty()){
+				if(noteTagId != null && noteTagId.length > 0){
+					//新标签集合
+					List<String> newList = new ArrayList<String>(noteTagId.length);
+					for(String tagId : noteTagId){
+						newList.add(tagId);
+					}
+					
+					//需删除的标签
+					for(String tagId : tagList){
+						if(!newList.contains(tagId)){
+							NoteTag noteTag = tagServiceI.findNoteTag(note.getId(), tagId);
+							tagServiceI.deleteNoteTag(noteTag);
+						}
+					}
+					
+					//需添加的标签
+					for(String tagId : newList){
+						if(!tagList.contains(tagId)){
+							NoteTag noteTag = new NoteTag();
+							noteTag.setId(UUIDGenerator.uuid());
+							noteTag.setNoteId(note.getId());
+							noteTag.setTagId(tagId);
+							tagServiceI.saveNoteTag(noteTag);
+						}
+					}
+				}else{
+					for(String tagId : tagList){
+						NoteTag noteTag = tagServiceI.findNoteTag(note.getId(), tagId);
+						tagServiceI.deleteNoteTag(noteTag);
+					}
+				}
+			}else{
+				if(noteTagId != null && noteTagId.length == 0){
+					for(String tagId : noteTagId){
+						NoteTag noteTag = new NoteTag();
+						noteTag.setId(UUIDGenerator.uuid());
+						noteTag.setNoteId(note.getId());
+						noteTag.setTagId(tagId);
+						tagServiceI.saveNoteTag(noteTag);
+					}
+				}
+			}
+			//tagServiceI.saveNoteTags(note.getId(), noteTagId);
 			return JsonUtil.bean2json(oldNote);
 		}
 
@@ -641,6 +694,7 @@ public class NoteController extends BaseController {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		NoteEntity note = noteService.getNote(id);
 		if (deleted == 1) {
+			tagServiceI.deleteNoteTagByNoteId(id);
 			noteService.deleteNote(note);
 		} else {
 			note.setUpdateUser(user.getId());
@@ -678,7 +732,7 @@ public class NoteController extends BaseController {
 	@RequestMapping(value = "/front/loadNote.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody
 	String loadNote(String id, HttpServletRequest request) {
-		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		AccountEntity user = accountService.getUser4Session();
 		NoteEntity note = noteService.getNote(id);
 		if (!noteService.noteIsRead(id, user.getId())) {
 			noteService.noteRead(id, user.getId());
@@ -707,6 +761,23 @@ public class NoteController extends BaseController {
 
 	}
 
+	@RequestMapping(value = "/front/loadNoteTags.dht", produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody String loadNoteTags(String noteId) {
+		List<TagEntity> tagList = tagServiceI.findTagByNote(noteId);
+		List<Map<String, String>> list = new ArrayList<Map<String,String>>();
+		if(tagList != null && !tagList.isEmpty()){
+			for(TagEntity tag : tagList){
+				Map<String, String> map = new HashMap<String, String>();
+				map.put("id", tag.getId());
+				map.put("name", tag.getName());
+				map.put("subjectId", tag.getSubjectId());
+				list.add(map);
+			}
+		}
+		// 不转成map，转json有问题
+		return JsonUtil.list2json(list);
+	}
+	
 	/**
 	 * 根据ID查询条目并返回
 	 * searchtype  （all所有，current前7条
@@ -714,33 +785,32 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/front/loadAttachment.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String loadAttachment(String id,String searchtype, HttpServletRequest request) {
-		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+	public @ResponseBody String loadAttachment(String id,String searchtype, HttpServletRequest request) {
 		NoteEntity note = noteService.getNote(id); 
-		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,searchtype);
-		note.setAttachmentEntitylist(attaList);
 		Map<String, Object> map = new HashMap<String, Object>();
-		//是否有更多
-		String isMore = "false";
-		//查询附件，默认前七条。
-		if(attaList.size()>7&&!searchtype.equals("all")){
-			isMore="true";
-			attaList.remove(attaList.size()-1);
-		}
-		//显示附件  【更多】按钮。
-		if(searchtype!=null&&searchtype.equals("all")&&attaList.size()>0){
-			isMore="true";
-		}
-		map.put("attaList", attaList);
-		map.put("isMore", isMore);
-		return JsonUtil.map2json(map);
+		if(note!=null){
+			List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,searchtype);
+			note.setAttachmentEntitylist(attaList);
+			//是否有更多
+			String isMore = "false";
+			//查询附件，默认前七条。
+			if(attaList.size()>7&&!searchtype.equals("all")){
+				isMore="true";
+				attaList.remove(attaList.size()-1);
+			}
+			//显示附件  【更多】按钮。
+			if(searchtype!=null&&searchtype.equals("all")&&attaList.size()>0){
+				isMore="true";
+			}
+			map.put("attaList", attaList);
+			map.put("isMore", isMore);
+			}
+			return JsonUtil.map2json(map);
 
 	}
 
 	@RequestMapping(value = "/front/restoreNote.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String restoreNote(String id, HttpServletRequest request) {
+	public @ResponseBody String restoreNote(String id, HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		NoteEntity note = noteService.getNote(id);
 		note.setUpdateUser(user.getId());
@@ -916,8 +986,8 @@ public class NoteController extends BaseController {
 		AjaxJson j = new AjaxJson();
 		message = "条目信息删除成功";
 		note = systemService.getEntity(TemplateEntity.class, note.getId());
-		note.setDeleted(Constants.DATA_DELETED);
-		noteService.saveOrUpdate(note);
+		tagServiceI.deleteNoteTagByNoteId(note.getId());
+		noteService.delete(note);
 		systemService.addLog(message, Globals.Log_Type_DEL, Globals.Log_Leavel_INFO);
 		j.setMsg(message);
 		return j;
@@ -937,4 +1007,16 @@ public class NoteController extends BaseController {
 		return new ModelAndView("com/eht/note/note");
 	}
 
+	/**
+	 * 专题成员条目数量
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value="/front/showcount.dht", produces={"application/json;charset=UTF-8"})
+	public @ResponseBody String  showcount(HttpServletRequest req) {
+		long c=tagService.findCoutNoteforRemenber(req.getParameter("subjectId"), req.getParameter("userId"));
+		String json = "{\"userId\":\"" + req.getParameter("userId") + "\"" + ",\"subjectId\":\"" + req.getParameter("subjectId") + "\"" + ",\"total\":\"" + c + "\""+ ",\"tId\":\"" + req.getParameter("tid") + "\"" + "}";
+		return json;
+	}
+	
 }

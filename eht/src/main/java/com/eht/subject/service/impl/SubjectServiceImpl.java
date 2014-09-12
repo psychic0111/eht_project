@@ -24,8 +24,6 @@ import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -41,21 +39,18 @@ import org.jeecgframework.core.util.SendMailUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.ActionName;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.RoleName;
-import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.AppContextUtils;
 import com.eht.common.util.AppRequstUtiles;
 import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.FileToolkit;
-import com.eht.common.util.TreeUtils;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
@@ -496,7 +491,29 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 			}
 		}
 	}
-
+  
+	@Override
+	public void inviteMemember(String  inviteMememberId,HttpServletRequest request)throws Exception {
+			InviteMememberEntity InviteMememberEntity=get(InviteMememberEntity.class, inviteMememberId);
+			if(InviteMememberEntity!=null){
+				SubjectEntity SubjectEntity=get(SubjectEntity.class, InviteMememberEntity.getSubjectid());
+				if(SubjectEntity!=null){
+					String basePath = AppRequstUtiles.getAppUrl(request);
+					Map<String, Object> map = new HashMap<String, Object>();
+					map.put("subject", SendMailUtil.getSubject());
+					map.put("content", SendMailUtil.getContent());
+					map.put("link",
+							"<a href='"
+									+ basePath
+									+ "/subjectController/center/acceptInvitemember.dht?id="
+									+ inviteMememberId + "'>" + SubjectEntity.getSubjectName()
+									+ "专题邀请</a>");
+					SendMailUtil.sendFtlMail(InviteMememberEntity.getEmail(), "邀请成员",
+							"mailtemplate/testmail.ftl", map);
+				}
+			}
+	}
+	
 	@Override
 	public void acceptInviteMember(InviteMememberEntity inviteMememberEntity,
 			AccountEntity user) throws Exception {

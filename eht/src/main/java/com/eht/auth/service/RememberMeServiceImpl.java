@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Date;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -113,6 +114,14 @@ public class RememberMeServiceImpl extends PersistentTokenBasedRememberMeService
         }
         AccountEntity user = (AccountEntity) getUserDetailsService().loadUserByUsername(token.getUsername());
         user.setClientId(request.getHeader(SynchConstants.HEADER_CLIENT_ID));
+        
+        //cookie中放入userid
+        String contextPath = request.getContextPath();
+        contextPath = contextPath.length() > 0 ? contextPath : "/";
+        
+        Cookie cookie = new Cookie("userid", user.getId());
+        cookie.setPath(contextPath);
+        response.addCookie(cookie);
         return user;
     }
 
@@ -131,6 +140,17 @@ public class RememberMeServiceImpl extends PersistentTokenBasedRememberMeService
         try {
             tokenRepository.createNewToken(persistentToken);
             addCookie(persistentToken, request, response);
+            
+            //cookie中放入userid
+            AccountEntity user = (AccountEntity) getUserDetailsService().loadUserByUsername(username);
+            user.setClientId(request.getHeader(SynchConstants.HEADER_CLIENT_ID));
+            
+            String contextPath = request.getContextPath();
+            contextPath = contextPath.length() > 0 ? contextPath : "/";
+            
+            Cookie cookie = new Cookie("userid", user.getId());
+            cookie.setPath(contextPath);
+            response.addCookie(cookie);
         } catch (DataAccessException e) {
             logger.error("Failed to save persistent token ", e);
         }

@@ -46,6 +46,7 @@
 		'buttonText': '测试',
 		//'checkScript':"checkScript.dht",
 		'onSelect': function(event, queueID, fileObj) {
+			alert(1);
 			if(fileObj.size > options.maxSize){
                 alert('当前选择的文件超过了设置的大小，请重新选择文件！');
                 try{
@@ -63,13 +64,17 @@
 			
 			var noteForm_id = "";
 			var dirId = "";
+			var subjectId ="";
 			if($('#noteForm_id')!=null&&$('#noteForm_id').val()!=null){
 				noteForm_id = $('#noteForm_id').val();
 			}
 			if($('#dirId')!=null&&$('#dirId').val()!=null){
 				dirId = $('#dirId').val();
 			}
-            $('#'+fileInputId).uploadifySettings("scriptData",{"noteid":noteForm_id,"dirId":dirId,"jsessionid":options.sessionId}); //动态更新配(执行此处时可获得值)
+			if($('#noteForm_subjectId')!=null&&$('#noteForm_subjectId').val()!=null){
+				subjectId = $('#noteForm_subjectId').val();
+			}
+            $('#'+fileInputId).uploadifySettings("scriptData",{"noteid":noteForm_id,"dirId":dirId,"jsessionid":options.sessionId,"subjectId":subjectId}); //动态更新配(执行此处时可获得值)
         },
 		'onQueueFull':function(event,queueSizeLimit){//超出文件个数
 			alert("已经超过上传文件数限制(最大上传文件数"+queueSizeLimit+"个)");
@@ -146,7 +151,6 @@
 }
 
 function uploadBtnClick(btnId){
-	
 	$("#"+btnId).uploadifyUpload();
 }
 /*
@@ -195,7 +199,7 @@ function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,session
 			"<input type='hidden' name='"+inputFileName+"' value='"+filecode+"' />"+
 			"<span onclick='downloadByid(\""+filecode+"\")'  title='"+fileName+"'><a href='javascript:;' style='color: #1F8919;'>"+attaStr+"</a>&nbsp;</span>"
 		);
-		var delBtn=$("<span onclick='removeCurrAttachment(this)'   attaid='"+filecode+"'><img style='display:none' src='"+imgPath+"/34aL_046.png' ></span>").click(function(){
+		var delBtn=$("<span onclick='removeCurrAttachment(this)'   attaid='"+filecode+"'><img style='display:inline;' src='"+imgPath+"/34aL_046.png' ></span>").click(function(){
 			fileItem.remove();
 		});
 		fileItem.append(delBtn);

@@ -26,6 +26,7 @@ import com.eht.log.entity.SynchLogEntity;
 import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
+import com.eht.note.entity.NoteTag;
 import com.eht.note.service.NoteServiceI;
 import com.eht.role.entity.RoleUser;
 import com.eht.role.service.RoleService;
@@ -88,7 +89,7 @@ public class OperateLogInterceptor {
 		Object paramEntity = args[0]; // 增删改实体参数都放在第一个
 		AccountEntity user = accountService.getUser4Session();
 		if(user == null){
-			String sessionId = ContextHolderUtils.getRequest().getAttribute("jsessionid").toString();
+			String sessionId = String.valueOf(ContextHolderUtils.getRequest().getAttribute("jsessionid"));
 			user = accountService.getUser4Session(sessionId);
 		}
 		int length = rp.dataClass().length;
@@ -96,7 +97,17 @@ public class OperateLogInterceptor {
 			SynchLogEntity log = new SynchLogEntity();
 			log.setClassName(rp.dataClass()[i].toString());
 			log.setAction(rp.action()[i].toString());
-			log.setOperateUser(user.getId());
+			if(log.getClassName().equals(DataType.SUBJECTUSER.toString())){
+				if(args[0].getClass().getName().equals(RoleUser.class.getName())){
+					RoleUser ru = (RoleUser) args[0];
+					log.setOperateUser(ru.getUserId());
+				}else{
+					log.setOperateUser(args[1].toString());
+				}
+				
+			}else{
+				log.setOperateUser(user.getId());
+			}
 			log.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
 			
 			// 数据操作发生的时间
@@ -200,6 +211,18 @@ public class OperateLogInterceptor {
 			noteId = note.getId();
 			subjectId = note.getSubjectId();
 		}
+		//条目标签关系
+		if (paramEntity.getClass().getName().equals(NoteTag.class.getName())) {
+			NoteTag noteTag = (NoteTag) paramEntity;
+			NoteEntity note = noteService.getNote(noteTag.getNoteId());
+			subjectId = note.getSubjectId();
+		}
+		//专题成员关系
+		if (paramEntity.getClass().getName().equals(RoleUser.class.getName())) {
+			RoleUser ru = (RoleUser) paramEntity;
+			subjectId = ru.getGroupId();
+		}
+		//附件
 		if (paramEntity.getClass().getName().equals(AttachmentEntity.class.getName())) {
 			AttachmentEntity atta = (AttachmentEntity) paramEntity;
 			String nid = atta.getNoteId();

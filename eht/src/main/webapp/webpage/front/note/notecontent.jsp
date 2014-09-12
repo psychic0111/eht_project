@@ -40,6 +40,19 @@ li.over {background-color: #bcd4ec;}
 			-moz-binding: url("ellipsis.xml#ellipsis");/*FireFox*/
 } 
 
+.note_tag{
+	cursor:pointer;
+	background-color: #fff7b5;
+	border-radius: 10px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.25);
+    color: #555;
+    display: block;
+    float: left;
+    margin: 0 6px 6px 0;
+    max-width: 100px;
+    padding: 1px 12px;
+    transition: all 100ms ease 0s;
+}
 -->
 </style> 
 
@@ -48,7 +61,7 @@ li.over {background-color: #bcd4ec;}
 		<input type="hidden" id="noteForm_id" name="id" value="${id}"/>
 		<input type="hidden" id="noteForm_subjectId" name="subjectId" value="${subjectId}"/>
 		<input type="hidden" id="noteForm_dirId" name="dirId" value="${dirId}"/>
-		<input type="hidden" id="noteForm_tagId" name="tagId" value="${tagId}"/>
+		<%-- <input type="hidden" id="noteForm_tagId" name="noteTagId" value="${tagId}"/> --%>
 		<input type="hidden" id="noteForm_version" name="version" value="${version}"/> 
 		<input type="hidden" id="sessionId" name="sessionId" value="${sessionId}"/> 
 		<input type="hidden" id="noteForm_createuser" value="${createUserId }"/> 
@@ -82,15 +95,20 @@ li.over {background-color: #bcd4ec;}
           <div class="clear"></div>
         </div>
         <div class="Edit">
-          <div style="font-size:12px;text-decoration:none;position:relative;z-index:1500;"padding-right: 5px>
+          <div style="font-size:12px;text-decoration:none;position:relative;">
 		       <div class="Edit_others" style="padding: 7px">
 			        标签：<span>
-			       	  <img src="${imgPath}/97162.gif.png" id="selectTag" onclick="selectTagTree()"  style="cursor:pointer;width:18px" title="添加标签"  />
-			          <span id="tagSelectNode" ></span>
+			       	  <img src="${imgPath}/97162.gif.png" id="selectTag" onclick="enableEditNoteT();selectTagTree()"  style="cursor:pointer;width:18px" title="添加标签"  />
+			          
+			          <ul id="tagSelectNode" style="display:inline-block;vertical-align:middle;height:20px;">
+			          	
+			          </ul>
 			       </span>
 		        </div>
 			    <div id="tagSelectContent" hidefocus="true" class="menuContent" style="background:#FFFFFF;font-size:13px;border: 1px solid rgb(190, 190, 190);display:none; position: absolute;z-index:1501">
-					<ul id="tagSelectTree"  hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002"></ul>
+					<i onclick="hideTagMenu()" style="float:right;margin-top:5px;margin-right:5px;background-image:url('${imgPath}/34aL_046.png');width:16px;height:16px;cursor:pointer;"></i>
+					<ul id="tagSelectTree"  hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002">
+					</ul>
 						<div class="rightMenu" id="tagSelectTreeRightMenu">
 				        		<ul id="tagSelectTreeRightMenu_ul_tag">
 				       				<li id="tagSelectTreeRightMenu_add_tag" onclick="tagaddChildTag()">添加标签</li>
@@ -103,7 +121,7 @@ li.over {background-color: #bcd4ec;}
         </div>
          <div class="title1" style="padding-bottom: 1px;padding: 7px">
          <div id="attTemp" style="position: relative;z-index:1100">
-         		附件：<div id="attachment" style="line-height: 16px; height: 0px; display: block;" title="添加附件"></div>
+         		附件：<div onclick="enableEditNoteT()" id="attachment" style="line-height: 16px; height: 0px; display: block;" title="添加附件"></div>
    	  	   		<div id="attachmentListDiv" style="position: absolute;top:0px;left:65px"></div>
    	  	   		<div id="attaMore" style="position: absolute;top:0px;left:89%;color: rgb(153, 153, 153);cursor: pointer;display: none;float: right;font-size: 12px;line-height: 20px;text-align: right;width: 40px;"  onclick="showButtonMore(this)">更多</div>
    		 </div>
@@ -117,18 +135,17 @@ li.over {background-color: #bcd4ec;}
         <div class="Edit_input">
           <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;display:none;"></script>
         </div>
-        <div id="parentHtmlViewDiv" style="height:100%;">
+        <div id="parentHtmlViewDiv" style="height:100%;border-top:1px solid #d9d9d9;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;overflow:auto;">
         	<div id="htmlViewDiv">
-    		 	<iframe id="htmlViewFrame"  frameborder="0" border="0" style="overflow-y:hidden;border:1px solid #d9d9d9;outline:0; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;height:100%;" >
+    		 	<iframe id="htmlViewFrame" scrolling="no" frameborder="0" style="border:none;outline:0; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;height:100%;" >
    				</iframe>
     		</div>
     		<!-- Begin comments-->
-		       <div class="comments" id="comments_div" style="display:none;height:200px;overflow-y:auto;">
-		        <div class="top" style="cursor:pointer;" ><img src="${imgPath}/comments1a.png" id="comment_img" onclick="togComment()" height="35px"/></div>
-		        <div class="comments_list" style="display:none;" id="comments_list">
-		        
-		        </div>
-		      </div>
+	        <div class="comments" id="comments_div" style="width:90%;margin-left:50px;">
+	        	<%-- <div class="top" style="cursor:pointer;" ><img src="${imgPath}/comments1a.png" id="comment_img" onclick="togComment()" height="35px"/></div> --%>
+	        	<div class="comments_list" id="comments_list">
+	        	</div>
+	      	</div>
 		    <!-- End comments--> 
         </div>
       </div>
@@ -169,8 +186,8 @@ $(document).ready(function() {
 	if(editorheight==null){
 		editorheight = document.body.clientHeight;
 	}
-	var frameHeight = editorheight - 275;
-	editorheight = frameHeight - $("#edui1_toolbarbox").outerHeight() - 53;
+	var frameHeight = editorheight - 278;
+	editorheight = frameHeight - $("#edui1_toolbarbox").outerHeight() - 54;
 	if(UE.browser.ie){
 		editorheight = editorheight -10;
 	}
@@ -179,8 +196,7 @@ $(document).ready(function() {
 	noteEditor.addListener("ready", function(){
 		noteEditor.hide();
 	});
-	
-	$("#htmlViewDiv").height(frameHeight);
+	$("#parentHtmlViewDiv").height(frameHeight);
 	//$("#htmlViewFrame").height(editorheight);
 	//$("#notes_new").height($("#right_index").height()+100);
 	var downloadPath = webRoot+"/noteController/front/downloadNodeAttach.dht";
@@ -188,10 +204,11 @@ $(document).ready(function() {
 	var basePath = uploadifyPath;
 	var upfileButton = " <a href='javascript:void(0);;' style='border:1px solid #fff;z-index:0'>添加附件 </a>";
 	var multiUpload=new MultiUpload("attachmentListDiv","filename",downloadPath,upLoadPath,'<%=frontPath%>',$('#sessionId').val(),upfileButton);//附件上传
-  	  if($('#noteForm_id').val()==null||$('#noteForm_id').val()==''){
+	if($('#noteForm_id').val()==null||$('#noteForm_id').val()==''){
       	$('#attachment').hide();
+      	$("#selectTag").hide();
   	 }
-
+	
   	hideLoading_edit();
 });
 

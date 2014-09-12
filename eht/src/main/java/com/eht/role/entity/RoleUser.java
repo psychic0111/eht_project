@@ -22,7 +22,7 @@ public class RoleUser implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	private Long id;
+	private String id;
 	/**
 	 * 用户ID
 	 */
@@ -48,12 +48,11 @@ public class RoleUser implements Serializable {
 	private long noteCount;
 	
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 	
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	

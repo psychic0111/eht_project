@@ -17,6 +17,7 @@ function SelectInfo(){
 	this.subjectId = "";//当前节点的subjectid
 	this.searchDirIds = ""; //当前节点可用于检索的目录id
 	this.dirId = ""; //当前节点的目录id，如果有的话
+	this.userId = ""; //创建人Id
 	this.isDeleted = 0;
 	this.tagId = "";//标签id
 	this.newEnable = true;//是否可以新建数据
@@ -63,7 +64,8 @@ var treeSetting = {
 		onClick: this.onNodeClick,//点击节点触发事件
 		beforeRename:this.zTreeBeforeRename,//改名字前验证触发事件
 		onRename: this.nodeOnRename,//改名字后触发事件
-		onAsyncSuccess: this.zTreeOnAsyncSuccess//异步加载后触发事件
+		onAsyncSuccess: this.zTreeOnAsyncSuccess,//异步加载后触发事件
+		onExpand: this.onExpand//展开事件
 	},
 	async : {
 	    autoParam : ["id", "dataType", "branchId"],
@@ -94,6 +96,7 @@ function onNodeClick(e, treeId, node) {
 
 //树节点click事件
 function onNodeClickDo(e, treeId, node) {
+	 
 	if(!onclickAndBefore)return;
 	var showD = true;
 
@@ -202,18 +205,31 @@ function onNodeClickDo(e, treeId, node) {
 		if(dataId == '-103'){
 			msgType = '2';
 		} 
+		if(dataId == '-100'){
+			var picId = node.tId;
+			picId = picId+"_ico";
+			$("#"+picId).removeClass("button sys_ico_docu").addClass("msg_ico_open newPriSubjectPic"); 
+		} 
 		//默认选中未读信息
 		if(msgType==''){
 			var parentNode = zTree_Menu.getNodeByParam("id", "-102", zTree_Menu.getNodes()[2]);
 			zTree_Menu.selectNode(parentNode);
 		}
-		changeCss(node);
+		
+		
 		if($("#noteEditor_td").is(":visible")){
 			hideNotePage();
 		}
 		var url = webRoot+"/messageController/front/messageList.dht?pageNo=1&pageSize=20&msgType=" + msgType;
 		AT.load("iframepage",url,function() {
 		});
+	}else if(node.dataType == "REMENBERCHILD"){
+		selectInfo = new SelectInfo();
+		selectInfo.newEnable = false;
+		selectInfo.subjectId = node.subjectId;
+		selectInfo.curMenu = node;
+		selectInfo.userId=node.id;
+		showSearchDiv();
 	}else{
 		selectInfo = new SelectInfo();
 		selectInfo.newEnable = false;
@@ -258,18 +274,11 @@ function destoryTree(){
 
 
 function beforeNodeClick(treeId, node) {
-	 if(isNoteStats()){//判断是否编辑状态
-		   var submit = function (v, h, f) {
-			if (v == true){ 
-				beforeNodeClickDo(treeId, node); 
-			} 
-			return true;
-		};
-		// 自定义按钮
-		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
-	 }else{
-		 beforeNodeClickDo(treeId, node);
-	 }
+	if (node.level === 0) {
+		beforeNodeClickDo(treeId, node);
+		return false;
+	}
+	 beforeNodeClickDo(treeId, node);
 }
 
 //点击节点前
@@ -551,4 +560,18 @@ function zTreeaddHoverDom(treeId, treeNode) {
 			aObj.append(editStr);
 		},false);
 	}
+}
+function onExpand(event, treeId, treeNode)  {
+	if(treeNode.dataType=='REMENBER'&&treeNode.open){
+		var nodes = treeNode.children;
+		for(var i=0;i<nodes.length;i++){
+			var params = {'userId':nodes[i].id,'subjectId':nodes[i].subjectId,'tid':nodes[i].tId};
+			AT.post(webRoot+"/noteController/front/showcount.dht",params,function(data){
+				$("#diyBtn_"+data.userId+"_"+data.subjectId).remove();
+				var aObj = $("#" + data.tId + '_a');
+			    var editStr = "<span id='diyBtn_" +data.userId+"_"+data.subjectId+ "' >"+"("+data.total+")"+"</span>";
+				aObj.append(editStr);
+			},true);
+		}
+	}return true;
 }

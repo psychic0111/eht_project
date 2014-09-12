@@ -3,6 +3,7 @@ package com.eht.role.service.impl;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -10,12 +11,13 @@ import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.RoleName;
-import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.page.PageResult;
+import com.eht.common.util.UUIDGenerator;
 import com.eht.role.entity.Role;
 import com.eht.role.entity.RoleUser;
 import com.eht.role.service.RoleService;
@@ -70,6 +72,7 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.ADD, keyIndex=0, targetUser=-1)
 	public boolean addRoleUser(String subjectId, String userId, String roleId) {
 		RoleUser ru = new RoleUser();
+		ru.setId(UUIDGenerator.uuid());
 		ru.setGroupId(subjectId);
 		ru.setRoleId(roleId);
 		ru.setUserId(userId);
@@ -198,6 +201,12 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.UPDATE, keyIndex=0, keyMethod="getId")
 	public void updateRoleUser(RoleUser ru) {
 		updateEntitie(ru);
+	}
+
+	@Override
+	public List<Role> findAllRoles() {
+		DetachedCriteria dc = DetachedCriteria.forClass(Role.class);
+		return findByDetached(dc);
 	}
 
 

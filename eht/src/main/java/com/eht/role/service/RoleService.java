@@ -128,4 +128,10 @@ public interface RoleService extends CommonService {
 	 * @return
 	 */
 	public boolean addRoleUser(RoleUser ru);
+	
+	/**
+	 * 查询所有角色
+	 * @return
+	 */
+	public List<Role> findAllRoles();
 }

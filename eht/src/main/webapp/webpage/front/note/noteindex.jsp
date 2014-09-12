@@ -31,6 +31,7 @@
           <input type="hidden" name="deleted" id="note_deleted" value="${deleted }"/>
           <input type="hidden" name="topNodeId" id="note_topNodeId" value="${topNodeId }"/>
           <input type="hidden" name="newEnable" id="note_newEnable" value="${newEnable }"/>
+          <input type="hidden" name="userId" id="note_userId" value="${userId }"/>
           <table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td class="search_input"><input class="InputTxt1" style="width:85%;line-height:26px;" type="text" name="searchInput" id="searchNoteField" value="${searchInput }"/></td>

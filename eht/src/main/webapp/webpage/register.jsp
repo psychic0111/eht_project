@@ -36,14 +36,39 @@
 	                <tr>
 	                  <td width="100">用户名：</td>
 	                  <td>
-	                    <input class="InputTxt2" id="userName"  style=" width:40%; height:28px; " onblur="repeat(this);" type="text" name="userName" autocomplete="off" />
+	                    <input class="InputTxt2" id="userName"  style=" width:40%; height:28px; "  type="text" name="userName" autocomplete="off" />
 	                    
 	                    </td>
 	                </tr>
 	                <tr>
 	                  <td>邮箱：</td>
-	                  <td><input class="InputTxt2" id="email"  style=" width:40%; height:28px; " type="text"   name="email" autocomplete="off"  />
+	                  <td>
+	                  <%
+						String email=request.getParameter("email");
+                         if(email!=null){
+                         %>
+                          <input class="InputTxt2" id="email"  style=" width:40%; height:28px; " type="text" onblur="repeat(this);" value="<%=request.getParameter("email")%>"  name="email" autocomplete="off"  />
+	                 
+                      <% }else{
+                      
+                      %>
+                       <input class="InputTxt2" id="email"  style=" width:40%; height:28px; " type="text" onblur="repeat(this);"   name="email" autocomplete="off"  />
+                     <% 
+                      }
+                      %>
 	                    </td>
+	                </tr>
+	                <tr>
+	                  <td width="100">密码：</td>
+	                  <td>
+	                   <input class="InputTxt2"  style=" width:40%; height:28px; " id="password" name="password" type="password" autocomplete="off" />
+	               	  </td>
+	                </tr>
+	                <tr>
+	                  <td>确认密码：</td>
+	                  <td>
+	                  	<input class="InputTxt2" style=" width:40%; height:28px; " id="passwordConf" name="passwordConf"  recheck="password" type="password" autocomplete="off"  />
+	                  </td>
 	                </tr>
 	                <tr>
 	                  <td>验证码：</td>
@@ -109,11 +134,14 @@
 	 	   rules:{
 				userName:{required:true,maxlength:200,remote:{url:'${webRoot}/center/checkUser.dht'}},
 			    email:{required:true,email:true,remote:{url:'${webRoot}/center/checkEmail.dht'}},
-				code:{required:true,remote:{url:'${webRoot}/center/checkCode.dht'}}
+				code:{required:true,remote:{url:'${webRoot}/center/checkCode.dht'}},
+				password:{required:true,maxlength:20,minlength:6},
+				passwordConf:{required:true,maxlength:20,minlength:6,equalTo:'#password'}
 			},
 			messages:{
 				userName:{remote:'* 账号已存在！',required:'* 请输入您的账号！'},
 				email:{remote:'* 邮箱已存在！',required:'* 请输入您的邮箱！',email:'* 邮箱格式不对!'},
+				passwordConf:{equalTo:'* 确认密码要和密码一致!'},
 				code:{remote:'* 验证码不正确！',required:"* 请输入验证码！"}
 			}
 		}

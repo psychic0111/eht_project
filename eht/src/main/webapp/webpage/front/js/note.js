@@ -28,7 +28,31 @@ function enableEditNote(){
 		$("#divhiden").text(noteEditor.getContent());
 		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
 		viewNotePageAndButton();
+		$("#tagSelectNode").empty();
+		$("input[name='noteTagId']").remove();
+		for(var i = 0; i < selectTags.length; i++){
+			var treeNode = selectTags[i];
+			// 标签显示
+			var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ treeNode.name +"</li>");
+			$("#tagSelectNode").prepend(tagLbl);
+			
+			// 条目form中添加隐藏域
+			var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
+			$("#noteForm").append(tagObj);
+		}
 	}
+}
+
+
+//选择附件或者标签时   条目切换成编辑状态
+function enableEditNoteT(){
+	if(document.getElementById("note_edit").style.display!='none'){
+		if($("#note_edit").hasClass("Button4")){
+			noteEditor.setContent($("#divhiden").text());
+			$("#htmlViewFrame").contents().find('body').html("");
+			editNotePageAndButton();
+		}
+	} 
 }
 
 function saveNote(){
@@ -57,6 +81,25 @@ function saveNote(){
 	});
 } 
 
+function saveNoteQuiet(){
+	noteEditor.sync("noteForm");
+	$("#divhiden").text(noteEditor.getContent());
+	AT.post($("#noteForm").attr("action"),$("#noteForm").serialize(), function(data){
+		//刷新当前条目id
+		$("#noteForm_id").val(data.id);
+		$("#noteForm_createuser").val(data.createUserId);
+		//显示&重置附件
+		
+		if($("#addCommentForm").length==0){
+			 var params = {'noteId':data.id};
+			 //显示评论
+			 AT.post(webRoot+"/commentController/front/findCommentByNote.dht",params,function(data){
+				 $("#comments_list").empty();
+				 $("#comments_list").append(data);
+			});
+		}
+	});
+} 
 
 //添加评论
 function addComment(){

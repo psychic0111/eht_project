@@ -144,6 +144,12 @@ public interface Constants {
 	 */
 	public static final int DISABLED=1;
 	
+	
+	/**
+	 * 未激活
+	 */
+	public static final int ACTIVATE=3;
+	
 	/**
 	 * 表格列表页记录每页数量
 	 */
