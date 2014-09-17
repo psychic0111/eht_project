@@ -105,6 +105,12 @@ public class MessageController extends BaseController {
 				total = messageService.countNoReadMessageByType(user.getId(), type, content);
 				pageResult.setTotal(total);
 			}
+			if(msgList != null){
+				for(MessageEntity msg : msgList){
+					messageService.markReadMessage(user.getId(), msg.getId());
+					msg.setUserIsRead(Constants.READED_OBJECT);
+				}
+			}
 			pageResult.setRows(msgList);
 			mmap.put("pageResult", pageResult);
 			mmap.put("orderType", orderType);

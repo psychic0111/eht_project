@@ -86,8 +86,8 @@ import com.eht.webservice.bean.DataBean;
 import com.eht.webservice.bean.SynchResult;
 import com.eht.webservice.service.DataSynchizeService;
 import com.eht.webservice.service.SynchResultService;
-import com.eht.webservice.service.util.DataSynchizeUtil;
-import com.eht.webservice.service.util.SynchDataCache;
+import com.eht.webservice.util.DataSynchizeUtil;
+import com.eht.webservice.util.SynchDataCache;
 
 public class DataSynchizeServiceImpl implements DataSynchizeService {
 
@@ -783,8 +783,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		res.setHeader(HeaderName.DATATYPE.toString(), DataType.ROLE.toString());
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		
-		
-		return JsonUtil.list2json(list);
+		return JsonUtil.bean2json(new DataBean("", JsonUtil.list2json(list)));
 	}
 	
 	@Override
@@ -800,7 +799,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		res.setHeader(HeaderName.DATATYPE.toString(), DataType.RESOURCE.toString());
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		
-		return JsonUtil.bean2json(cn);
+		DataBean dataBean = new DataBean("", JsonUtil.bean2json(cn));
+		return JsonUtil.bean2json(dataBean);
 	}
 	
 	@Override
@@ -816,7 +816,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		res.setHeader(HeaderName.DATATYPE.toString(), DataType.RESOURCEACTION.toString());
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		
-		return JsonUtil.list2json(actionList);
+		DataBean dataBean = new DataBean("", JsonUtil.list2json(actionList));
+		return JsonUtil.bean2json(dataBean);
 	}
 	
 	@Override
@@ -833,7 +834,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		res.setHeader(HeaderName.DATATYPE.toString(), DataType.RESOURCEACTION.toString());
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		
-		return JsonUtil.list2json(list);
+		DataBean dataBean = new DataBean("", JsonUtil.list2json(list));
+		return JsonUtil.bean2json(dataBean);
 	}
 	
 	@Override
@@ -841,8 +843,16 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/send/client/a/{clientType}")
 	public String registerClient(@PathParam("clientType") String clientType, @Context HttpServletResponse res) {
 		String clientId = dataInitService.registerClient(clientType);
+		
+		res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+		res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.CLIENT.toString());
+		
+		res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.REQUEST.toString());
+		res.setHeader(HeaderName.DATATYPE.toString(), DataType.ROLE.toString());
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
-		return clientId;
+		
+		DataBean dataBean = new DataBean("", JsonUtil.string2json(clientId));
+		return JsonUtil.bean2json(dataBean);
 	}
 	
 	@Override

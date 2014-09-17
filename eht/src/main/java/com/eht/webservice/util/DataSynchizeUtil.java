@@ -1,4 +1,4 @@
-package com.eht.webservice.service.util;
+package com.eht.webservice.util;
 
 import java.io.File;
 import java.io.FileInputStream;

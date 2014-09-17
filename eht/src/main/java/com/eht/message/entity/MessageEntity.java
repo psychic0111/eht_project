@@ -46,6 +46,12 @@ public class MessageEntity implements java.io.Serializable {
 	
 	private Integer msgType;
 	
+	private String className;
+	
+	private String classPk;
+	
+	private String operate;
+	
 	private Integer userIsRead;
 	
 	/** 树节点使用 */
@@ -69,8 +75,6 @@ public class MessageEntity implements java.io.Serializable {
 	 *@return: java.lang.String  主键ID
 	 */
 	@Id
-	@GeneratedValue(generator = "paymentableGenerator")
-	@GenericGenerator(name = "paymentableGenerator", strategy = "uuid")
 	@Column(name ="ID",nullable=false,length=32)
 	public java.lang.String getId(){
 		return this.id;
@@ -170,5 +174,29 @@ public class MessageEntity implements java.io.Serializable {
 		if(this.createTimeStamp != null && this.createTime == null){
 			this.createTime = new Date(this.createTimeStamp);
 		}
+	}
+
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public String getClassPk() {
+		return classPk;
+	}
+
+	public void setClassPk(String classPk) {
+		this.classPk = classPk;
+	}
+
+	public String getOperate() {
+		return operate;
+	}
+
+	public void setOperate(String operate) {
+		this.operate = operate;
 	}
 }

@@ -662,7 +662,7 @@ public class NoteController extends BaseController {
 					}
 				}
 			}else{
-				if(noteTagId != null && noteTagId.length == 0){
+				if(noteTagId != null && noteTagId.length > 0){
 					for(String tagId : noteTagId){
 						NoteTag noteTag = new NoteTag();
 						noteTag.setId(UUIDGenerator.uuid());

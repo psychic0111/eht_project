@@ -41,7 +41,7 @@ import com.eht.system.service.DataInitService;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
 import com.eht.webservice.service.impl.DataSynchizeServiceImpl;
-import com.eht.webservice.service.util.SynchDataCache;
+import com.eht.webservice.util.SynchDataCache;
 
 @Service("synchLogService")
 @Transactional

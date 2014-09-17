@@ -19,23 +19,23 @@
 	.textarea{ width:300px; height:50px; padding:3px; font-family:Tahoma, Arial;}
 </style>
 <script type="text/javascript">
-		// 绑定表情
-		var context='${imgPath}/biaoqing/';
+	// 绑定表情
+	var context='${imgPath}/biaoqing/';
 	$('#face').SinaEmotion($('#pinglun'),context);
-		$().ready(function() {
-			 $("#addCommentForm").validate({
-					rules:{
-					 content:{required:true,maxlength:200}
-					}
+	$().ready(function() {
+		 $("#addCommentForm").validate({
+				rules:{
+				 content:{required:true,maxlength:200}
 				}
-			);
-			
-		});
-		 $(".commentcontent").each(function(index){
-     		  var inputText = $(this).text();
-     		  $(this).html(AnalyticEmotion(inputText,context));
-		});
-	</script>
+			}
+		);
+		
+	});
+	$(".commentcontent").each(function(index){
+   		  var inputText = $(this).text();
+   		  $(this).html(AnalyticEmotion(inputText,context));
+	});
+</script>
 <form action="${webRoot}/commentController/front/commentAdd.dht" method="post" id="addCommentForm" name="addCommentForm"> 
 <input type="hidden" name="noteId" id="noteId" value="${noteId}">
 <div style="margin-bottom:1px;padding-right:10px;width:100%;">

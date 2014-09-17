@@ -551,7 +551,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		}
 		if (ownerRole != null) {
 			for (int i = 0; i < ids.length; i++) {
-				RoleUser u = get(RoleUser.class, Long.valueOf(ids[i]));
+				RoleUser u = get(RoleUser.class, ids[i]);
 				u.setRoleId(ownerRole.getId());
 				roleService.updateEntitie(u);
 			}

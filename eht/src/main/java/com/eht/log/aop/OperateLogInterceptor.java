@@ -22,8 +22,11 @@ import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.ReflectionUtils;
+import com.eht.common.util.UUIDGenerator;
 import com.eht.log.entity.SynchLogEntity;
 import com.eht.log.service.SynchLogServiceI;
+import com.eht.message.entity.MessageEntity;
+import com.eht.message.service.MessageServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.note.entity.NoteTag;
@@ -37,6 +40,7 @@ import com.eht.subject.service.SubjectServiceI;
 import com.eht.tag.entity.TagEntity;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
+import com.eht.webservice.util.SynchDataCache;
 
 @Aspect
 @Component
@@ -59,6 +63,9 @@ public class OperateLogInterceptor {
 
 	@Autowired
 	private NoteServiceI noteService;
+	
+	@Autowired
+	private MessageServiceI messageService;
 
 	@Pointcut("execution(* com.eht.webservice.service.impl.DataSynchizeServiceImpl.*(..))")
 	public void pointCut() {
@@ -95,6 +102,7 @@ public class OperateLogInterceptor {
 		int length = rp.dataClass().length;
 		for (int i = 0; i < length; i++) {
 			SynchLogEntity log = new SynchLogEntity();
+			log.setId(UUIDGenerator.uuid());
 			log.setClassName(rp.dataClass()[i].toString());
 			log.setAction(rp.action()[i].toString());
 			if(log.getClassName().equals(DataType.SUBJECTUSER.toString())){
@@ -156,16 +164,40 @@ public class OperateLogInterceptor {
 						String newMemberId = args[1].toString();
 						userIdList.add(newMemberId);  // 包括刚刚加入的成员
 					}
+					
 					for(String uid : userIdList){
 						SynchLogEntity newLog = new SynchLogEntity();
 						try {
 							BeanUtils.copyProperties(newLog, log);
-							newLog.setId(null);
+							newLog.setId(UUIDGenerator.uuid());
 							newLog.setTargetUser(uid);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 						synchLogService.saveSynchLog(newLog);
+						
+						// 条目操作发送系统消息给其他成员
+						if(!uid.equals(user.getId())){
+							if(log.getClassName().equals(DataType.NOTE.toString())){
+								MessageEntity msg = new MessageEntity();
+								msg.setId(log.getId());
+								
+								NoteEntity note = (NoteEntity) paramEntity;
+								String content = msgContent(log.getAction(), user.getUserName(), note.getTitle());
+								msg.setContent(content);
+								msg.setClassName(SynchDataCache.getDataClass(log.getClassName()).getName());
+								msg.setClassPk(log.getClassPK());
+								msg.setOperate(log.getAction());
+								
+								Date date = new Date();
+								msg.setCreateTime(date);
+								msg.setCreateTimeStamp(date.getTime());
+								msg.setCreateUser(user.getId());
+								msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
+								msg.setUserIsRead(Constants.NOT_READ_OBJECT);
+								messageService.saveMessages(msg, uid);
+							}
+						}
 					}
 				}else{
 					// 只影响操作者本身
@@ -272,5 +304,17 @@ public class OperateLogInterceptor {
 			}
 		}
 		return userIdList;
+	}
+	
+	private String msgContent(String action, String userName, String title){
+		String operate = "新增";
+		if(action.equals(DataSynchAction.UPDATE.toString())){
+			operate = "修改";
+		}
+		if(action.equals(DataSynchAction.DELETE.toString())){
+			operate = "删除";
+		}
+		String content = userName + operate + "条目: " + title;
+		return content;
 	}
 }

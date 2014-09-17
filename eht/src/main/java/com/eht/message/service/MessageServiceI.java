@@ -88,8 +88,16 @@ public interface MessageServiceI extends CommonService{
 	
 
 	/**
-	 * 删除消息-用户关系
+	 * 添加消息
 	 * @param messageId
 	 */
 	public void saveMessages(String content, List<String> username,String userId) throws Exception;
+	
+	/**
+	 * 添加消息
+	 * @param msg
+	 * @param targetUsers
+	 * @throws Exception
+	 */
+	public void saveMessages(MessageEntity msg, String targetUser);
 }

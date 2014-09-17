@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eht.common.constant.Constants;
+import com.eht.common.util.UUIDGenerator;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.entity.MessageUserEntity;
 import com.eht.message.service.MessageServiceI;
@@ -246,31 +247,42 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 	}
 
 	@Override
-	public void saveMessages(String content, List<String> username,String userId) throws Exception{
-		MessageEntity  m=new MessageEntity();
-		 m.setContent(content);
-		 m.setCreateTime(new Date());
-		 m.setCreateUser(userId);
-		 m.setMsgType(Constants.MSG_USER_TYPE);
-		 m.setUserIsRead(Constants.NOT_READ_OBJECT);
-		 save(m);
-		 List<String> list=username;
-		 if(list!=null){
-			 for (String string : list) {
-				 if(string.indexOf("@")!=-1){
-					 string=string.substring(1).trim();
-				 }
-				 AccountEntity a=	 accountServiceI.findUserByAccount(string);
-				 if(a!=null){
-					 MessageUserEntity k=new MessageUserEntity();
-					 k.setIsRead(Constants.NOT_READ_OBJECT);
-					 k.setMessageId(m.getId());
-					 k.setUserId(a.getId());
-					 save(k);
-				 }
+	public void saveMessages(String content, List<String> username, String userId) throws Exception{
+		MessageEntity m = new MessageEntity();
+		m.setId(UUIDGenerator.uuid());
+		m.setContent(content);
+		m.setCreateTime(new Date());
+		m.setCreateUser(userId);
+		m.setMsgType(Constants.MSG_USER_TYPE);
+		m.setUserIsRead(Constants.NOT_READ_OBJECT);
+		save(m);
+		List<String> list = username;
+		if (list != null) {
+			for (String string : list) {
+				if (string.indexOf("@") != -1) {
+					string = string.substring(1).trim();
 				}
-		 }
-		
+				AccountEntity a = accountServiceI.findUserByAccount(string);
+				if (a != null) {
+					MessageUserEntity k = new MessageUserEntity();
+					k.setIsRead(Constants.NOT_READ_OBJECT);
+					k.setMessageId(m.getId());
+					k.setUserId(a.getId());
+					save(k);
+				}
+			}
+		}
+
+	}
+	
+	@Override
+	public void saveMessages(MessageEntity msg, String targetUser){
+		save(msg);
+		MessageUserEntity k = new MessageUserEntity();
+		k.setIsRead(Constants.NOT_READ_OBJECT);
+		k.setMessageId(msg.getId());
+		k.setUserId(targetUser);
+		save(k);
 	}
 
 }

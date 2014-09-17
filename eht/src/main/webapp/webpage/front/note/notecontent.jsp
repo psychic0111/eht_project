@@ -53,6 +53,18 @@ li.over {background-color: #bcd4ec;}
     padding: 1px 12px;
     transition: all 100ms ease 0s;
 }
+
+.note_comment{
+	cursor:pointer;
+	background-color: #dcdcdc;
+    color: #555;
+    display: block;
+    float: right;
+    margin: 0 6px 6px 0;
+    padding: 1px 12px;
+    transition: all 100ms ease 0s;
+}
+
 -->
 </style> 
 
@@ -88,6 +100,7 @@ li.over {background-color: #bcd4ec;}
           <div class="left" style="margin-top:-5px;width:60%;">
           	<input id="noteTitleField" class="InputTxt3" type="text" value="${title}" name="title" style=" width:100%;line-height:29px;" maxlength="200">
           </div>
+          <div class="note_comment"><a href="#" onclick="toComment()">评论</a></div>
            <div class="clear"></div>
         </div> 
         <div class="title">
@@ -107,7 +120,7 @@ li.over {background-color: #bcd4ec;}
 		        </div>
 			    <div id="tagSelectContent" hidefocus="true" class="menuContent" style="background:#FFFFFF;font-size:13px;border: 1px solid rgb(190, 190, 190);display:none; position: absolute;z-index:1501">
 					<i onclick="hideTagMenu()" style="float:right;margin-top:5px;margin-right:5px;background-image:url('${imgPath}/34aL_046.png');width:16px;height:16px;cursor:pointer;"></i>
-					<ul id="tagSelectTree"  hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002">
+					<ul id="tagSelectTree" hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002">
 					</ul>
 						<div class="rightMenu" id="tagSelectTreeRightMenu">
 				        		<ul id="tagSelectTreeRightMenu_ul_tag">
@@ -208,8 +221,10 @@ $(document).ready(function() {
       	$('#attachment').hide();
       	$("#selectTag").hide();
   	 }
-	
   	hideLoading_edit();
 });
 
+function toComment(){
+	$("#pinglun").focus();
+}
 </script>

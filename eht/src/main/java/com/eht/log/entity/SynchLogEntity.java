@@ -63,8 +63,6 @@ public class SynchLogEntity implements java.io.Serializable {
 	 */
 	
 	@Id
-	@GenericGenerator(name = "idGenerator", strategy = "uuid")
-	@GeneratedValue(generator = "idGenerator")
 	@Column(name ="ID",nullable=false,length=32)
 	@JsonIgnore
 	public java.lang.String getId(){

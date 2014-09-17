@@ -1,4 +1,4 @@
-package com.eht.webservice.service.util;
+package com.eht.webservice.util;
 
 import java.util.HashMap;
 import java.util.List;

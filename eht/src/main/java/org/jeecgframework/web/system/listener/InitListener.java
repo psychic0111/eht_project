@@ -10,7 +10,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.eht.common.util.AppContextUtils;
 import com.eht.system.service.DataInitService;
-import com.eht.webservice.service.util.DataSynchizeUtil;
+import com.eht.webservice.util.DataSynchizeUtil;
 
 
 /**

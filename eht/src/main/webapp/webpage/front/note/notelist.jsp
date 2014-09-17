@@ -37,12 +37,12 @@
 					<c:set var="first" value="false"></c:set>
 				</c:if>
 				<li style="width:100%;">
-				<div class="title">
+				<div class="title" style="font-size:16px;">
 					<a href="#" onclick="viewNoteclick('${note.id}')">
 						<img src="${imgPath}/note.png" />
 						<c:choose>
-    						<c:when test="${fn:length(note.title) > 50}">
-    							<c:out value="${fn:substring(note.title, 0, 50)}......" />
+    						<c:when test="${fn:length(note.title) > 15}">
+    							<c:out value="${fn:substring(note.title, 0, 15)}......" />
      						</c:when>
    						  	<c:otherwise>
     					 		${note.title }

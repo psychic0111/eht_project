@@ -48,7 +48,7 @@ import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.DirectoryServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
-import com.eht.webservice.service.util.DataSynchizeUtil;
+import com.eht.webservice.util.DataSynchizeUtil;
 
 @Service("noteService")
 @Transactional
@@ -249,22 +249,24 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			dc.add(Restrictions.or( Restrictions.like("note.title", title, MatchMode.ANYWHERE),Restrictions.like("note.content", title, MatchMode.ANYWHERE)));
 		}
 		
-		if (!StringUtil.isEmpty(subjectId)) {
+		if (!StringUtil.isEmptyOrBlank(subjectId)) {
 			dc.add(Restrictions.eq("note.subjectId", subjectId));
 		}
-		if (!StringUtil.isEmpty(dirId)) {
+		if (!StringUtil.isEmptyOrBlank(dirId)) {
 			String[] ids = dirId.split(",");
-			if (ids[0].equals("*")) { // 专题下的条目（不属于某个目录下）
-				if (ids.length > 2) {
-					dc.add(Restrictions.or(Property.forName("note.dirId").isNull(), Property.forName("note.dirId").in(ids)));
-				} else if (ids.length == 2) {
-					dc.add(Restrictions.or(Property.forName("note.dirId").isNull(), Property.forName("note.dirId").eq(ids[1])));
-				}
-			} else {
-				if (ids.length > 1) {
-					dc.add(Restrictions.in("dirId", ids));
-				} else if (ids.length == 1) {
-					dc.add(Restrictions.eq("dirId", ids[0]));
+			if(ids != null && ids.length > 0){
+				if (ids[0].equals("*")) { // 专题下的条目（不属于某个目录下）
+					if (ids.length > 2) {
+						dc.add(Restrictions.or(Property.forName("note.dirId").isNull(), Property.forName("note.dirId").in(ids)));
+					} else if (ids.length == 2) {
+						dc.add(Restrictions.or(Property.forName("note.dirId").isNull(), Property.forName("note.dirId").eq(ids[1])));
+					}
+				} else {
+					if (ids.length > 1) {
+						dc.add(Restrictions.in("dirId", ids));
+					} else if (ids.length == 1) {
+						dc.add(Restrictions.eq("dirId", ids[0]));
+					}
 				}
 			}
 		}

@@ -32,7 +32,7 @@ $().ready(function() {
 document.getElementById("subjectName").focus();
 	$("#addSubjectForm").validate({
 			rules:{
-				subjectName:{required:true,minlength:2,maxlength:40,remote:{url:'${webRoot}/subjectController/front/checkSubjectName.dht'}},
+				subjectName:{required:true,minlength:2,maxlength:40},
 				description:{maxlength:200}
 			},
 			messages:{
@@ -280,7 +280,7 @@ function resetTree() {
 		          </select>
 		          <div class="content_wrap">
 		          	<div class="zTreeDemoBackground left">
-						<ul id="treeDemo" class="tag_tree" style="margin-top: 0px;border: 1px solid #617775;background: #f0f6e4;width:220px;height:200px;overflow-y:scroll;overflow-x:auto;"></ul>
+						<ul id="treeDemo" class="tag_tree" style="margin-top: 0px;border: 1px solid #617775;background: #f0f6e4;width:220px;height:200px;overflow-y:scroll;overflow-x:auto;z-index:1003;"></ul>
 					</div>
 				</div>
 		        </td>

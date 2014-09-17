@@ -39,6 +39,15 @@ function isSelected(treeId, treeNode){
 var selectTags = [];
 function beforeTagClick(treeId, treeNode, clickFlag){
 	var selected = isSelected(treeId, treeNode);
+	if(treeNode.children != null && treeNode.children.length > 0){
+		//点击根节点判断效果
+		if(treeNode.open){
+			zTree_Menu.expandNode(treeNode, false);	
+		}else{
+			zTree_Menu.expandNode(treeNode, true);	
+		}
+		return false;
+	}
 	if(selected){
 		//取消选中当前tag
 		tag_zTree_Menu.cancelSelectedNode(treeNode);

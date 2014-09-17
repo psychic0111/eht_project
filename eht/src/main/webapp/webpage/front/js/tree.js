@@ -79,7 +79,9 @@ var treeSetting = {
 	}
 }; 
 function onNodeClick(e, treeId, node) {
-	
+	 if(node.name == "我的标签" || node.name == "专题标签"){
+		 return false;
+	 }
 	 if(isNoteStats()){//判断是否编辑状态
 	   var submit = function (v, h, f) {
 		if (v == true){ 

@@ -122,7 +122,7 @@ function sendmessages(obj){
               </table>
             </div>
             <div class="others">
-              <input class="Button4" type="button" name="mark_btn" id="mark_btn" onclick="markMessage()" value="全标记为已读" />
+              <!--<input class="Button4" type="button" name="mark_btn" id="mark_btn" onclick="markMessage()" value="全标记为已读" /> -->
               <select name="orderField" style="height:28px;" onchange="orderMsg()">
                 <option value="createTime" <c:if test="${orderField == 'createTime' }"> selected="selected"</c:if>>按日期排序 </option>
                 <option value="createUser" <c:if test="${orderField == 'createUser' }"> selected="selected"</c:if>>按发送人排序 </option>
@@ -142,7 +142,7 @@ function sendmessages(obj){
                 <c:forEach items="${pageResult.rows}" var="msg">
                 	<tr class="TD1">
                 		<td width="35" align="center">
-                			<img src="${webRoot}/${msg.creator.photo}" width="35" height="34" />
+                			<img onerror="loadDefaultPhoto(this)" src="${webRoot}/${msg.creator.photo}" width="35" height="34" />
                 		</td>
                 		<td >
                 			<input type="hidden" name="id" value="${msg.id }">

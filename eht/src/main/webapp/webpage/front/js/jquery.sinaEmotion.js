@@ -74,7 +74,7 @@ function AnalyticEmotion(s,context) {
 		$(this).click(function(event){
 			event.stopPropagation();
 			
-			var eTop = target.offset().top + target.height() + 15;
+			var eTop = target.offset().top - target.height() * 5;
 			var eLeft = target.offset().left - 1;
 			
 			if($('#emotions .categorys')[0]){

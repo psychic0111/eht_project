@@ -143,6 +143,7 @@
 <script type="text/javascript" src="${frontPath}/js/treeRightFunction.js"></script>
 <script type="text/javascript" src="${frontPath}/js/notesearch.js"></script>
 <script type="text/javascript" src="${frontPath}/js/jquery.sinaEmotion.js"></script>
+<script type="text/javascript" src="${frontPath}/js/math.uuid.js"></script>
 <script type="text/javascript"> 
 window.UEDITOR_HOME_URL = "${frontPath}/js/ueditor/";
 window.UEDITOR_IMG_URL = "${webRoot}";
@@ -151,7 +152,7 @@ window.imgPath = imgPath;
 var context='${imgPath}/biaoqing/';
 function loadDefaultPhoto(obj){
 	var img = $(obj);
-	img.attr("src", '${imgPath}/headphoto.jpg');
+	img.attr("src", '${webRoot}/uptem/user.png');
 	img.attr("onerror", null);
 }
 </script>
