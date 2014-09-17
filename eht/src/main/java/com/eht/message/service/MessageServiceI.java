@@ -100,4 +100,10 @@ public interface MessageServiceI extends CommonService{
 	 * @throws Exception
 	 */
 	public void saveMessages(MessageEntity msg, String targetUser);
+	
+	/**
+	 * 查询用户收到未读的条目操作系统消息
+	 * @param targetUser
+	 */
+	public List<MessageEntity> findUserNoteMessages(String targetUser);
 }

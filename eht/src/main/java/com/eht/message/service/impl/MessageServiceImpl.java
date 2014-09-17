@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.ListUtils;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -18,12 +19,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eht.common.constant.Constants;
+import com.eht.common.enumeration.DataType;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.entity.MessageUserEntity;
 import com.eht.message.service.MessageServiceI;
+import com.eht.note.entity.NoteEntity;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
+import com.eht.webservice.util.SynchDataCache;
 
 @Service("messageService")
 @Transactional
@@ -283,6 +287,32 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 		k.setMessageId(msg.getId());
 		k.setUserId(targetUser);
 		save(k);
+	}
+
+	@Override
+	public List<MessageEntity> findUserNoteMessages(String targetUser) {
+		DetachedCriteria dc = DetachedCriteria.forClass(MessageUserEntity.class);
+		dc.add(Restrictions.eq("userId", targetUser));
+		dc.add(Restrictions.eq("isRead", Constants.NOT_READ_OBJECT));
+		
+		List<MessageUserEntity> list = findByDetached(dc);
+		if(list != null && !list.isEmpty()){
+			String[] msgIds = new String[list.size()];
+			for(int i=0;i<list.size();i++){
+				MessageUserEntity mu = list.get(i);
+				msgIds[i] = mu.getMessageId();
+			}
+			
+			DetachedCriteria deta = DetachedCriteria.forClass(MessageEntity.class);
+			deta.add(Restrictions.in("id", msgIds));
+			deta.add(Restrictions.eq("msgType", Constants.MSG_SYSTEM_TYPE));
+			deta.add(Restrictions.eq("className", SynchDataCache.getDataClass(DataType.NOTE.toString()).getName()));
+			
+			List<MessageEntity> msgList = findByDetached(deta);
+			return msgList;
+		}
+		
+		return null;
 	}
 
 }

@@ -1,6 +1,6 @@
 package com.eht.message.controller;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -26,13 +27,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
-import com.eht.common.util.UUIDGenerator;
+import com.eht.common.util.JsonUtil;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.service.MessageServiceI;
-import com.eht.subject.entity.SubjectEntity;
 import com.eht.user.entity.AccountEntity;
+import com.eht.user.service.AccountServiceI;
 
 
 /**   
@@ -53,8 +55,13 @@ public class MessageController extends BaseController {
 
 	@Autowired
 	private MessageServiceI messageService;
+	
+	@Autowired
+	private AccountServiceI accountService;
+	
 	@Autowired
 	private SystemService systemService;
+	
 	private String message;
 	
 	public String getMessage() {
@@ -155,19 +162,32 @@ public class MessageController extends BaseController {
 	
 	/**
 	 * 标记消息已读
-	 * @param id
-	 * @param msgType
-	 * @param content
-	 * @param orderField
-	 * @param orderType
-	 * @param request
-	 * @param pageResult
 	 * @return
 	 */
 	@RequestMapping(value="/front/sendMessag.dht")
 	public ModelAndView messageMark() {
 		ModelAndView mv = new ModelAndView("front/message/commentList");
 		return mv;
+	}
+	
+	@RequestMapping(value = "/front/noteMessage.dht", produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody String queryNodeMessage() {
+		AccountEntity user = accountService.getUser4Session();
+		List<MessageEntity> msgList = messageService.findUserNoteMessages(user.getId());
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		List<Map<String, String>> result = new ArrayList<Map<String, String>>();
+		for(MessageEntity msg : msgList){
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("id", msg.getId());
+			map.put("classPk", msg.getClassPk());
+			map.put("className", msg.getClassName());
+			map.put("conntent", msg.getContent());
+			map.put("operate", msg.getOperate());
+			map.put("createTime", format.format(msg.getCreateTime()));
+			map.put("msgType", String.valueOf(msg.getMsgType()));
+			result.add(map);
+		}
+		return JsonUtil.list2json(result);
 	}
 	
 	/**
@@ -214,6 +234,8 @@ public class MessageController extends BaseController {
 		}
 		return new ModelAndView(new RedirectView("/center/login.dht", true));
 	}
+	
+	
 	
 	/**
 	 * 系统消息提醒列表 页面跳转

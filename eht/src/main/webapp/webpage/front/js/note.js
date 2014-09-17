@@ -1,4 +1,21 @@
 var followNodeId='';
+var msgPeriod = 10000;
+
+//查询条目信息
+function getNoteMessage(){
+	var url = webRoot + "/messageController/front/noteMessage.dht";
+	AT.get(url, function(data){
+		if(data != null && data != ''){
+			for(var i = 0; i < data.length; i++){
+				console.log(data[i]);
+			}
+		}
+		
+	},true);
+}
+
+var periodId = setInterval(getNoteMessage, msgPeriod);
+
 //显示、隐藏评论
 function togComment(){
 	var src = $("#comment_img").attr("src");
@@ -81,6 +98,7 @@ function saveNote(){
 	});
 } 
 
+// 保存条目，不刷新列表
 function saveNoteQuiet(){
 	noteEditor.sync("noteForm");
 	$("#divhiden").text(noteEditor.getContent());

@@ -248,6 +248,7 @@ function viewNote(id,ishiden){
 			
 			$("#htmlViewFrame").contents().find('body').html("");
 			$("#divhiden").text("");
+			selectTags = [];
 			noteEditor.setContent("");
 		}catch(e){
 		}

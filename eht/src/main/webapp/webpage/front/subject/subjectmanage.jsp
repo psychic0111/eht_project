@@ -120,22 +120,22 @@
 if(actionSchedule!=null){
 
 }else{
- actionSchedule=setInterval(
- function(){
- if(!document.getElementById("schedule_1409022827875")){
- 	clearInterval(actionSchedule);
- 	actionSchedule=null;
- 	return;
- }
-  AT.post("${webRoot}/subjectController/front/sujectSchedule.dht",null,function(data){
-			if(data.success){
-			   var c='专题正在导出('+data.attributes.cout+'/'+data.attributes.couts+')';
-			   $("#"+data.attributes.subjectId + "_schedule").text(c);
-			}else{
-			   $(".schedulesubjects").text("");
-			}
-		},true);
- },10000);
+	actionSchedule=setInterval(
+		function(){
+		if(!document.getElementById("schedule_1409022827875")){
+			clearInterval(actionSchedule);
+			actionSchedule=null;
+			return;
+		}
+		 AT.post("${webRoot}/subjectController/front/sujectSchedule.dht",null,function(data){
+				if(data.success){
+				   var c='专题正在导出('+data.attributes.cout+'/'+data.attributes.couts+')';
+				   $("#"+data.attributes.subjectId + "_schedule").text(c);
+				}else{
+				   $(".schedulesubjects").text("");
+				}
+			},true);
+	},10000);
 
 }		
 </script>

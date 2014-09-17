@@ -28,7 +28,7 @@ function tagnodeOnRightClick(){}
 
 //判断节点是否为选中状态
 function isSelected(treeId, treeNode){
-	if(!!$("#" + treeId + "_" +treeNode.tId + "_a")){
+	if(!!$("#" + treeNode.tId + "_a").attr("class")){
 		if($("#" + treeNode.tId + "_a").hasClass("curSelectedNode")){
 			return true;
 		}
@@ -48,29 +48,55 @@ function beforeTagClick(treeId, treeNode, clickFlag){
 		}
 		return false;
 	}
-	if(selected){
-		//取消选中当前tag
-		tag_zTree_Menu.cancelSelectedNode(treeNode);
-		$("#li_" + treeNode.id).remove();
-		$("#" + treeNode.id).remove();
-		return false;
+	if(treeNode.name != '添加标签'){
+		if(selected){
+			//取消选中当前tag
+			tag_zTree_Menu.cancelSelectedNode(treeNode);
+			$("#li_" + treeNode.id).remove();
+			$("#" + treeNode.id).remove();
+			for(var i= 0; i< selectTags.length; i++){
+				if(selectTags[i].id == treeNode.id){
+					selectTags.splice(i, 1);
+					break;
+				}
+			}
+			//return false;
+		}else{
+			tag_zTree_Menu.selectNode(treeNode, true);
+			selectTags.push(treeNode);
+		}
 	}
-	selectTags = tag_zTree_Menu.getSelectedNodes();
 	return true;
 }
 //追加选择当前tag标签
 function current_noteContent_Tag(event, treeId, treeNode, clickFlag) {
-	for(var i= 0; i< selectTags.length; i++){
-		tag_zTree_Menu.selectNode(selectTags[i], true);
+	if(treeNode.name != '添加标签'){
+		tag_zTree_Menu.cancelSelectedNode();
+		setSelectedNodes();
+		var selected = isSelected(treeId, treeNode);
+		if(selected){
+			// 标签显示
+			if(!$("#li_"+ treeNode.id).attr("id")){
+				var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ treeNode.name +"</li>");
+				$("#tagSelectNode").append(tagLbl);
+			}
+			// 条目form中添加隐藏域
+			if(!$("#" + treeNode.id).attr("id")){
+				var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
+				$("#noteForm").append(tagObj);
+			}
+		}
+	}else{
+		var newNode = {
+				id : "",
+				name : "新标签",
+				icon : imgPath + "/tree/tag_blue.png"
+			};
+			newNode = tag_zTree_Menu.addNodes(null, newNode);
+			tagSelectHideRightMenu();
+			tag_zTree_Menu.editName(newNode[0]);
+			return false;
 	}
-	// 标签显示
-	var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ treeNode.name +"</li>");
-	$("#tagSelectNode").append(tagLbl);
-	
-	// 条目form中添加隐藏域
-	var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
-	$("#noteForm").append(tagObj);
-	
 }
 
 //隐藏标签树功能
@@ -101,15 +127,7 @@ function selectTagTree() {
 		$.fn.zTree.init($("#tagSelectTree"),noteContent_Tag_TreeSetting, data);
 		tag_zTree_Menu = $.fn.zTree.getZTreeObj("tagSelectTree");
 		tag_zTree_Menu.expandAll(true);
-		var nodes = tag_zTree_Menu.transformToArray(tag_zTree_Menu.getNodes());
-		var index = 0;
-		for(var i = 0; i < nodes.length; i++){
-			if(nodes[i].selected == 'true'){
-				tag_zTree_Menu.selectNode(nodes[i], true);
-				selectTags[index] = nodes[i];
-				index ++;
-			}
-		}
+		setSelectedNodes();
 	});
 	$("#tagSelectTree").html("");
 	$("#tagSelectContent").css({
@@ -117,6 +135,19 @@ function selectTagTree() {
 		top : "42px"
 	}).slideDown("fast");
 	$("body").bind("mousedown", onBodyTagDown);
+}
+
+//设置节点选中状态
+function setSelectedNodes(){
+	var nodes = tag_zTree_Menu.transformToArray(tag_zTree_Menu.getNodes());
+	for(var i = 0; i < nodes.length; i++){
+		for(var k = 0; k < selectTags.length; k++){
+			if(nodes[i].id == selectTags[k].id){
+				tag_zTree_Menu.selectNode(nodes[i], true);
+				break;
+			}
+		}
+	}
 }
 
 //-------------------------------------------------------------
@@ -140,7 +171,10 @@ function tagSelectMouseMenu(treeId, node) {
 }
 
 //鼠标注右键点击前, 准备菜单
-function tagSelectNodeBeforeRightClick(treeId, node,event) { 
+function tagSelectNodeBeforeRightClick(treeId, node,event) {
+	if(node.name == '添加标签'){
+		return false;
+	}
 	selectTags = tag_zTree_Menu.getSelectedNodes();
 	tagRightClickNode = node; 
 	tagSelectMouseMenu(treeId, node); 
@@ -310,7 +344,7 @@ function tagSelectNodeOnRename(e, treeId, node) {
 				zTree_Menu.updateNode(treeNode); 
 			}
 			tag_zTree_Menu.updateNode(node);
-			tag_zTree_Menu.cancelSelectedNode(node);
+			tag_zTree_Menu.cancelSelectedNode();
 			
 			for(var i= 0; i< selectTags.length; i++){
 				tag_zTree_Menu.selectNode(selectTags[i], true);
