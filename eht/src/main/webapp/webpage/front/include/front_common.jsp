@@ -237,5 +237,10 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 			//xddialog.confirm(message,title,okfunc,cancelfuncUser);
 		}
 	}
-
+	
+	function loadDefaultPhoto(obj){
+		var img = $(obj);
+		img.attr("src", '${webRoot}/uptem/user.png');
+		img.attr("onerror", null);
+	}
 </script> 

@@ -537,6 +537,12 @@ public class SubjectController extends BaseController {
 		return mv;
 	}
 	
+	@RequestMapping(value = "/front/treeDataEdit.dht", produces = { "application/json;charset=UTF-8" })
+	public @ResponseBody String treeDataEdit(HttpServletRequest request){
+		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		String json=subjectService.treeSubject(request.getParameter("subjectId"),user.getId());
+		return json;
+	}
 	
 	/**
 	 * 前台导出专题

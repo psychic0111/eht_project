@@ -3,10 +3,12 @@ package com.eht.system.controller;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
 import org.apache.log4j.Logger;
 import org.apache.ws.security.util.UUIDGenerator;
 import org.jeecgframework.core.common.controller.BaseController;
@@ -23,8 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import com.eht.common.constant.Constants;
+import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.util.AppRequstUtiles;
+import com.eht.message.entity.MessageEntity;
+import com.eht.message.service.MessageServiceI;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.system.bean.SendEmailSession;
@@ -45,6 +51,10 @@ import com.eht.user.service.AccountServiceI;
 public class LogonController extends BaseController {
 	@Autowired
 	private SubjectServiceI subjectService;
+	
+	@Autowired
+	private MessageServiceI messageService;
+	
 	/**
 	 * 登陆
 	 * @return
@@ -410,8 +420,25 @@ public class LogonController extends BaseController {
 			String msg="此账号已经完成注册";
 			return linkLoginMessage(msg,null,null,null,null);
 		}else{
+			// 点击激活邮件直接跳转到首页
 			request.setAttribute("accountPage", account);
-			return new ModelAndView("/user/accountRegister");
+			//return new ModelAndView("/user/accountRegister");
+			MessageEntity msg = new MessageEntity();
+			msg.setClassName(AccountEntity.class.getName());
+			msg.setClassPk(account.getId());
+			msg.setContent("请完善自己的帐号信息");
+			Date date = new Date();
+			msg.setCreateTime(date);
+			msg.setCreateTimeStamp(date.getTime());
+			msg.setCreateUser("SYSTEM");
+			msg.setId(com.eht.common.util.UUIDGenerator.uuid());
+			msg.setUserIsRead(Constants.NOT_READ_OBJECT);
+			msg.setOperate(DataSynchAction.UPDATE.toString());
+			msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
+			messageService.saveMessages(msg, account.getId());
+			
+			account.setStatus(Constants.ENABLED);
+			return linkIndex(request.getSession(), account);
 		}
 	}
 	

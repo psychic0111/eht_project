@@ -85,7 +85,6 @@
     <div id="tagContent" class="menuContent" style="background:#FFFFFF;font-size:13px;border:1px solid #3C85BA;display:none; position: absolute;z-index:2003">
 		<ul id="tagTree" class="tag_tree" style="margin-top:0; width:186px;"></ul>
 	</div>
-	<div id="divhiden" style="display:none;"></div>
 <script type="text/javascript">
 //滚动浮动
 var funcDiv_top = $("#topFuncDiv").offset().top;

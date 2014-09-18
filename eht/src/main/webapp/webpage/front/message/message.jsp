@@ -32,7 +32,14 @@ function orderMsg(){
 //标记已读
 function markMessage(){
 	var param = $("#messageListForm").serialize();
-	AT.load("iframepage","${webRoot}/messageController/front/messageMark.dht?" + param, function() {});
+	var url = "${webRoot}/messageController/front/messageMark.dht";
+	AT.post(url, param, function(data){
+		var ary = $(".msgContent");
+		for(var i = 0; i < ary.length; i++){
+			var obj = $(ary[i]).text();
+			$(ary[i]).text(obj);
+		}
+	});
 	var nodes = zTree_Menu.getNodesByFilter(findMsgNode);
 	for(var i = 0; i < nodes.length; i++){
 		nodes[i].name = nodes[i].name.substring(0,4); 
@@ -101,8 +108,11 @@ function sendmessages(obj){
             return true;
         }
 	});
-	}	
+}	
 
+$(document).ready(function(){
+	markMessage();
+});
 </script>
 
 	<div class="right_top">
@@ -142,12 +152,28 @@ function sendmessages(obj){
                 <c:forEach items="${pageResult.rows}" var="msg">
                 	<tr class="TD1">
                 		<td width="35" align="center">
-                			<img onerror="loadDefaultPhoto(this)" src="${webRoot}/${msg.creator.photo}" width="35" height="34" />
+                			<c:choose>
+                				<c:when test="${msg.createUser == 'SYSTEM' }">
+                					<img onerror="loadDefaultPhoto(this)" src="${imgPath}/97162.gif.png" width="35" height="34" />
+                				</c:when>
+                				<c:otherwise>
+                					<img onerror="loadDefaultPhoto(this)" src="${webRoot}/${msg.creator.photo}" width="35" height="34" />
+                				</c:otherwise>
+                			</c:choose>
                 		</td>
                 		<td >
                 			<input type="hidden" name="id" value="${msg.id }">
-                  			<span class="Font2"><strong>${msg.creator.userName}：</strong></span>
-                  			<font size="2">
+                  			<span class="Font2">
+                  				<c:choose>
+                				<c:when test="${msg.createUser == 'SYSTEM' }">
+                					<strong>系统消息：</strong>
+                				</c:when>
+                				<c:otherwise>
+                					<strong>${msg.creator.userName}：</strong>
+                				</c:otherwise>
+                			</c:choose>
+                  			</span>
+                  			<font class="msgContent" size="2">
 	                  			<c:if test="${msg.userIsRead == 0}"> 
 	                  				<strong>${msg.content}</strong><br />
 	                  			</c:if>

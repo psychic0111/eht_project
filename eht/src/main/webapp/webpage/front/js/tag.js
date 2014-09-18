@@ -354,3 +354,80 @@ function tagSelectNodeOnRename(e, treeId, node) {
 }
 
 //============编辑区 标签选择 END=================================================================================>>>>>>> .r935
+//树对象
+var dir_zTree_Menu = null;
+//标签树初始化
+var noteContent_Dir_TreeSetting = {
+	data : {
+		simpleData : {
+			enable : true
+		}
+	},
+	view : {
+		dblClickExpand : false,
+		nameIsHTML : false
+	},
+	callback : {
+		onClick : current_noteContent_Dir
+	}
+};
+
+//
+function current_noteContent_Dir(event, treeId, treeNode, clickFlag) {
+	$("#noteSubjectName").text(recurDirParentName(treeNode,""));
+	if(treeNode.dataType!='SUBJECT'){
+		$("#noteForm_dirId").val("");
+	}else{
+		$("#noteForm_dirId").val(treeNode.id);
+	}
+	hideDirMenu();
+}
+
+function recurDirParentName(node,subjectName){
+	if(node!= null&&node.dataType!='SUBJECT'){
+		subjectName =node.name + "/"+subjectName;
+		return recurDirParentName(node.getParentNode(),subjectName);
+	}else{
+		if(node.branchId=='-1'){
+			subjectName ='个人专题'+ "/"+node.name + "/"+subjectName;
+		}else{
+			subjectName ='多人专题'+ "/"+node.name + "/"+subjectName;
+		}
+		
+		return subjectName;
+	}
+}
+//隐藏标签树功能
+function hideDirMenu() {
+	$("#dirSelectContent").fadeOut("fast");
+	$("body").unbind("mousedown", onBodyDirDown);
+}
+//鼠标页面点击事件
+function onBodyDirDown(event) {
+	if (isShowConfirm(event)) {
+		return;
+	}
+	if (event.target.id != "dirSelectContent"
+			&& event.target.id != "dirSelectTreeRightMenu"
+				&& $(event.target).parents("#dirSelectContent").attr("id") == null) {
+		hideDirMenu();
+	}
+}
+
+function selectDirTree(){
+	var params = {
+			"subjectId" : $('#note_subjectId').val()
+		};
+		var url = webRoot + "/subjectController/front/treeDataEdit.dht";
+		AT.post(url, params,function(data) {
+			$.fn.zTree.init($("#dirSelectTree"),noteContent_Dir_TreeSetting, data);
+			dir_zTree_Menu = $.fn.zTree.getZTreeObj("dirSelectTree");
+			dir_zTree_Menu.expandAll(true);
+		});
+		$("#dirSelectTree").html("");
+		$("#dirSelectContent").css({
+			left : "0px",
+			top : "112px"
+		}).slideDown("fast");
+		$("body").bind("mousedown", onBodyDirDown);
+}

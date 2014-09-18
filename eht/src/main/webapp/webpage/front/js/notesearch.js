@@ -241,13 +241,15 @@ function viewNote(id,ishiden){
 			$("#noteForm_version").val("");
 			$("#noteForm_subjectId").val("");
 			$("#noteForm_dirId").val("");
-
-			//$("#noteForm_tagId").val("");
 			$("input[name='noteTagId']").remove();
 			$("#tagSelectNode").empty();
-			
 			$("#htmlViewFrame").contents().find('body').html("");
 			$("#divhiden").text("");
+			if(selectInfo.curMenu.dataType == "SUBJECT"||selectInfo.curMenu.dataType == "DIRECTORY"&&!isDocumentFolder(selectInfo.curMenu)){
+				$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));	
+			}else{
+				$("#noteSubjectName").text("");	
+			}
 			selectTags = [];
 			noteEditor.setContent("");
 		}catch(e){
@@ -440,7 +442,7 @@ function clearAttaMore(){
 function viewNotePageAndButton(){
 	//标题不可编辑
 	$("#noteTitleField").attr("disabled", "disabled");
-	
+	$("#selectDir").hide();
 	// 提交按钮不可点
 	$("#saveNote_btn").hide();
 	
@@ -634,6 +636,7 @@ function addNewNote() {
 	 }
 }
 function addNewNotedo() {
+	$("#selectDir").hide();
 	if ($("#note_new").val() != "- 撤消条目") {
 		var uuid = Math.uuid().replace(/\-/g,"");
 		noteEditor.setContent("");

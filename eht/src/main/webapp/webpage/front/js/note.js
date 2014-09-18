@@ -40,8 +40,10 @@ function enableEditNote(){
 	if($("#note_edit").hasClass("Button4")){
 		noteEditor.setContent($("#divhiden").text());
 		$("#htmlViewFrame").contents().find('body').html("");
+		$("#selectDir").show();
 		editNotePageAndButton();
 	}else if($("#note_edit").hasClass("Button3")){
+		$("#selectDir").hide();
 		$("#divhiden").text(noteEditor.getContent());
 		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
 		viewNotePageAndButton();

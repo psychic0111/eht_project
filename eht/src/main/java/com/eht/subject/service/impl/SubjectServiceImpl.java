@@ -392,7 +392,20 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		List<SubjectEntity> list = findByDetached(dc);
 		return list;
 	}
-
+	
+	@Override
+	public List<SubjectEntity> findSubjectByParam(String subjectName, String userId, int subjectType) {
+		DetachedCriteria dc = DetachedCriteria.forClass(SubjectEntity.class);
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("status", Constants.ENABLED));
+		dc.add(Restrictions.eq("createUser", userId));
+		dc.add(Restrictions.eq("subjectType", subjectType));
+		dc.add(Restrictions.eq("subjectName", subjectName));
+		
+		List<SubjectEntity> list = findByDetached(dc);
+		return list;
+	}
+	
 	@Override
 	public List<SubjectEntity> findSubjectByType(Integer subjectType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(SubjectEntity.class);
@@ -1448,11 +1461,15 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		TreeData treeData = new TreeData();
 		treeData.setName(subjectEntity.getSubjectName());
 		treeData.setId(subjectEntity.getId());
+		treeData.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/subject.png");
 		treeData.setpId("-1");
 		treeData.setOpen("true");
+		treeData.setBranchId(subjectEntity.getSubjectType()+"");
 		treeData.setChecked("true");
+		treeData.setDataType("SUBJECT");
 		listTreeData.add(treeData);
 		List<DirectoryEntity> list=	directoryService.findDirsBySubjectOderByTime(subjectId,true);
+		findRemoveDirDOCUMENT(list,subjectId);
 		for (DirectoryEntity directoryEntity : list) {
 			TreeData t = new TreeData();
 			t.setName(directoryEntity.getDirName());
@@ -1462,6 +1479,29 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			listTreeData.add(t);
 		}
 		return JSONHelper.collection2json(listTreeData);
+	}
+	
+	private void findRemoveDirDOCUMENT(List<DirectoryEntity> list,String subjectId){
+		List<DirectoryEntity> removeList =new ArrayList<DirectoryEntity>();
+		for (Iterator iterator = list.iterator(); iterator.hasNext();) {
+			DirectoryEntity directoryEntity = (DirectoryEntity) iterator.next();
+			if(directoryEntity.getDirName().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)&&subjectId.equals(directoryEntity.getPId())){
+				removeDir(list,directoryEntity.getId(),removeList);
+				removeList.add(directoryEntity);
+				break;
+			}
+		}
+		list.removeAll(removeList);
+	}
+	private void removeDir(List<DirectoryEntity> list,String pid,List<DirectoryEntity> removeList){
+		Iterator<DirectoryEntity> k=list.iterator();
+		for (Iterator iterator = list.iterator(); iterator.hasNext();) {
+			DirectoryEntity directoryEntity = (DirectoryEntity) iterator.next();
+			if(directoryEntity.getPId().equals(pid)){
+				removeDir(list,directoryEntity.getId(),removeList);
+				removeList.add(directoryEntity);
+			}
+		}
 	}
  
 }

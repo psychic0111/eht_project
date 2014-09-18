@@ -150,11 +150,6 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 window.DOWNLOAD_URL = "${webRoot}/noteController/front/downloadNodeAttach.dht";
 window.imgPath = imgPath;
 var context='${imgPath}/biaoqing/';
-function loadDefaultPhoto(obj){
-	var img = $(obj);
-	img.attr("src", '${webRoot}/uptem/user.png');
-	img.attr("onerror", null);
-}
 </script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>

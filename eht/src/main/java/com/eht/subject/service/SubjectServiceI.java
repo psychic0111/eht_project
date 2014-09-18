@@ -171,5 +171,15 @@ public interface SubjectServiceI extends CommonService{
      * @param subject
      */
     public String treeSubject(String subjectId,String userId);
+	
+    /**
+     * 专题查询
+     * @param subjectName
+     * @param userId
+     * @param subjectType
+     * @return
+     */
+    public List<SubjectEntity> findSubjectByParam(String subjectName, String userId,
+			int subjectType);
     
 }

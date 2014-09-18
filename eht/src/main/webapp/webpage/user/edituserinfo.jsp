@@ -52,7 +52,7 @@
 	                <tr>
 	                  <td>头像：</td>
 	                  <td>
-	                      <img src="${webRoot}/${SESSION_USER_ATTRIBUTE.photo}" width="60" height="60" />  
+	                      <img onerror="loadDefaultPhoto(this)" src="${webRoot}/${SESSION_USER_ATTRIBUTE.photo}" width="48" height="48" />  
 						  <input class="InputTxt2" id="file" value="default.img"  name="file" type="file"  autocomplete="off"/>
 	                  </td>
 	                </tr>

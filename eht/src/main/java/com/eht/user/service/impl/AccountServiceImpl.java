@@ -169,6 +169,7 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 	public void activeUser(AccountEntity account,String sessionId) {
 		super.updateEntitie(account);
 		ClientManager.getInstance().getSession(sessionId).setAttribute(Constants.SESSION_USER_ATTRIBUTE, account);
+		
 		SubjectEntity subject = new SubjectEntity();
 		subject.setCreateUser(account.getId());
 		subject.setCreateTime(new Date());
@@ -178,7 +179,10 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 		subject.setStatus(0);
 		subject.setDeleted(0);
 		subject.setSubjectName("默认专题");	
-	    subjectService.addSubject(subject);
+		List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
+		if(list == null || list.isEmpty()){
+			subjectService.addSubject(subject);
+		}
 	}
 	
 }

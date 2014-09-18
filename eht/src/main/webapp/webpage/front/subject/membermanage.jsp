@@ -151,14 +151,14 @@ function sendInvitemember(obj){
          	 <div style="float:left;">
          	   <form action="${webRoot}/subjectController/front/addInvitemember.dht" method="post" id="addInvitemember" name="addInvitemember" onsubmit="return false;" > 
                <input type="hidden" name="id" value="${subjectEntity.id }">
-              <input class="InputTxt2" style="width:200px;height:27px;float:left;padding-left:12px;margin-right:10px;" name="textarea1" autocomplete="off" id="textarea1"  type="text"/>
+              <input onfocus='javascript:this.value=""' class="InputTxt2" value="输入被邀请成员的邮箱地址" style="width:200px;height:27px;float:left;padding-left:12px;margin-right:10px;color:graytext;" name="textarea1" autocomplete="off" id="textarea1"  type="text"/>
          	  <select id="textareatype" style="width:100px;float:left;height:28px;margin-right:10px;" name="type">
 			                  <option value="1">超级管理员</option>
 			                  <option value="2">编辑</option>
 			                  <option value="3">作者</option>
 			                  <option value="4">读者</option>
               </select>
-         	  <input style="width:100px;float:left;padding-left:12px" class="Button2" type="button" name="button" id="button"  onclick="viewInvitemember();" value="邀请新成员" />
+         	  <input style="width:100px;float:left;padding-left:12px"  class="Button2" type="button" name="inviteMem_button" id="inviteMem_button"  onclick="viewInvitemember();" value="邀请新成员" />
               </form>          	
 			</div>
             <div class="others">

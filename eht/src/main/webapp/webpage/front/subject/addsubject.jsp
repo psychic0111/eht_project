@@ -3,10 +3,6 @@
 <%@include file="/context/mytags.jsp"%>
 <link rel="stylesheet" href="${cssPath}/zTreeStyle/tagTree.css" type="text/css">
 <style type="text/css">
-div.content_wrap {width: 600px;height:250px;}
-div.content_wrap div.left{float: left;width: 250px;}
-div.content_wrap div.right{float: right;width: 340px;}
-div.zTreeDemoBackground {width:250px;height:260px;text-align:left;}
 </style>
 <script type="text/javascript">
 var zNodestemplate =[];
@@ -41,7 +37,7 @@ document.getElementById("subjectName").focus();
 		}
 	);
 	rMenuTemplate = $("#rMenuTemplate");
-	$('.content_wrap').hide();
+	$('#templateSelectContent').hide();
 });
 
 function OnRightClickTemplate(event, treeId, treeNode) {
@@ -89,7 +85,9 @@ function beforeRename(treeId, treeNode, newName) {
 }
 
 function hideRMenu() {
-	if (rMenuTemplate) rMenuTemplate.hide();
+	if (rMenuTemplate) {
+	rMenuTemplate.hide();
+	}
 	$("body").unbind("mousedown", onBodyMouseDown);
 }
 
@@ -135,9 +133,12 @@ function addSubject(){
 function onBodyMouseDown(event){
 	if (!(event.target.id == "rMenuTemplate" || $(event.target).parents("#rMenuTemplate").length>0)) {
 		rMenuTemplate.hide();
+		
 	}
 }
-
+function hideTemplateMenu(){
+$('#templateSelectContent').hide();
+}
 $('#templateId').change(function(){
 	if($(this).val()!=''){
 		var params = {'id':$(this).val()};
@@ -154,21 +155,24 @@ $('#templateId').change(function(){
 					zNodestemplate=data;
 					$.fn.zTree.init($("#treeDemo"), settingtemplate, data);
 					zTreeTemplate = $.fn.zTree.getZTreeObj("treeDemo");
-					$('.content_wrap').show();
+					$('#templateSelectContent').css({
+						left : "515px",
+					    top : "255px"
+					}).show();
 			 }else{
 				 MSG.alert("当前模板数据出现问题");
 			 	 $('#templateId').val("");
 			     zNodestemplate=[];
 			     $.fn.zTree.init($("#treeDemo"), settingtemplate, []);
 			     zTreeTemplate = $.fn.zTree.getZTreeObj("treeDemo");
-			     $('.content_wrap').hide();
+			     $('#templateSelectContent').hide();
 			 }
 		});
 	}else{
 		zNodestemplate=[];
 		$.fn.zTree.init($("#treeDemo"), settingtemplate, []);
 		zTreeTemplate = $.fn.zTree.getZTreeObj("treeDemo");
-		$('.content_wrap').hide();
+		$('#templateSelectContent').hide();
 	}
 	
 });
@@ -278,11 +282,18 @@ function resetTree() {
 		         			<option value="${template.id }">${template.templateName }</option>
 		         		</c:forEach>
 		          </select>
+		          <div id="templateSelectContent" hidefocus="true" class="menuContent" style="background:#FFFFFF;font-size:13px;border: 1px solid rgb(190, 190, 190);display:none; position: absolute;z-index:1501">
+					<i onclick="hideTemplateMenu()" style="float:right;margin-top:5px;margin-right:5px;background-image:url('${imgPath}/34aL_046.png');width:16px;height:16px;cursor:pointer;"></i>
+					<ul id="treeDemo"  hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002">
+					</ul>
+					</div>
+		          <!-- 
 		          <div class="content_wrap">
 		          	<div class="zTreeDemoBackground left">
 						<ul id="treeDemo" class="tag_tree" style="margin-top: 0px;border: 1px solid #617775;background: #f0f6e4;width:220px;height:200px;overflow-y:scroll;overflow-x:auto;z-index:1003;"></ul>
 					</div>
 				</div>
+				-->
 		        </td>
 		      </tr>
 		      <tr>
@@ -299,7 +310,7 @@ function resetTree() {
 		</div>
 	<!-- End Information--> 
 	</form>
-	<div  id="rMenuTemplate" class="rightMenu">
+	<div  id="rMenuTemplate" class="rightMenu" style="z-index:13000">
         		<ul id="treeRightMenu_ul_subject">
        				 <li id="m_add" onclick="addTreeNode();">增加节点</li>
 					<li id="m_del" onclick="removeTreeNode();">删除节点</li>

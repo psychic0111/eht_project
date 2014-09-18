@@ -83,7 +83,6 @@ public class MessageController extends BaseController {
 		if(obj != null){
 			AccountEntity user = (AccountEntity) obj;
 			
-			ModelMap mmap = new ModelMap();
 			if(pageResult == null){
 				pageResult = new PageResult();
 			}
@@ -112,12 +111,15 @@ public class MessageController extends BaseController {
 				total = messageService.countNoReadMessageByType(user.getId(), type, content);
 				pageResult.setTotal(total);
 			}
-			if(msgList != null){
+			/*if(msgList != null){
 				for(MessageEntity msg : msgList){
 					messageService.markReadMessage(user.getId(), msg.getId());
 					msg.setUserIsRead(Constants.READED_OBJECT);
 				}
-			}
+			}*/
+			
+			ModelMap mmap = new ModelMap();
+			
 			pageResult.setRows(msgList);
 			mmap.put("pageResult", pageResult);
 			mmap.put("orderType", orderType);
@@ -154,7 +156,7 @@ public class MessageController extends BaseController {
 					}
 				}
 			}
-			return messageList(msgType, content, orderField, orderType, request, pageResult);
+			return null;
 		}
 		return new ModelAndView(new RedirectView("/center/login.dht", true));
 	}
@@ -176,16 +178,18 @@ public class MessageController extends BaseController {
 		List<MessageEntity> msgList = messageService.findUserNoteMessages(user.getId());
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		List<Map<String, String>> result = new ArrayList<Map<String, String>>();
-		for(MessageEntity msg : msgList){
-			Map<String, String> map = new HashMap<String, String>();
-			map.put("id", msg.getId());
-			map.put("classPk", msg.getClassPk());
-			map.put("className", msg.getClassName());
-			map.put("conntent", msg.getContent());
-			map.put("operate", msg.getOperate());
-			map.put("createTime", format.format(msg.getCreateTime()));
-			map.put("msgType", String.valueOf(msg.getMsgType()));
-			result.add(map);
+		if(msgList != null){
+			for(MessageEntity msg : msgList){
+				Map<String, String> map = new HashMap<String, String>();
+				map.put("id", msg.getId());
+				map.put("classPk", msg.getClassPk());
+				map.put("className", msg.getClassName());
+				map.put("conntent", msg.getContent());
+				map.put("operate", msg.getOperate());
+				map.put("createTime", format.format(msg.getCreateTime()));
+				map.put("msgType", String.valueOf(msg.getMsgType()));
+				result.add(map);
+			}
 		}
 		return JsonUtil.list2json(result);
 	}

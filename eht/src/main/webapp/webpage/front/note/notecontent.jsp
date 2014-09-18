@@ -104,7 +104,15 @@ li.over {background-color: #bcd4ec;}
            <div class="clear"></div>
         </div> 
         <div class="title">
-          <div class="left" style="font-size:14px;">位置：<span id="noteSubjectName"></span><span id="noteDirName"></span> </div>
+          <div class="left" style="font-size:14px;">位置：
+          <img src="${imgPath}/97162.gif.png" id="selectDir" onclick="selectDirTree()"  style="cursor:pointer;width:18px;display:none;" title="修改位置" />
+          <span id="noteSubjectName"></span>
+          </div>
+          <div id="dirSelectContent" hidefocus="true" class="menuContent" style="background:#FFFFFF;font-size:13px;border: 1px solid rgb(190, 190, 190);display:none; position: absolute;z-index:1501">
+					<i onclick="hideDirMenu()" style="float:right;margin-top:5px;margin-right:5px;background-image:url('${imgPath}/34aL_046.png');width:16px;height:16px;cursor:pointer;"></i>
+					<ul id="dirSelectTree"  hidefocus="true" class="tag_tree" style="margin-top:0; width:186px;z-index:1002">
+					</ul>
+			</div>
           <div class="clear"></div>
         </div>
         <div class="Edit">
@@ -133,7 +141,7 @@ li.over {background-color: #bcd4ec;}
           </div>
         </div>
          <div class="title1" style="padding-bottom: 1px;padding: 7px">
-         <div id="attTemp" style="position: relative;z-index:1100">
+         <div id="attTemp" style="position: relative;z-index:99">
          		附件：<div onclick="enableEditNoteT()" id="attachment" style="line-height: 16px; height: 0px; display: block;" title="添加附件"></div>
    	  	   		<div id="attachmentListDiv" style="position: absolute;top:0px;left:65px"></div>
    	  	   		<div id="attaMore" style="position: absolute;top:0px;left:89%;color: rgb(153, 153, 153);cursor: pointer;display: none;float: right;font-size: 12px;line-height: 20px;text-align: right;width: 40px;"  onclick="showButtonMore(this)">更多</div>
@@ -173,6 +181,7 @@ li.over {background-color: #bcd4ec;}
     <ul style="display:none;" class="floattishi" id="flttishi" ></ul>
 	<input type="hidden" name="prevTrIndex" id="prevTrIndex" value="-1" />    
 </div>
+<div id="divhiden" style="display:none;"></div>
 <script>
 function reloadEditor(){
 	var hidden = false;
@@ -225,6 +234,9 @@ $(document).ready(function() {
 });
 
 function toComment(){
+	if($("#note_edit").hasClass("Button3")){
+		enableEditNote();
+	}
 	$("#pinglun").focus();
 }
 </script>
