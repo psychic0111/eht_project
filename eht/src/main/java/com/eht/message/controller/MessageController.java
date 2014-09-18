@@ -176,22 +176,7 @@ public class MessageController extends BaseController {
 	public @ResponseBody String queryNodeMessage() {
 		AccountEntity user = accountService.getUser4Session();
 		List<MessageEntity> msgList = messageService.findUserNoteMessages(user.getId());
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		List<Map<String, String>> result = new ArrayList<Map<String, String>>();
-		if(msgList != null){
-			for(MessageEntity msg : msgList){
-				Map<String, String> map = new HashMap<String, String>();
-				map.put("id", msg.getId());
-				map.put("classPk", msg.getClassPk());
-				map.put("className", msg.getClassName());
-				map.put("conntent", msg.getContent());
-				map.put("operate", msg.getOperate());
-				map.put("createTime", format.format(msg.getCreateTime()));
-				map.put("msgType", String.valueOf(msg.getMsgType()));
-				result.add(map);
-			}
-		}
-		return JsonUtil.list2json(result);
+		return JsonUtil.list2json(msgList);
 	}
 	
 	/**

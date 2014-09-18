@@ -170,7 +170,7 @@ public interface SubjectServiceI extends CommonService{
      * 专题树形结构
      * @param subject
      */
-    public String treeSubject(String subjectId,String userId);
+    public String treeSubject(String subjectId,String userId,boolean remvdocument);
 	
     /**
      * 专题查询

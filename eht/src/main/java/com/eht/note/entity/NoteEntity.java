@@ -2,6 +2,7 @@ package com.eht.note.entity;
 
 import java.util.Date;
 import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -11,11 +12,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+
 import com.eht.common.annotation.ClientJsonIgnore;
-import com.eht.common.bean.BaseSubjectModel;
 import com.eht.common.util.HtmlParser;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
@@ -33,7 +35,7 @@ import com.eht.user.entity.AccountEntity;
 @DynamicUpdate(true)
 @DynamicInsert(true)
 @XmlRootElement(name = "note")
-public class NoteEntity extends BaseSubjectModel implements java.io.Serializable {
+public class NoteEntity implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 	/** ID */
@@ -498,11 +500,6 @@ public class NoteEntity extends BaseSubjectModel implements java.io.Serializable
 		}
 	}
 
-	@Override
-	public String findOwnSubjectId() {
-		return this.subjectId;
-	}
-    
 	@Transient
 	public java.lang.String getContentMht() {
 		return contentMht;

@@ -296,8 +296,9 @@ public class JsonUtil {
 		json.append("{");
 		PropertyDescriptor[] props = null;
 		try {
-			props = Introspector.getBeanInfo(bean.getClass(), Object.class).getPropertyDescriptors();
+			props = Introspector.getBeanInfo(bean.getClass(), bean.getClass().getSuperclass()).getPropertyDescriptors();
 		} catch (IntrospectionException e) {
+			e.printStackTrace();
 		}
 		if (props != null) {
 			for (int i = 0; i < props.length; i++) {
@@ -313,6 +314,7 @@ public class JsonUtil {
 					json.append(value);
 					json.append(",");
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 			json.setCharAt(json.length() - 1, '}');
@@ -329,6 +331,7 @@ public class JsonUtil {
 		try {
 			props = Introspector.getBeanInfo(bean.getClass(), Object.class).getPropertyDescriptors();
 		} catch (IntrospectionException e) {
+			e.printStackTrace();
 		}
 		if (props != null) {
 			for (int i = 0; i < props.length; i++) {
@@ -345,6 +348,7 @@ public class JsonUtil {
 						}
 					}
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 			json.setCharAt(json.length() - 1, '}');

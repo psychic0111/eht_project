@@ -1455,7 +1455,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 	}
 
 	@Override
-	public String treeSubject(String subjectId,String userId) {
+	public String treeSubject(String subjectId,String userId,boolean remvdocument) {
 		SubjectEntity subjectEntity=getEntity(SubjectEntity.class, subjectId);
 		List<TreeData> listTreeData =new ArrayList<TreeData>();
 		TreeData treeData = new TreeData();
@@ -1469,7 +1469,9 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		treeData.setDataType("SUBJECT");
 		listTreeData.add(treeData);
 		List<DirectoryEntity> list=	directoryService.findDirsBySubjectOderByTime(subjectId,true);
-		findRemoveDirDOCUMENT(list,subjectId);
+		if(remvdocument){
+			findRemoveDirDOCUMENT(list,subjectId);
+		}
 		for (DirectoryEntity directoryEntity : list) {
 			TreeData t = new TreeData();
 			t.setName(directoryEntity.getDirName());

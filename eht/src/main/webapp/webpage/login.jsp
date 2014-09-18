@@ -90,7 +90,14 @@
 
 <script type="text/javascript"> 
 function repeat(obj){
-   window.location.href='${webRoot}/center/repeat.dht?username='+escape(obj);
+   var params = {'username':obj};
+   AT.post("${webRoot}/center/repeatajax.dht",params,function(data){
+				if(data.success){
+				MSG.alert("请查看邮件并激活账号！");
+				}else{
+				MSG.alert("邮件发送失败！");
+				}
+			},true);
 }
 $().ready(function() {
 	$("#username").focus();

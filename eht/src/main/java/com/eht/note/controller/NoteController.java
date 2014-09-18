@@ -82,9 +82,6 @@ public class NoteController extends BaseController {
 	private static final Logger logger = Logger.getLogger(NoteController.class);
 	
 	@Autowired
-	private TagServiceI tagService;
-
-	@Autowired
 	private NoteServiceI noteService;
 
 	@Autowired
@@ -1014,7 +1011,7 @@ public class NoteController extends BaseController {
 	 */
 	@RequestMapping(value="/front/showcount.dht", produces={"application/json;charset=UTF-8"})
 	public @ResponseBody String  showcount(HttpServletRequest req) {
-		long c=tagService.findCoutNoteforRemenber(req.getParameter("subjectId"), req.getParameter("userId"));
+		long c=tagServiceI.findCoutNoteforRemenber(req.getParameter("subjectId"), req.getParameter("userId"));
 		String json = "{\"userId\":\"" + req.getParameter("userId") + "\"" + ",\"subjectId\":\"" + req.getParameter("subjectId") + "\"" + ",\"total\":\"" + c + "\""+ ",\"tId\":\"" + req.getParameter("tid") + "\"" + "}";
 		return json;
 	}

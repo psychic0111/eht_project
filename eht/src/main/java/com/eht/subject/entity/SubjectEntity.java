@@ -17,7 +17,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.eht.common.annotation.ClientJsonIgnore;
-import com.eht.common.bean.BaseSubjectModel;
 import com.eht.common.constant.Constants;
 import com.eht.user.entity.AccountEntity;
 
@@ -33,7 +32,7 @@ import com.eht.user.entity.AccountEntity;
 @Table(name = "eht_subject")
 @DynamicUpdate(true)
 @DynamicInsert(true)
-public class SubjectEntity extends BaseSubjectModel implements java.io.Serializable {
+public class SubjectEntity implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**ID*/
 	private java.lang.String id;
@@ -369,11 +368,6 @@ public class SubjectEntity extends BaseSubjectModel implements java.io.Serializa
 		}
 	}
 
-	@Override
-	public String findOwnSubjectId() {
-		return this.id;
-	}
-	
     @Transient
 	public java.lang.String getSubjectNameTitle() {
 		return subjectNameTitle;

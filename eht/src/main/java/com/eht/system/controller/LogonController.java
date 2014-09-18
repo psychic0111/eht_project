@@ -2,7 +2,9 @@ package com.eht.system.controller;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +14,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.log4j.Logger;
 import org.apache.ws.security.util.UUIDGenerator;
 import org.jeecgframework.core.common.controller.BaseController;
+import org.jeecgframework.core.common.model.json.AjaxJson;
 import org.jeecgframework.core.constant.Globals;
 import org.jeecgframework.core.util.Md5Utils;
 import org.jeecgframework.core.util.SendMailUtil;
@@ -31,7 +34,9 @@ import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.util.AppRequstUtiles;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.service.MessageServiceI;
+import com.eht.subject.entity.Info;
 import com.eht.subject.entity.InviteMememberEntity;
+import com.eht.subject.entity.SujectSchedule;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.system.bean.SendEmailSession;
 import com.eht.user.entity.AccountEntity;
@@ -74,7 +79,7 @@ public class LogonController extends BaseController {
 			u = accountService.findUserByAccount(username);
 		}
 		if(u!=null&&u.getStatus()!=null&&u.getStatus()==Constants.ACTIVATE){
-			mv = new ModelAndView("login");
+			mv = new ModelAndView("/login");
 			mmp.put("username", username);
 			mmp.put("password", request.getParameter("password"));
 			mmp.put("sendmail", "1");
@@ -115,12 +120,18 @@ public class LogonController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/repeat.dht")
-	public ModelAndView save( HttpServletRequest request) {
+	public ModelAndView repeat( HttpServletRequest request) {
 		String linkname = null;
 		String linkpath = null;
 		try {
-			msg = "注册成功！请查看邮件并激活账号！";
-			AccountEntity account = accountService.findUserByEmail(request.getParameter("username"));
+			msg = "请查看邮件并激活账号！";
+			String type=request.getParameter("type");
+			AccountEntity account = null;
+			if(type!=null&&type.equals("1")){
+				account =accountService.findUserByAccount(request.getParameter("username"));
+			}else{
+				account =accountService.findUserByEmail(request.getParameter("username"));
+			}
 			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
 			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 		  } catch (Exception e) {
@@ -128,6 +139,27 @@ public class LogonController extends BaseController {
 	    } 
 		return linkLoginMessage(msg,null,linkpath,linkname,null);
 	}
+	
+	/**
+	 * 
+	 * 邮件重发ajax
+	 * @return
+	 */
+	@RequestMapping("/repeatajax.dht")
+	@ResponseBody
+	public AjaxJson sujectSchedule(HttpServletRequest request) {
+		AjaxJson j = new AjaxJson();
+		try {
+			 AccountEntity	account =accountService.findUserByAccount(request.getParameter("username"));
+			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
+			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
+			j.setSuccess(true);
+		  } catch (Exception e) {
+			  j.setSuccess(false);
+	    } 
+		return j;
+	}
+	
 	
 	/**
 	 * 第三方登陆验证

@@ -6,7 +6,6 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -16,11 +15,8 @@ import javax.persistence.Transient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
-import org.jeecgframework.core.util.StringUtil;
 
 import com.eht.common.annotation.ClientJsonIgnore;
-import com.eht.common.bean.BaseSubjectModel;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.user.entity.AccountEntity;
 
@@ -36,7 +32,7 @@ import com.eht.user.entity.AccountEntity;
 @Table(name = "eht_attachment", schema = "")
 @DynamicUpdate(true)
 @DynamicInsert(true)
-public class AttachmentEntity extends BaseSubjectModel implements java.io.Serializable {
+public class AttachmentEntity implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 	/**ID*/
@@ -420,18 +416,6 @@ public class AttachmentEntity extends BaseSubjectModel implements java.io.Serial
 		this.tempFilePath = tempFilePath;
 	}
 
-	@Override
-	public String findOwnSubjectId() {
-		if(noteEntity != null){
-			return noteEntity.getSubjectId();
-		}else if(directoryEntity != null){
-			return directoryEntity.getSubjectId();
-		}else{
-			return null;
-		}
-		
-	}
-	
 	@Transient
 	public java.lang.String getFileNameMht() {
 		return fileNameMht;

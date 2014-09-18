@@ -533,14 +533,14 @@ public class SubjectController extends BaseController {
 	public ModelAndView treeSuject(HttpServletRequest request, HttpServletResponse response) {
 		ModelAndView mv = new ModelAndView("front/subject/subjectTree");
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		mv.addObject("tree", subjectService.treeSubject(request.getParameter("subjectId"),user.getId()));
+		mv.addObject("tree", subjectService.treeSubject(request.getParameter("subjectId"),user.getId(),false));
 		return mv;
 	}
 	
 	@RequestMapping(value = "/front/treeDataEdit.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String treeDataEdit(HttpServletRequest request){
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		String json=subjectService.treeSubject(request.getParameter("subjectId"),user.getId());
+		String json=subjectService.treeSubject(request.getParameter("subjectId"),user.getId(),true);
 		return json;
 	}
 	
