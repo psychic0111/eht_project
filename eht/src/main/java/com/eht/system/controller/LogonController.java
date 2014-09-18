@@ -426,7 +426,7 @@ public class LogonController extends BaseController {
 			MessageEntity msg = new MessageEntity();
 			msg.setClassName(AccountEntity.class.getName());
 			msg.setClassPk(account.getId());
-			msg.setContent("请完善自己的帐号信息");
+			msg.setContent("请完善自己的帐号信息。");
 			Date date = new Date();
 			msg.setCreateTime(date);
 			msg.setCreateTimeStamp(date.getTime());
