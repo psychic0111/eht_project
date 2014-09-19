@@ -31,7 +31,15 @@ import com.eht.common.annotation.ClientJsonIgnore;
  *         robert.feng</a>
  */
 public class JsonUtil {
-
+	
+	private static List<String> exculdesList = new ArrayList<String>();
+	static{
+		exculdesList.add("handler");
+		exculdesList.add("tagEntity");
+		exculdesList.add("accountCreateUser");
+		exculdesList.add("accountUpdateUser");
+		exculdesList.add("hibernateLazyInitializer");
+	}
 	/**
 	 * 从一个JSON 对象字符格式中得到一个java对象
 	 * 
@@ -296,7 +304,7 @@ public class JsonUtil {
 		json.append("{");
 		PropertyDescriptor[] props = null;
 		try {
-			props = Introspector.getBeanInfo(bean.getClass(), Object.class).getPropertyDescriptors();
+			props = Introspector.getBeanInfo(bean.getClass(), bean.getClass().getSuperclass()).getPropertyDescriptors();
 		} catch (IntrospectionException e) {
 			e.printStackTrace();
 		}
@@ -473,12 +481,17 @@ public class JsonUtil {
 	 * @return
 	 */
 	private static boolean IsIgnore(PropertyDescriptor prop){
+		if(exculdesList.contains(prop.getName())){
+			return true;
+		}
 		Method method = prop.getReadMethod();
-		Annotation[] annos = method.getAnnotations();
-		for(Annotation anno : annos){
-			if(anno.annotationType().getName().equals(JsonIgnore.class.getName()) 
-					|| anno.annotationType().getName().equals(ClientJsonIgnore.class.getName())){
-				return true;
+		if(method != null){
+			Annotation[] annos = method.getAnnotations();
+			for(Annotation anno : annos){
+				if(anno.annotationType().getName().equals(JsonIgnore.class.getName()) 
+						|| anno.annotationType().getName().equals(ClientJsonIgnore.class.getName())){
+					return true;
+				}
 			}
 		}
 		return false;

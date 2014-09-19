@@ -44,6 +44,9 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	@Override
 	@RecordOperate(dataClass=DataType.TAG, action=DataSynchAction.ADD, keyIndex=0, keyMethod="getId", timeStamp="createTime")
 	public String addTag(TagEntity tag) {
+		if(StringUtil.isEmptyOrBlank(tag.getParentId())){
+			tag.setParentId(null);
+		}
 		save(tag);
 		
 		ClassName c = resourceActionService.findResourceByName(TagEntity.class.getName());
@@ -306,9 +309,16 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 		List<String> tagList = findTagIdsByNote(noteId);
 		
 		if(tagList != null && !tagList.isEmpty()){
-			DetachedCriteria deta = DetachedCriteria.forClass(TagEntity.class);
+			StringBuilder sb = new StringBuilder("from TagEntity where name=name and id in(");
+			for(String tagId : tagList){
+				sb.append("'").append(tagId).append("',");
+			}
+			sb.setLength(sb.length() - 1);
+			sb.append(")");
+			/*DetachedCriteria deta = DetachedCriteria.forClass(TagEntity.class);
 			deta.add(Restrictions.in("id", tagList));
-			return findByDetached(deta);
+			return findByDetached(deta);*/
+			return findByQueryString(sb.toString());
 		}
 		return null;
 	}

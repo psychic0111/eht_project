@@ -731,8 +731,7 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/front/loadNote.dht", produces = { "application/json;charset=UTF-8" })
-	public @ResponseBody
-	String loadNote(String id, HttpServletRequest request) {
+	public @ResponseBody String loadNote(String id, HttpServletRequest request) {
 		AccountEntity user = accountService.getUser4Session();
 		NoteEntity note = noteService.getNote(id);
 		if (!noteService.noteIsRead(id, user.getId())) {
@@ -765,24 +764,25 @@ public class NoteController extends BaseController {
 	@RequestMapping(value = "/front/loadNoteTags.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String loadNoteTags(String noteId) {
 		List<TagEntity> tagList = tagServiceI.findTagByNote(noteId);
-		List<Map<String, String>> list = new ArrayList<Map<String,String>>();
+		List<Map<String, Object>> list = new ArrayList<Map<String,Object>>();
 		if(tagList != null && !tagList.isEmpty()){
 			for(TagEntity tag : tagList){
-				System.out.println(tag.getName());
-				if(!StringUtil.isEmptyOrBlank(tag.getParentId())){
-					TagEntity parentTag = tagServiceI.getTag(tag.getParentId());
-				}
 				
-				
-				Map<String, String> map = new HashMap<String, String>();
+				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("id", tag.getId());
 				map.put("name", tag.getName());
 				map.put("subjectId", tag.getSubjectId());
+				if(!StringUtil.isEmptyOrBlank(tag.getParentId())){
+					map.put("tagEntity", tagServiceI.getTag(tag.getParentId()));
+				}else{
+					map.put("tagEntity", null);
+				}
 				list.add(map);
 			}
 		}
 		// 不转成map，转json有问题
-		return JsonUtil.list2json(tagList);
+		System.out.println(JsonUtil.list2json(list));
+		return JsonUtil.list2json(list);
 	}
 	
 	/**

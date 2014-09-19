@@ -412,7 +412,13 @@ function spellTag(noteId){
 	AT.get(url, function(data){
 		for(var i = 0; i < data.length; i ++){
 			var node = data[i];
-			var text = "<li onclick='selectTagTree()' class='note_tag' id='li_" + node.id + "'>"+node.name+"</span>";
+			var displayName = "<font color='#aa33ff'>" + node.name + "</font>";
+			var parentNode = node.tagEntity;
+			while(parentNode != null && parentNode != ''){
+				displayName = parentNode.name + " > " + displayName;
+				parentNode = parentNode.tagEntity;
+			}
+			var text = "<li onclick='selectTagTree()' class='note_tag' id='li_" + node.id + "'>"+displayName+"</span>";
 			$("#tagSelectNode").append($(text));
 			
 			// 条目form中添加隐藏域

@@ -205,7 +205,7 @@ public class TagEntity implements java.io.Serializable {
 	}
    
 	@JsonIgnore    //getList查询转换为列表时处理json转换异常
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "parentId", insertable=false, updatable=false)
 	@ClientJsonIgnore
 	public TagEntity getTagEntity() {

@@ -45,11 +45,11 @@ li.over {background-color: #bcd4ec;}
 	background-color: #fff7b5;
 	border-radius: 10px;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.25);
-    color: #555;
+    color: #c3c3c3;
     display: block;
     float: left;
     margin: 0 6px 6px 0;
-    max-width: 100px;
+    /* max-width: 100px; */
     padding: 1px 12px;
     transition: all 100ms ease 0s;
 }

@@ -63,7 +63,14 @@ function beforeTagClick(treeId, treeNode, clickFlag){
 		}else{
 			tag_zTree_Menu.selectNode(treeNode, true);
 			// 标签显示
-			var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ treeNode.name +"</li>");
+			var displayName = "<font color='#aa33ff'>" + treeNode.name + "</font>";
+			var parentNode = treeNode.getParentNode();
+			while(parentNode != null && parentNode != ''){
+				displayName = parentNode.name + " > " + displayName;
+				parentNode = parentNode.getParentNode();
+			}
+			
+			var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ displayName +"</li>");
 			$("#tagSelectNode").prepend(tagLbl);
 			
 			// 条目form中添加隐藏域
