@@ -412,7 +412,6 @@ function spellTag(noteId){
 	AT.get(url, function(data){
 		for(var i = 0; i < data.length; i ++){
 			var node = data[i];
-			console.log(node);
 			var text = "<li onclick='selectTagTree()' class='note_tag' id='li_" + node.id + "'>"+node.name+"</span>";
 			$("#tagSelectNode").append($(text));
 			

@@ -17,6 +17,10 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JsonConfig;
+import net.sf.json.util.CycleDetectionStrategy;
+
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -764,6 +768,12 @@ public class NoteController extends BaseController {
 		List<Map<String, String>> list = new ArrayList<Map<String,String>>();
 		if(tagList != null && !tagList.isEmpty()){
 			for(TagEntity tag : tagList){
+				System.out.println(tag.getName());
+				if(!StringUtil.isEmptyOrBlank(tag.getParentId())){
+					TagEntity parentTag = tagServiceI.getTag(tag.getParentId());
+				}
+				
+				
 				Map<String, String> map = new HashMap<String, String>();
 				map.put("id", tag.getId());
 				map.put("name", tag.getName());
@@ -772,7 +782,7 @@ public class NoteController extends BaseController {
 			}
 		}
 		// 不转成map，转json有问题
-		return JsonUtil.list2json(list);
+		return JsonUtil.list2json(tagList);
 	}
 	
 	/**

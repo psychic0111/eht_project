@@ -41,12 +41,11 @@ function beforeTagClick(treeId, treeNode, clickFlag){
 	var selected = isSelected(treeId, treeNode);
 	if(treeNode.children != null && treeNode.children.length > 0){
 		//点击根节点判断效果
-		if(treeNode.open){
+		/*if(treeNode.open){
 			zTree_Menu.expandNode(treeNode, false);	
 		}else{
 			zTree_Menu.expandNode(treeNode, true);	
-		}
-		return false;
+		}*/
 	}
 	if(treeNode.name != '添加标签'){
 		if(selected){
@@ -54,24 +53,35 @@ function beforeTagClick(treeId, treeNode, clickFlag){
 			tag_zTree_Menu.cancelSelectedNode(treeNode);
 			$("#li_" + treeNode.id).remove();
 			$("#" + treeNode.id).remove();
-			for(var i= 0; i< selectTags.length; i++){
+			/*for(var i= 0; i< selectTags.length; i++){
 				if(selectTags[i].id == treeNode.id){
 					selectTags.splice(i, 1);
 					break;
 				}
-			}
+			}*/
 			//return false;
 		}else{
 			tag_zTree_Menu.selectNode(treeNode, true);
-			selectTags.push(treeNode);
+			// 标签显示
+			var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ treeNode.name +"</li>");
+			$("#tagSelectNode").prepend(tagLbl);
+			
+			// 条目form中添加隐藏域
+			var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
+			$("#noteForm").append(tagObj);
+			
+			//selectTags.push(treeNode);
 		}
+		return false;
+	}else{
+		return true;
 	}
-	return true;
+	
 }
 //追加选择当前tag标签
 function current_noteContent_Tag(event, treeId, treeNode, clickFlag) {
 	if(treeNode.name != '添加标签'){
-		tag_zTree_Menu.cancelSelectedNode();
+		/*tag_zTree_Menu.cancelSelectedNode();
 		setSelectedNodes();
 		var selected = isSelected(treeId, treeNode);
 		if(selected){
@@ -85,7 +95,7 @@ function current_noteContent_Tag(event, treeId, treeNode, clickFlag) {
 				var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
 				$("#noteForm").append(tagObj);
 			}
-		}
+		}*/
 	}else{
 		var newNode = {
 				id : "",
@@ -140,9 +150,11 @@ function selectTagTree() {
 //设置节点选中状态
 function setSelectedNodes(){
 	var nodes = tag_zTree_Menu.transformToArray(tag_zTree_Menu.getNodes());
+	var selectedTags = $("#tagSelectNode > li");
 	for(var i = 0; i < nodes.length; i++){
-		for(var k = 0; k < selectTags.length; k++){
-			if(nodes[i].id == selectTags[k].id){
+		for(var k = 0; k < selectedTags.length; k++){
+			var tagId = $(selectedTags[k]).attr("id").substring(3);
+			if(nodes[i].id == tagId){
 				tag_zTree_Menu.selectNode(nodes[i], true);
 				break;
 			}
@@ -175,7 +187,6 @@ function tagSelectNodeBeforeRightClick(treeId, node,event) {
 	if(node.name == '添加标签'){
 		return false;
 	}
-	selectTags = tag_zTree_Menu.getSelectedNodes();
 	tagRightClickNode = node; 
 	tagSelectMouseMenu(treeId, node); 
 	return true;
@@ -344,11 +355,9 @@ function tagSelectNodeOnRename(e, treeId, node) {
 				zTree_Menu.updateNode(treeNode); 
 			}
 			tag_zTree_Menu.updateNode(node);
-			tag_zTree_Menu.cancelSelectedNode();
 			
-			for(var i= 0; i< selectTags.length; i++){
-				tag_zTree_Menu.selectNode(selectTags[i], true);
-			}
+			tag_zTree_Menu.cancelSelectedNode();
+			setSelectedNodes();
 		}
 	}, true);
 }

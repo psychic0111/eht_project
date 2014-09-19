@@ -296,7 +296,7 @@ public class JsonUtil {
 		json.append("{");
 		PropertyDescriptor[] props = null;
 		try {
-			props = Introspector.getBeanInfo(bean.getClass(), bean.getClass().getSuperclass()).getPropertyDescriptors();
+			props = Introspector.getBeanInfo(bean.getClass(), Object.class).getPropertyDescriptors();
 		} catch (IntrospectionException e) {
 			e.printStackTrace();
 		}
