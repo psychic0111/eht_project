@@ -391,7 +391,7 @@ var noteContent_Dir_TreeSetting = {
 //
 function current_noteContent_Dir(event, treeId, treeNode, clickFlag) {
 	$("#noteSubjectName").text(recurDirParentName(treeNode,""));
-	if(treeNode.dataType!='SUBJECT'){
+	if(treeNode.dataType=='SUBJECT'){
 		$("#noteForm_dirId").val("");
 	}else{
 		$("#noteForm_dirId").val(treeNode.id);

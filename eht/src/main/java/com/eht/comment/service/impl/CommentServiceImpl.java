@@ -11,6 +11,7 @@ import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
+import com.eht.common.util.UUIDGenerator;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.entity.MessageUserEntity;
 import com.eht.message.service.MessageServiceI;
@@ -29,29 +30,30 @@ public class CommentServiceImpl extends CommonServiceImpl implements CommentServ
 	@RecordOperate(dataClass=DataType.COMMENT, action=DataSynchAction.ADD, keyMethod="getId", timeStamp="createTime")
 	public String addComment(CommentEntity comment) {
 		save(comment);
-		MessageEntity  m=new MessageEntity();
-		 m.setContent(comment.getContent());
-		 m.setCreateTime(comment.getCreateTime());
-		 m.setCreateUser(comment.getCreateUser());
-		 m.setMsgType(Constants.MSG_USER_TYPE);
-		 m.setUserIsRead(Constants.NOT_READ_OBJECT);
-		 MessageServiceI.save(m);
-		 List<String> list=comment.getAccout();
-		 if(list!=null){
-			 for (String string : list) {
-				 if(string.indexOf("@")!=-1){
-					 string=string.substring(1).trim();
-				 }
-				 AccountEntity a=	 accountServiceI.findUserByAccount(string);
-				 if(a!=null){
-					 MessageUserEntity k=new MessageUserEntity();
-					 k.setIsRead(Constants.NOT_READ_OBJECT);
-					 k.setMessageId(m.getId());
-					 k.setUserId(a.getId());
-					 MessageServiceI.save(k);
-				 }
+		MessageEntity m = new MessageEntity();
+		m.setId(UUIDGenerator.uuid());
+		m.setContent(comment.getContent());
+		m.setCreateTime(comment.getCreateTime());
+		m.setCreateUser(comment.getCreateUser());
+		m.setMsgType(Constants.MSG_USER_TYPE);
+		m.setUserIsRead(Constants.NOT_READ_OBJECT);
+		MessageServiceI.save(m);
+		List<String> list = comment.getAccout();
+		if (list != null) {
+			for (String string : list) {
+				if (string.indexOf("@") != -1) {
+					string = string.substring(1).trim();
 				}
-		 }
+				AccountEntity a = accountServiceI.findUserByAccount(string);
+				if (a != null) {
+					MessageUserEntity k = new MessageUserEntity();
+					k.setIsRead(Constants.NOT_READ_OBJECT);
+					k.setMessageId(m.getId());
+					k.setUserId(a.getId());
+					MessageServiceI.save(k);
+				}
+			}
+		}
 		return comment.getId();
 	}
 

@@ -1,20 +1,78 @@
 var followNodeId='';
 var msgPeriod = 10000;
+var periodId = null;
+
+//标记已读
+function markNoteMessage(msgId){
+	var url = webRoot + "/messageController/front/messageMark.dht?id=" + msgId;
+	try{
+		AT.post(url, null, function(){
+			periodId = setInterval(getNoteMessage, msgPeriod);
+		}, true);
+		var nodes = zTree_Menu.getNodesByFilter(findTreeMsgNode);
+		for(var i = 0; i < nodes.length; i++){
+			nodes[i].name = nodes[i].name.substring(0,4); 
+			zTree_Menu.updateNode(nodes[i]);
+		}
+		var num = parseInt($("#noReadMsgNum").text()) - 1;
+		if(num <= 0 || isNaN(num)){
+			num = '';
+		}
+		$("#noReadMsgNum").empty().append(num);
+	}catch(e){}
+}
+
+//查询消息中心节点 
+function findTreeMsgNode(node){
+	if(node.dataType == "MSG"){
+		return true;
+	}else{
+		return false;
+	}
+}
 
 //查询条目信息
 function getNoteMessage(){
-	/*var url = webRoot + "/messageController/front/noteMessage.dht";
-	AT.get(url, function(data){
-		if(data != null && data != ''){
-			for(var i = 0; i < data.length; i++){
-				//console.log(data[i]);
+	if(!$("#jbox").attr("id")){
+		var url = webRoot + "/messageController/front/noteMessage.dht";
+		AT.get(url, function(data){
+			if(data != null && data != ''){
+				msgData = data;
+				var index = 0;
+				var btns = {};
+				
+				if(msgData.length > 0){
+					var options = {
+						icon: "info",
+						timeout: 0,
+						buttons: btns,
+						showType: "show",
+						submit: function(v, h, f){
+							/*
+							var i = parseInt($("#msgIndex").val()) + 1;
+							if(i >= msgData.length){
+								i = 0;
+							}
+							$.jBox.messager(msgData[i].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[i].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+i+'"/>', "系统通知", 2000, options
+							);*/
+							return true;
+						},
+						closed: function(){
+							markNoteMessage(data[index].id);
+						}
+					};
+					
+					$.jBox.messager(data[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+data[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>', "系统通知", 2000, options
+					);
+					
+				}
 			}
-		}
-		
-	},true);*/
+			
+		},true);
+	}else{
+		window.clearInterval(periodId);
+	}
 }
-
-var periodId = setInterval(getNoteMessage, msgPeriod);
 
 //显示、隐藏评论
 function togComment(){

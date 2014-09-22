@@ -545,23 +545,7 @@ function toAddSubject(){
 
 //鼠标移动到节点后添加标签所属条目
 function zTreeaddHoverDom(treeId, treeNode) {
-	if(treeNode.dataType=='TAG'){
-		if(treeNode.id=='tag_personal'){
-			return;
-		}
-		if(treeNode.id.indexOf('tag_subject')!=-1&&treeNode.level==2){
-			return;
-		}
-		if ($("#diyBtn_"+treeNode.id).length>0) {
-			$("#diyBtn_"+treeNode.id).remove();
-		};
-		var params = {'id':treeNode.id};
-		AT.post(webRoot+"/tagController/front/showcount.dht",params,function(data){
-			var aObj = $("#" + treeNode.tId + '_a');
-			var editStr = "<span id='diyBtn_" +treeNode.id+ "' >"+"("+data+")"+"</span>";
-			aObj.append(editStr);
-		},false);
-	}
+	
 }
 function onExpand(event, treeId, treeNode)  {
 	if(treeNode.dataType=='REMENBER'&&treeNode.open){
@@ -575,5 +559,25 @@ function onExpand(event, treeId, treeNode)  {
 				aObj.append(editStr);
 			},true);
 		}
-	}return true;
+	}
+	if(treeNode.dataType=='TAG'&&treeNode.open){
+		//if(treeNode.id=='tag_personal'){
+		//	return;
+		//}
+		//if(treeNode.id.indexOf('tag_subject')!=-1&&treeNode.level==2){
+		//	return;
+		//}
+		var nodes = treeNode.children;
+		for(var i=0;i<nodes.length;i++){
+			var params = {'id':nodes[i].id,'tid':nodes[i].tId};
+			AT.post(webRoot+"/tagController/front/showcount.dht",params,function(data){
+				$("#diyBtn_"+data.id).remove();
+				var aObj = $("#" + data.tId + '_a');
+				var editStr = "<span id='diyBtn_" +data.id+ "' >"+"("+data.total+")"+"</span>";
+				aObj.append(editStr);
+			},true);
+		}
+		
+	}
+	return true;
 }

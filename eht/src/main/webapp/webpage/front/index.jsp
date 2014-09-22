@@ -514,6 +514,7 @@ $(document).ready(function(){
 	document.getElementById("mainTreeDiv").style.height = contentHeight + "px";
 	rightMenu = $("#treeRightMenu").html();
 	buildMainMenu(0,null,true);
+	periodId = setInterval(getNoteMessage, msgPeriod);
 });
 //专题导出进度任务句柄
 var actionSchedule=null;

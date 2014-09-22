@@ -298,7 +298,7 @@
                 $box.css({
                     position: (isIE6) ? "absolute" : "fixed",
                     right: 1,
-                    bottom: 1
+                    bottom: 10
                 });
             } else {
                 $boxTemp.css({ top: options.top });

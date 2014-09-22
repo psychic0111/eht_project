@@ -409,6 +409,7 @@ function noteAttachment(attaList,searchType){
 function spellTag(noteId){
 	var url = webRoot+"/noteController/front/loadNoteTags.dht?noteId=" + noteId;
 	$("#tagSelectNode").empty();
+	$("input[name='noteTagId']").remove();
 	AT.get(url, function(data){
 		for(var i = 0; i < data.length; i ++){
 			var node = data[i];

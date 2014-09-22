@@ -180,7 +180,7 @@ public class OperateLogInterceptor {
 						if(!uid.equals(user.getId())){
 							if(log.getClassName().equals(DataType.NOTE.toString())){
 								MessageEntity msg = new MessageEntity();
-								msg.setId(log.getId());
+								msg.setId(UUIDGenerator.uuid());
 								
 								NoteEntity note = (NoteEntity) paramEntity;
 								String content = msgContent(log.getAction(), user.getUserName(), note.getTitle());

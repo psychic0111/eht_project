@@ -166,7 +166,8 @@ public class TagController extends BaseController {
 	@RequestMapping(value="/front/showcount.dht", produces={"application/json;charset=UTF-8"})
 	public @ResponseBody String  showcount(HttpServletRequest req) {
 		String id=req.getParameter("id");
-		return tagService.findCoutNoteforTags(id)+"";
+		String json = "{\"id\":\"" + id + "\"" + ",\"total\":\"" + tagService.findCoutNoteforTags(id)+ "\"" + ",\"tId\":\"" + req.getParameter("tid") + "\"" + "}";
+		return json;
 	}
 	
 }
