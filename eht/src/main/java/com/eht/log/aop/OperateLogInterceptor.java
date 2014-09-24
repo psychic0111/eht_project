@@ -37,6 +37,8 @@ import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.DirectoryServiceI;
 import com.eht.subject.service.SubjectServiceI;
+import com.eht.system.bean.ClientEntity;
+import com.eht.system.service.DataInitService;
 import com.eht.tag.entity.TagEntity;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
@@ -66,6 +68,9 @@ public class OperateLogInterceptor {
 	
 	@Autowired
 	private MessageServiceI messageService;
+	
+	@Autowired
+	private DataInitService dataInitService;
 
 	@Pointcut("execution(* com.eht.webservice.service.impl.DataSynchizeServiceImpl.*(..))")
 	public void pointCut() {
@@ -99,6 +104,19 @@ public class OperateLogInterceptor {
 			String sessionId = String.valueOf(ContextHolderUtils.getRequest().getAttribute("jsessionid"));
 			user = accountService.getUser4Session(sessionId);
 		}
+		String userId = user == null ? null : user.getId();
+		
+		ClientEntity client = null;
+		String clientId = user == null ? null : user.getClientId();
+		if(!StringUtil.isEmpty(clientId)){
+			client = dataInitService.getClient(clientId);
+		}
+		if(client == null){
+			client = new ClientEntity();
+			client.setClientId(SynchConstants.CLIENT_DEFAULT_ID);
+			client.setClientType(SynchConstants.CLIENT_DEFAULT_TYPE);
+		}
+		
 		int length = rp.dataClass().length;
 		for (int i = 0; i < length; i++) {
 			SynchLogEntity log = new SynchLogEntity();
@@ -108,15 +126,19 @@ public class OperateLogInterceptor {
 			if(log.getClassName().equals(DataType.SUBJECTUSER.toString())){
 				if(args[0].getClass().getName().equals(RoleUser.class.getName())){
 					RoleUser ru = (RoleUser) args[0];
-					log.setOperateUser(ru.getUserId());
+					userId = ru.getUserId();
+					log.setOperateUser(userId);
 				}else{
-					log.setOperateUser(args[1].toString());
+					userId = args[1].toString();
+					log.setOperateUser(userId);
 				}
 				
 			}else{
-				log.setOperateUser(user.getId());
+				log.setOperateUser(userId);
 			}
 			log.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
+			log.setClientType(client.getClientType());
+			log.setClientId(client.getClientId());
 			
 			// 数据操作发生的时间
 			if (StringUtil.isEmpty(rp.timeStamp()[i])) {
@@ -177,7 +199,7 @@ public class OperateLogInterceptor {
 						synchLogService.saveSynchLog(newLog);
 						
 						// 条目操作发送系统消息给其他成员
-						if(!uid.equals(user.getId())){
+						if(!uid.equals(log.getOperateUser())){
 							if(log.getClassName().equals(DataType.NOTE.toString())){
 								MessageEntity msg = new MessageEntity();
 								msg.setId(UUIDGenerator.uuid());
@@ -201,7 +223,7 @@ public class OperateLogInterceptor {
 					}
 				}else{
 					// 只影响操作者本身
-					log.setTargetUser(user.getId());
+					log.setTargetUser(userId);
 					synchLogService.saveSynchLog(log);
 				}
 			}

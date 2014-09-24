@@ -469,7 +469,7 @@ public class SubjectController extends BaseController {
 
 	
 	/**
-	 * 前台邀请成员页面跳转
+	 * 
 	 * 
 	 * @return
 	 */
@@ -483,7 +483,23 @@ public class SubjectController extends BaseController {
 		}
 		return sb.toString();
 	}
-
+	
+	/**
+	 * 前台删除成员邀请
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/front/delInvitemember.dht", produces = { "text/html;charset=UTF-8" })
+	public @ResponseBody String delInvitemember(HttpServletRequest request){ 
+		StringBuffer sb = new StringBuffer("");
+		try {
+			InviteMememberEntity inviteMememberEntity=	subjectService.get(InviteMememberEntity.class, request.getParameter("id"));
+			subjectService.delete(inviteMememberEntity);
+		} catch (Exception e) {
+			sb.append("删除失败");
+		}
+		return sb.toString();
+	}
 	
 	/**
 	 * 前台接受邀请成员

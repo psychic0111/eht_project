@@ -117,7 +117,7 @@ li.over {background-color: #bcd4ec;}
         </div>
         <div class="Edit">
           <div style="font-size:12px;text-decoration:none;position:relative;">
-		       <div class="Edit_others" style="padding: 7px">
+		       <div class="Edit_others" style="padding:7px 7px 7px 10px">
 			        标签：<span>
 			       	  <img src="${imgPath}/97162.gif.png" id="selectTag" onclick="enableEditNoteT();selectTagTree()"  style="cursor:pointer;width:18px" title="添加标签"  />
 			          
@@ -140,7 +140,7 @@ li.over {background-color: #bcd4ec;}
 				</div>
           </div>
         </div>
-         <div class="title1" style="padding-bottom: 1px;padding: 7px">
+         <div class="title1" style="padding-bottom: 1px;padding:7px 7px 7px 10px">
          <div id="attTemp" style="position: relative;z-index:99">
          		附件：<div onclick="enableEditNoteT()" id="attachment" style="line-height: 16px; height: 0px; display: block;" title="添加附件"></div>
    	  	   		<div id="attachmentListDiv" style="position: absolute;top:0px;left:65px"></div>

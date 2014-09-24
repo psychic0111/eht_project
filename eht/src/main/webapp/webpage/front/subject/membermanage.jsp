@@ -138,6 +138,16 @@ function sendInvitemember(obj){
 					},true);
             return true; 
 	}
+function delInvitemember(obj){
+	 AT.post("${webRoot}/subjectController/front/delInvitemember.dht","id="+obj,function(data){
+						if(data==''){
+								 MSG.alert('操作成功');
+							}
+							AT.load("iframepage","${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}",function() {});
+					},true);
+            return true; 
+	}
+	
 </script>
 		
  		<div class="right_top mainer_right">
@@ -226,6 +236,7 @@ function sendInvitemember(obj){
                    <td align="center">未激活</td>
                     <td align="center">
                     <input class="Button2" type="button" onclick="sendInvitemember('${inviteMemember.id}');" value="再次发送" />
+                     <input class="Button3" type="button" onclick="delInvitemember('${inviteMemember.id}');" value="删除" />
                   </td>
                 </tr>
                 </c:forEach>

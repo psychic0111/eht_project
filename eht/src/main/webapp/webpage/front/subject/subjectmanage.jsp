@@ -1,7 +1,23 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
 	pageEncoding="UTF-8"%>
-<%@ include file="/webpage/front/include/front_common.jsp"%>
-
+<%@page import="com.eht.common.constant.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
+<%@ taglib prefix="xd" uri="http://www.xd-tech.com.cn/" %>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
+	String frontPath = basePath + "/webpage/front";
+	String cssPath = basePath + "/webpage/front/css";
+	String imgPath = basePath + "/webpage/front/images";
+	String webpagePath = basePath +"/webpage";
+	String uploadifyPath = basePath + "/webpage/front/js/uploadify";
+%>
+<c:set var="webRoot" value="<%=basePath%>" />
+<c:set var="frontPath" value="<%=frontPath%>" />
+<c:set var="cssPath" value="<%=cssPath%>" />
+<c:set var="imgPath" value="<%=imgPath%>" />
 <script type="text/javascript">
 	function toEditSubject(obj){
 		url = "${webRoot}/subjectController/front/viewEditSubject.dht?id="+obj;
@@ -92,18 +108,18 @@
 				
 				</div>
 				<div class="others" style="height:22px">
-					<xd:hasPermission  resource="SubjectManage" subjectId="${sub.id}" action="<%=ActionName.ASSIGN_MEMBER %>">
 					<input class="Button4 scheduleExportSubject" type="button" name="button"  style="width:80px;"
-						value="导出专题"  onclick="toExportSubject('${sub.id}')"/> 
-					<c:if test="${sub.subjectType eq 2}">
-						<input class="Button1" type="button" style="width:80px;"  name="button" id="button" value="成员管理" onclick="toMemberManage('${sub.id}')" />
-					</c:if>
+						value="导出专题"  onclick="toExportSubject('${sub.id}')"/>
+					<xd:hasPermission  resource="SubjectManage" subjectId="${sub.id}" action="<%=ActionName.ASSIGN_MEMBER %>">
+						<c:if test="${sub.subjectType eq 2}">
+							<input class="Button1" type="button" style="width:80px;"  name="button" id="button" value="成员管理" onclick="toMemberManage('${sub.id}')" />
+						</c:if>
 					</xd:hasPermission>	
 				</div>
 			</li>
 			</c:forEach>
-			<li class="Add" onclick="toAddSubject()">
-				<div class="Add_type" style="cursor:pointer;">
+			<li class="Add">
+				<div onclick="toAddSubject()" class="Add_type" style="cursor:pointer;">
 					<table width="100%" border="0" cellspacing="0" cellpadding="0" >
 						<tr>
 							<td><img src="${imgPath}/add.png" width="15" height="15" /></td>

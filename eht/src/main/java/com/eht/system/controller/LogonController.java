@@ -2,15 +2,11 @@ package com.eht.system.controller;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.log4j.Logger;
 import org.apache.ws.security.util.UUIDGenerator;
 import org.jeecgframework.core.common.controller.BaseController;
@@ -28,15 +24,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import com.eht.common.constant.Constants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.util.AppRequstUtiles;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.service.MessageServiceI;
-import com.eht.subject.entity.Info;
 import com.eht.subject.entity.InviteMememberEntity;
-import com.eht.subject.entity.SujectSchedule;
+import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.system.bean.SendEmailSession;
 import com.eht.user.entity.AccountEntity;
@@ -470,7 +464,22 @@ public class LogonController extends BaseController {
 			messageService.saveMessages(msg, account.getId());
 			
 			account.setStatus(Constants.ENABLED);
-			return linkIndex(request.getSession(), account);
+			subjectService.updateEntitie(account);
+			
+			SubjectEntity subject = new SubjectEntity();
+			subject.setCreateUser(account.getId());
+			subject.setCreateTime(new Date());
+			subject.setId(com.eht.common.util.UUIDGenerator.uuid());
+			subject.setDescription("");
+			subject.setSubjectType(1);
+			subject.setStatus(0);
+			subject.setDeleted(0);
+			subject.setSubjectName("默认专题");	
+			List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
+			if(list == null || list.isEmpty()){
+				subjectService.addSubject(subject);
+			}
+			return new ModelAndView(new RedirectView("/webpage/login.jsp", true));
 		}
 	}
 	

@@ -78,29 +78,6 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements SynchLogSe
 	@Override
 	public String saveSynchLog(SynchLogEntity log) {
 		logger.info("保存操作日志; 数据类型：" + log.getClassName() + ", 数据主键：" + log.getClassPK() + ", 数据操作：" + log.getAction());
-		ClientEntity client = null;
-		SecurityContext securityContext = SecurityContextHolder.getContext(); 
-		if(securityContext != null){
-			AccountEntity user = accountService.getUser4Session();
-			if(user == null){
-				//String sessionId = ContextHolderUtils.getRequest().getParameter("jsessionid");
-				String sessionId = ContextHolderUtils.getRequest().getAttribute("jsessionid").toString();
-				user = accountService.getUser4Session(sessionId);
-			}
-			String clientId = user.getClientId();
-			if(!StringUtil.isEmpty(clientId)){
-				client = dataInitService.getClient(clientId);
-			}
-		}
-		if(client != null){
-			log.setClientId(client.getClientId());
-			log.setClientType(client.getClientType());
-		}else{
-			// 默认为WEB客户端
-			log.setClientId(SynchConstants.CLIENT_DEFAULT_ID);
-			log.setClientType(SynchConstants.CLIENT_DEFAULT_TYPE);
-		}
-		
 		SynchLogEntity oldLog = findLogByData(log.getClassName(), log.getClassPK(), log.getTargetUser(), log.getAction());
 		if(oldLog != null){
 			logger.info("发现已存在日志; 数据类型：" + oldLog.getClassName() + ", 数据主键：" + oldLog.getClassPK() + ", 数据操作：" + oldLog.getAction());
