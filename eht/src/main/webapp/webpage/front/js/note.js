@@ -105,7 +105,7 @@ function enableEditNote(){
 		$("#divhiden").text(noteEditor.getContent());
 		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
 		viewNotePageAndButton();
-		$("#tagSelectNode").empty();
+		/*$("#tagSelectNode").empty();
 		$("input[name='noteTagId']").remove();
 		for(var i = 0; i < selectTags.length; i++){
 			var treeNode = selectTags[i];
@@ -116,7 +116,7 @@ function enableEditNote(){
 			// 条目form中添加隐藏域
 			var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
 			$("#noteForm").append(tagObj);
-		}
+		}*/
 	}
 }
 

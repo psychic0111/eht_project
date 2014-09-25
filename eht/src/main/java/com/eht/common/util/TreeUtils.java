@@ -201,7 +201,7 @@ public class TreeUtils {
 			//设置节点是否checked
 			for(String id : checkedIdList){
 				if(id.equals(treeData.getId())){
-					treeData.setSelected("true");
+					treeData.setChecked("true");
 					break;
 				}
 			}

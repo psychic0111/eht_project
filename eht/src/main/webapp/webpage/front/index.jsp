@@ -272,7 +272,7 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 					zTree_Menu.removeNode(nodes[i]);
 					i--;
 				}else{
-					alert(zTree_Menu.getNodes()[2].tId);
+					//alert(zTree_Menu.getNodes()[2].tId);
 					//$("#" + zTree_Menu.getNodes()[2].tId + "_a").append('<span id="noReadMsgNum" class="numb">'+ json.totalCount +'</span>');
 				}
 			}

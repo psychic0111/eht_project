@@ -12,6 +12,10 @@ var noteContent_Tag_TreeSetting = {
 			enable : true
 		}
 	},
+	check:{
+		enable: true,
+		chkboxType: { "Y": "", "N": "" }
+	},
 	view : {
 		dblClickExpand : false,
 		nameIsHTML : false
@@ -21,24 +25,13 @@ var noteContent_Tag_TreeSetting = {
 		onClick : current_noteContent_Tag,
 		beforeRightClick : this.tagSelectNodeBeforeRightClick,
 		onRename : this.tagSelectNodeOnRename,
-		onRightClick : this.tagnodeOnRightClick
+		onRightClick : this.tagnodeOnRightClick,
+		onCheck : checkTagNode
 	}
 };
-function tagnodeOnRightClick(){}
 
-//判断节点是否为选中状态
-function isSelected(treeId, treeNode){
-	if(!!$("#" + treeNode.tId + "_a").attr("class")){
-		if($("#" + treeNode.tId + "_a").hasClass("curSelectedNode")){
-			return true;
-		}
-	}
-	return false;
-}
-
-var selectTags = [];
-function beforeTagClick(treeId, treeNode, clickFlag){
-	var selected = isSelected(treeId, treeNode);
+function checkTagNode(event, treeId, treeNode){
+	var selected = !isSelected(treeId, treeNode); //返回的是点击后节点的check状态，所以非
 	if(treeNode.children != null && treeNode.children.length > 0){
 		//点击根节点判断效果
 		/*if(treeNode.open){
@@ -83,7 +76,22 @@ function beforeTagClick(treeId, treeNode, clickFlag){
 	}else{
 		return true;
 	}
-	
+}
+
+function tagnodeOnRightClick(){}
+
+//判断节点是否为选中状态
+function isSelected(treeId, treeNode){
+	/*if(!!$("#" + treeNode.tId + "_a").attr("class")){
+		if($("#" + treeNode.tId + "_a").hasClass("curSelectedNode")){
+			return true;
+		}
+	}*/
+	return treeNode.checked;
+}
+
+function beforeTagClick(treeId, treeNode, clickFlag){
+	return true;
 }
 //追加选择当前tag标签
 function current_noteContent_Tag(event, treeId, treeNode, clickFlag) {
@@ -143,8 +151,9 @@ function selectTagTree() {
 	AT.post(url, params,function(data) {
 		$.fn.zTree.init($("#tagSelectTree"),noteContent_Tag_TreeSetting, data);
 		tag_zTree_Menu = $.fn.zTree.getZTreeObj("tagSelectTree");
+		var tid = tag_zTree_Menu.getNodes()[0].tId;
+		$("#" + tid + "_check").remove();
 		tag_zTree_Menu.expandAll(true);
-		setSelectedNodes();
 	});
 	$("#tagSelectTree").html("");
 	$("#tagSelectContent").css({

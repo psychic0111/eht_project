@@ -68,11 +68,11 @@ function searchNotes(deleted,unloadfirst){
 				viewNote($("#firstNodeId").val(),true);
 				$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));
 			}
-			viewNotePageAndButton();
+			//viewNotePageAndButton();
 		}else{
 			if(!unloadfirst){
 				try{
-					viewNotePageAndButton();
+					//viewNotePageAndButton();
 				}catch(e){}
 				if(switchNote){
 					viewNote($("#firstNodeId").val(),true);
@@ -250,7 +250,6 @@ function viewNote(id,ishiden){
 			}else{
 				$("#noteSubjectName").text("");	
 			}
-			selectTags = [];
 			noteEditor.setContent("");
 		}catch(e){
 		}
@@ -411,6 +410,7 @@ function spellTag(noteId){
 	$("#tagSelectNode").empty();
 	$("input[name='noteTagId']").remove();
 	AT.get(url, function(data){
+		var maxWidth = $("#tagSelectNode").parents("div .Edit_others").width() - 200;
 		for(var i = 0; i < data.length; i ++){
 			var node = data[i];
 			var displayName = "<font color='#aa33ff'>" + node.name + "</font>";
@@ -419,8 +419,17 @@ function spellTag(noteId){
 				displayName = parentNode.name + " > " + displayName;
 				parentNode = parentNode.tagEntity;
 			}
-			var text = "<li onclick='selectTagTree()' class='note_tag' id='li_" + node.id + "'>"+displayName+"</span>";
-			$("#tagSelectNode").append($(text));
+			var text = "<li onclick='selectTagTree()' class='note_tag' id='li_" + node.id + "'>"+displayName+"</li>";
+			var w = $("#tagSelectNode").width();
+			if(w < maxWidth){
+				$("#tagSelectNode").append($(text));
+				$("#tagSelectNode_hidden").append($("<li class='note_tag'>"+displayName+"</span>"));
+			}else{
+				if(!$("#tag_more").attr("id")){
+					$("#tagSelectNode").append($("<li onclick='selectTagTree()' class='tag_more' id='tag_more'>更多</li>"));
+				}
+				$("#tagSelectNode_hidden").append($("<li class='note_tag'>"+displayName+"</span>"));
+			}
 			
 			// 条目form中添加隐藏域
 			var tagObj = $("<input type='hidden' name='noteTagId' id='" + node.id + "' value='" + node.id + "'/>");
