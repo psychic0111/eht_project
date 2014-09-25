@@ -40,23 +40,23 @@ function addChildTag(){
 	zTree_Menu.editName(newNode[0]);
 }
 
-function subjectManage() {
+function subjectManage(obj) {
 	 if(isNoteStats()){//判断是否编辑状态
 		   var submit = function (v, h, f) {
 			if (v == true){ 
-				subjectManageDo(); 
+				subjectManageDo(obj); 
 			} 
 			return true;
 		};
 		// 自定义按钮
 		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
 	 }else{
-		 subjectManageDo();
+		 subjectManageDo(obj);
 	 }
 }
 
 //专题管理跳转
-function subjectManageDo(){
+function subjectManageDo(obj){
 	if($("#noteEditor_td").is(":visible")){
 		hideNotePage();
 	}

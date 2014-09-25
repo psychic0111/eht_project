@@ -272,7 +272,6 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 					zTree_Menu.removeNode(nodes[i]);
 					i--;
 				}else{
-					//alert(zTree_Menu.getNodes()[2].tId);
 					//$("#" + zTree_Menu.getNodes()[2].tId + "_a").append('<span id="noReadMsgNum" class="numb">'+ json.totalCount +'</span>');
 				}
 			}
@@ -323,7 +322,7 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 		$("#"+zTree_Menu.getNodes()[2].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 
 		$(".gear").click(function(){
-			subjectManage();
+			subjectManage(this);
 			return false;
 		});
 		
@@ -334,7 +333,6 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 function countMessage(){
 	AT.get("${webRoot}/indexController/front/messageCount.dht",function(json){
 		//消息中心count、
-		
 		if(json.totalCount !=0){
 			$("#" + zTree_Menu.getNodes()[2].tId + "_a").find(".numb").remove();
 			$("#" + zTree_Menu.getNodes()[2].tId + "_a").append('<span id="noReadMsgNum" class="numb">'+ json.totalCount +'</span>');
@@ -342,7 +340,7 @@ function countMessage(){
 			$("#" + zTree_Menu.getNodes()[2].tId + "_a").find(".numb").remove();
 		}
 		//未读消息count
-		var parentNode = zTree_Menu.getNodeByParam("id", "<%=Constants.MSG_NODEID_NR%>", zTree_Menu.getNodes()[2]);
+		<%-- var parentNode = zTree_Menu.getNodeByParam("id", "<%=Constants.MSG_NODEID_NR%>", zTree_Menu.getNodes()[2]);
 			$("#" + parentNode.tId).find("#"+parentNode.tId + "_span").remove();
 		if(json.totalCount !=0){
 			$("#" + parentNode.tId).find("#"+parentNode.tId + "_a").attr("title","未读消息("+json.totalCount+")");
@@ -350,7 +348,7 @@ function countMessage(){
 		}else{
 			$("#" + parentNode.tId).find("#"+parentNode.tId + "_a").attr("title","未读消息");
 			$("#"+parentNode.tId + "_a").append('<span id="'+parentNode.tId+'_span">未读消息</span>');
-		}
+		} --%>
 		//系统消息count
 		parentNode = zTree_Menu.getNodeByParam("id", "<%=Constants.MSG_NODEID_SYS%>", zTree_Menu.getNodes()[2]);
 		$("#" + parentNode.tId).find("#"+parentNode.tId + "_span").remove();

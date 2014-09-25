@@ -43,9 +43,9 @@ function checkTagNode(event, treeId, treeNode){
 	if(treeNode.name != '添加标签'){
 		if(selected){
 			//取消选中当前tag
-			tag_zTree_Menu.cancelSelectedNode(treeNode);
 			$("#li_" + treeNode.id).remove();
 			$("#" + treeNode.id).remove();
+			$("#hid_" + treeNode.id).remove();
 			/*for(var i= 0; i< selectTags.length; i++){
 				if(selectTags[i].id == treeNode.id){
 					selectTags.splice(i, 1);
@@ -62,9 +62,17 @@ function checkTagNode(event, treeId, treeNode){
 				displayName = parentNode.name + " > " + displayName;
 				parentNode = parentNode.getParentNode();
 			}
-			
-			var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ displayName +"</li>");
-			$("#tagSelectNode").prepend(tagLbl);
+			var maxWidth = $("#tagSelectNode").parents("div .Edit_others").width() - 200;
+			var w = $("#tagSelectNode").width();
+			if(w < maxWidth){
+				var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ displayName +"</li>");
+				$("#tagSelectNode").prepend(tagLbl);
+			}else{
+				if(!$("#tag_more").attr("id")){
+					$("#tagSelectNode").append($("<li onclick='toggleTagMore()' class='tag_more' id='tag_more'>显示所有</li>"));
+				}
+				$("#tagSelectNode_hidden").append($("<li id='hid_"+ treeNode.id +"' class='note_tag'>"+displayName+"</span>"));
+			}
 			
 			// 条目form中添加隐藏域
 			var tagObj = $("<input type='hidden' name='noteTagId' id='" + treeNode.id + "' value='" + treeNode.id + "'/>");
@@ -455,4 +463,8 @@ function selectDirTree(){
 			top : "112px"
 		}).slideDown("fast");
 		$("body").bind("mousedown", onBodyDirDown);
+}
+
+function toggleTagMore(){
+	$("#tagSelectNode_div").toggle();
 }

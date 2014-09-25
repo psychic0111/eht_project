@@ -54,6 +54,18 @@ li.over {background-color: #bcd4ec;}
     transition: all 100ms ease 0s;
 }
 
+.tag_more{
+	cursor:pointer;
+    color: #4467E0;
+    display: block;
+    float: left;
+    margin: 0 6px 6px 0;
+    /* max-width: 100px; */
+    padding: 4px 5px;
+    font-size:11px;
+    text-decoration:underline;
+}
+
 .note_comment{
 	cursor:pointer;
 	background-color: #dcdcdc;
@@ -125,11 +137,11 @@ li.over {background-color: #bcd4ec;}
 			          	
 			          </ul>
 			       </span>
-			       <div id="tagSelectNode_div" style="display:none;border:1px solid #8F83BF;top:40px;left:71px;position:absolute;border-radius:3px;box-shadow:0px 0px 2px rgba(0, 0, 0, 0.25);background:#E1E4EF;z-index:100;">
-						<span style="float:right;margin-right:5px;cursor:pointer;" onclick="closeTagDiv()">
+			       <div id="tagSelectNode_div" style="display:none;border:1px solid #8F83BF;top:40px;left:71px;position:absolute;border-radius:3px;box-shadow:0px 0px 2px rgba(0, 0, 0, 0.25);background:#F7FAFB;z-index:1110;">
+						<span style="float:right;margin-right:5px;cursor:pointer;" onclick="toggleTagMore()">
 							<i style="font:inherit;color:#2866C3;">关闭</i>
 						</span>
-						<ul id="tagSelectNode_hidden" style="display:inline-block;vertical-align:middle;padding:15px 15px 0 5px;">
+						<ul id="tagSelectNode_hidden" style="display:inline-block;vertical-align:middle;padding:0 15px 0 10px;max-width:450px;">
 						</ul>
 				   </div>
 		        </div>

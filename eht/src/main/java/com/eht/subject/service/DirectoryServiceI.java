@@ -92,6 +92,15 @@ public interface DirectoryServiceI extends CommonService{
 	 * @return
 	 */
 	public List<DirectoryEntity> findUserDirsBySubject(String userId, String subjectId);
+	
+	/**
+	 * 将用户加入黑名单，用户将不能访问该目录及目录下资源(包括下属条目)
+	 * @param userId
+	 * @param dirId
+	 * @return
+	 */
+	public void blackListedAllUser(String userId, String dirId);
+	
 	/**
 	 * 将用户加入黑名单，用户将不能访问该目录及目录下资源
 	 * @param userId
@@ -107,6 +116,15 @@ public interface DirectoryServiceI extends CommonService{
 	 * @return
 	 */
 	public void removeUser4lacklist(String userId, String dirId);
+	
+	
+	/**
+	 * 将用户从黑名单移,除该目录及目录下资源(包括下属条目)
+	 * @param userId
+	 * @param dirId
+	 * @return
+	 */
+	public void removeUserALL4lacklist(String userId, String dirId);
 	
 	/**
 	 * 检查目录名是否存在，同级目录不能重名

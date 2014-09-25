@@ -3,7 +3,6 @@ package com.eht.note.service;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 import org.jeecgframework.core.common.service.CommonService;
 import com.eht.common.page.PageResult;
 import com.eht.note.entity.NoteEntity;

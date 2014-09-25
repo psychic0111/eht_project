@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -16,11 +15,9 @@ import org.jeecgframework.core.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.RoleName;
-import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.CollectionUtil;
@@ -28,6 +25,7 @@ import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.entity.GroupUser;
 import com.eht.group.service.GroupService;
+import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.NoteServiceI;
 import com.eht.resource.entity.ClassName;
 import com.eht.resource.entity.ResourceAction;
@@ -272,6 +270,22 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		//将用户放入group-user关系表
 		groupService.addGroupUser(group.getGroupId(), userId);
 	}
+	
+	@Override
+	public void blackListedAllUser(String userId, String dirId) {
+		blacklistedUser(userId,dirId);
+		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class);
+		dc.add(Restrictions.eq("parentId", dirId));
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		List<NoteEntity> noteList=noteService.findNotesByDir(dirId);
+		for (NoteEntity noteEntity : noteList) {
+			noteService.blacklistedUser(userId, noteEntity.getId());
+		}
+		List<DirectoryEntity> dirList = findByDetached(dc);
+		for (DirectoryEntity directoryEntity : dirList) {
+			blackListedAllUser(userId, directoryEntity.getId());
+		}
+	}
 
 	@Override
 	public boolean nameExists(DirectoryEntity dir) {
@@ -323,7 +337,20 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		Group group = groupService.findGroup(DirectoryEntity.class.getName(), dirId);
 		groupService.removeGroupUser(group.getGroupId(), userId);
 	}
-
+	public void removeUserALL4lacklist(String userId, String dirId){
+		removeUser4lacklist(userId,dirId);
+		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class);
+		dc.add(Restrictions.eq("parentId", dirId));
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		List<NoteEntity> noteList=noteService.findNotesByDir(dirId);
+		for (NoteEntity noteEntity : noteList) {
+			noteService.removeUser4blacklist(userId, noteEntity.getId());
+		}
+		List<DirectoryEntity> dirList = findByDetached(dc);
+		for (DirectoryEntity directoryEntity : dirList) {
+			removeUser4lacklist(userId, directoryEntity.getId());
+		}
+	}
 	@Override
 	public List<DirectoryEntity> findDeletedDirs(String userId, int subjectType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class, "d");
@@ -387,5 +414,7 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 			findUpDirs(directoryEntity.getParentId(),list);
 		}
 	}
+
+	
 
 }

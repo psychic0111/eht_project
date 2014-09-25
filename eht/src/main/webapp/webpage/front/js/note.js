@@ -11,6 +11,9 @@ function markNoteMessage(msgId){
 		}, true);
 		var nodes = zTree_Menu.getNodesByFilter(findTreeMsgNode);
 		for(var i = 0; i < nodes.length; i++){
+			if(nodes[i].level == 0){
+				continue;
+			}
 			nodes[i].name = nodes[i].name.substring(0,4); 
 			zTree_Menu.updateNode(nodes[i]);
 		}

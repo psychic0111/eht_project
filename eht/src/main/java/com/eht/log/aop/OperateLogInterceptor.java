@@ -205,7 +205,7 @@ public class OperateLogInterceptor {
 								msg.setId(UUIDGenerator.uuid());
 								
 								NoteEntity note = (NoteEntity) paramEntity;
-								String content = msgContent(log.getAction(), user.getUserName(), note.getTitle());
+								String content = msgContent(log.getAction(), user.getUserName(), note);
 								msg.setContent(content);
 								msg.setClassName(SynchDataCache.getDataClass(log.getClassName()).getName());
 								msg.setClassPk(log.getClassPK());
@@ -328,7 +328,7 @@ public class OperateLogInterceptor {
 		return userIdList;
 	}
 	
-	private String msgContent(String action, String userName, String title){
+	private String msgContent(String action, String userName, NoteEntity note){
 		String operate = "新增";
 		if(action.equals(DataSynchAction.UPDATE.toString())){
 			operate = "修改";
@@ -336,7 +336,25 @@ public class OperateLogInterceptor {
 		if(action.equals(DataSynchAction.DELETE.toString())){
 			operate = "删除";
 		}
-		String content = userName + operate + "条目: " + title;
-		return content;
+		
+		StringBuilder sb = new StringBuilder(userName);
+		sb.append(operate).append("条目【");
+		
+		SubjectEntity sub = subjectService.getSubject(note.getSubjectId());
+		sb.append(sub.getSubjectName()).append("/");
+		
+		if(!StringUtil.isEmptyOrBlank(note.getDirId())){
+			DirectoryEntity dir = directoryService.getDirectory(note.getDirId());
+			String dirPath = dir.getDirName();
+			while(!StringUtil.isEmpty(dir.getParentId())){
+				dir = directoryService.getDirectory(dir.getParentId());
+				dirPath = dir.getDirName() + "/" + dirPath; 
+			}
+			sb.append(dirPath);
+		}
+		sb.append("】：");
+		sb.append(note.getTitle());
+		
+		return sb.toString();
 	}
 }

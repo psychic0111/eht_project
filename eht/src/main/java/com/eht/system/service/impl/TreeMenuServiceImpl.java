@@ -52,7 +52,7 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 		
 		long sysMsgCount = messageService.getNoReadMessageCount(userId, Constants.MSG_SYSTEM_TYPE);
 		long userCount = messageService.getNoReadMessageCount(userId, Constants.MSG_USER_TYPE);
-		long totalCount = sysMsgCount + userCount;
+		//long totalCount = sysMsgCount + userCount;
 		
 		TreeData rootMsg = new TreeData();
 		rootMsg.setDataType("MSG");
@@ -67,9 +67,9 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 		userMsgNode.setId(Constants.MSG_NODEID_U);
 		//未读消息大于0才显示数量
 		if(userCount > 0){
-			userMsgNode.setName("用户消息（"+userCount+"）");
+			userMsgNode.setName("私信（"+userCount+"）");
 		}else{
-			userMsgNode.setName("用户消息");
+			userMsgNode.setName("私信");
 		}
 		userMsgNode.setpId(rootMsg.getId());
 		userMsgNode.setIconSkin("user");
@@ -87,7 +87,7 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 		sysMsgNode.setpId(rootMsg.getId());
 		sysMsgNode.setIconSkin("sys");
 		
-		TreeData notReadMsgNode = new TreeData();
+		/*TreeData notReadMsgNode = new TreeData();
 		notReadMsgNode.setDataType("MSG");
 		notReadMsgNode.setId(Constants.MSG_NODEID_NR);
 		//未读消息大于0才显示数量
@@ -97,10 +97,10 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 			notReadMsgNode.setName("未读消息");
 		}
 		notReadMsgNode.setpId(rootMsg.getId());
-		notReadMsgNode.setIconSkin("noread");
+		notReadMsgNode.setIconSkin("noread");*/
 		
 		dataList.add(rootMsg);
-		dataList.add(notReadMsgNode);
+		//dataList.add(notReadMsgNode);
 		dataList.add(sysMsgNode);
 		dataList.add(userMsgNode);
 		

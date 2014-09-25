@@ -111,7 +111,7 @@ public class DirectoryController extends BaseController {
 			if(c){
 				directoryService.removeUser4lacklist(userId, directoryId);
 			}else{
-				directoryService.blacklistedUser(userId, directoryId);
+				directoryService.blackListedAllUser(userId, directoryId);
 			}
 			}catch (Exception e) {
 				e.printStackTrace();
