@@ -13,14 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JsonConfig;
-import net.sf.json.util.CycleDetectionStrategy;
-
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -42,7 +36,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.AppContextUtils;
@@ -305,7 +298,7 @@ public class NoteController extends BaseController {
 			outputStream.close();
 			fis.close();
 		} catch (Exception e) {
-			response.getWriter().write("您请求的 《" + java.net.URLEncoder.encode(fileName, "UTF-8") + "》 文件已不存在！");
+			response.getWriter().write("您请求的 《" + fileName + "》 文件已不存在！");
 		}
 	}
 

@@ -163,10 +163,10 @@ function delInvitemember(obj){
                <input type="hidden" name="id" value="${subjectEntity.id }">
               <input onfocus='javascript:this.value=""' class="InputTxt2" value="输入被邀请成员的邮箱地址" style="width:200px;height:27px;float:left;padding-left:12px;margin-right:10px;color:graytext;" name="textarea1" autocomplete="off" id="textarea1"  type="text"/>
          	  <select id="textareatype" style="width:100px;float:left;height:28px;margin-right:10px;" name="type">
-			                  <option value="1">超级管理员</option>
-			                  <option value="2">编辑</option>
-			                  <option value="3">作者</option>
-			                  <option value="4">读者</option>
+         	  				  <option value="4">读者</option>
+         	  				  <option value="3">作者</option>
+         	  				  <option value="2">编辑</option>
+			                  <option value="1">管理员</option>
               </select>
          	  <input style="width:100px;float:left;padding-left:12px"  class="Button2" type="button" name="inviteMem_button" id="inviteMem_button"  onclick="viewInvitemember();" value="邀请新成员" />
               </form>          	
@@ -196,8 +196,8 @@ function delInvitemember(obj){
               <table width="100%" border="0" cellspacing="1" cellpadding="0">
                 <tr>
                   <td align="center" class="tdTitle" style="width:20%">用户</td>
-                  <td align="center" class="tdTitle" style="width:20%">角色</td>
-                  <td align="center" class="tdTitle" style="width:15%">状态</td>
+                  <td align="center" class="tdTitle" style="width:10%">角色</td>
+                  <td align="center" class="tdTitle" style="width:10%">状态</td>
                   <td align="center" class="tdTitle" style="width:10%">
                   	<input type="checkbox"  id="checkbox2" />
                   </td>
@@ -233,10 +233,12 @@ function delInvitemember(obj){
                   </c:choose>
                   </td>
                   <td align="center">${inviteMemember.role.description}</td>
-                   <td align="center">未激活</td>
-                    <td align="center">
-                    <input class="Button2" type="button" onclick="sendInvitemember('${inviteMemember.id}');" value="再次发送" />
-                     <input class="Button3" type="button" onclick="delInvitemember('${inviteMemember.id}');" value="删除" />
+                  <td align="center">未激活</td>
+                  <td align="left">
+                  	<span style="width:100%;">
+                  		<input class="Button2" type="button" onclick="sendInvitemember('${inviteMemember.id}');" value="再次发送" />
+                    	<input class="Button3" type="button" onclick="delInvitemember('${inviteMemember.id}');" value="取消邀请" />
+                    </span>
                   </td>
                 </tr>
                 </c:forEach>

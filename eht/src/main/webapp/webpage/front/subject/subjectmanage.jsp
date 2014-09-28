@@ -119,7 +119,7 @@
 			</li>
 			</c:forEach>
 			<li class="Add">
-				<div onclick="toAddSubject()" class="Add_type" style="cursor:pointer;">
+				<div onclick="toAddSubject(${subjectType})" class="Add_type" style="cursor:pointer;">
 					<table width="100%" border="0" cellspacing="0" cellpadding="0" >
 						<tr>
 							<td><img src="${imgPath}/add.png" width="15" height="15" /></td>

@@ -181,7 +181,7 @@ li.over {background-color: #bcd4ec;}
    				</iframe>
     		</div>
     		<!-- Begin comments-->
-	        <div class="comments" id="comments_div" style="width:90%;margin-left:50px;">
+	        <div class="comments" id="comments_div" style="width:90%;margin-left:50px;padding-top:50px;">
 	        	<%-- <div class="top" style="cursor:pointer;" ><img src="${imgPath}/comments1a.png" id="comment_img" onclick="togComment()" height="35px"/></div> --%>
 	        	<div class="comments_list" id="comments_list">
 	        	</div>

@@ -64,4 +64,10 @@
 		<li id="treeRightMenu_deleteAll" onclick="deleteChildNodes()">清空回收站</li>
 	</xd:hasPermission>
 </ul>
+<ul id="treeRightMenu_ul_MemberManage">
+     <xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ASSIGN_MEMBER %>">
+      	<li id="treeRightMenu_MemberManage" onclick="treeToMemberManage('${subjectId}')">成员管理</li>
+     </xd:hasPermission>
+</ul>
+
 <!-- End header-->  

@@ -368,14 +368,14 @@ function mouseMenu(treeId, node){
 	var hideObj = null;
 	var showId = null;
 	if(node.dataType == 'SUBJECT'){   //专题
-		hideObj = [$("#treeRightMenu_ul_directory"),$("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment")];
+		hideObj = [$("#treeRightMenu_ul_directory"),$("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment"),$("#treeRightMenu_ul_MemberManage")];
 		showId = "treeRightMenu_ul_subject";
 	}else if(node.dataType == 'DIRECTORY'){  //目录
 		if(rightClickNode.name != '回收站' && (node.branchId == 'RECYCLEP' || node.branchId == 'RECYCLE')){  //回收站
-			hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment")];
+			hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment"),$("#treeRightMenu_ul_MemberManage")];
 			showId = "treeRightMenu_ul_recycle";
 		}else if(isDocumentFolder(rightClickNode)){
-			hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_recycle")];
+			hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_recycle"),$("#treeRightMenu_ul_MemberManage")];
 			showId = "treeRightMenu_ul_attachment";
 			//文档资料文件夹不能删除,不能重命名
 			if(rightClickNode.name == '文档资料'){
@@ -384,7 +384,7 @@ function mouseMenu(treeId, node){
 			}
 		}else{
 			var params = {'id':node.branchId};
-			hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment")];
+			hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment"),$("#treeRightMenu_ul_MemberManage")];
 			showId = "treeRightMenu_ul_directory";
 			$("#"+showId + " #treeRightMenu_black_dir").remove();
 			AT.post(webRoot+"/subjectController/front/checkSubjectType.dht",params,function(data){
@@ -395,13 +395,16 @@ function mouseMenu(treeId, node){
 			});
 		}
 	}else if(node.dataType == 'TAG'){  //标签
-		hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment")];
+		hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment"),$("#treeRightMenu_ul_MemberManage")];
 		showId = "treeRightMenu_ul_tag";
 	}else if(node.dataType == 'RECYCLEP' || node.dataType == 'RECYCLE'){
-		hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_attachment")];
+		hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_attachment"),$("#treeRightMenu_ul_MemberManage")];
 		showId = "treeRightMenu_ul_recycleRoot";
+	}else if(node.dataType == 'REMENBER'){
+		
+		hideObj = [$("#treeRightMenu_ul_subject"),$("#treeRightMenu_ul_directory"), $("#treeRightMenu_ul_tag"), $("#treeRightMenu_ul_recycle"), $("#treeRightMenu_ul_recycleRoot"), $("#treeRightMenu_ul_attachment")];
+		showId = "treeRightMenu_ul_MemberManage";
 	}
-	
 	if(hideObj != null && showId != null){
 		for(var i=0;i<hideObj.length;i++){
 			hideObj[i].hide();
@@ -417,9 +420,9 @@ function mouseMenu(treeId, node){
 				$("#treeRightMenu_delete_subject").hide();
 			}
 			var obj = $("#" + node.tId + "_a");
-			var top = obj.offset().top;
+			var top = obj.offset().top - 15;
 			var left = obj.offset().left;
-			$("#treeRightMenu").css({position: "absolute",'top':top + 10,'left':left + 60});
+			$("#treeRightMenu").css({position: "absolute",'top':top, 'left':left + 60});
 			$("#treeRightMenu").show();
 		}
 	}
@@ -537,8 +540,8 @@ function zTreeOnAsyncSuccess(event, treeId, treeNode, msg){
 	}
 }
 //专题添加跳转
-function toAddSubject(){
-	url = webRoot+"/subjectController/front/viewAddSubject.dht";
+function toAddSubject(subjectType){
+	url = webRoot+"/subjectController/front/viewAddSubject.dht?subjectType=" + subjectType;
 	AT.load("iframepage",url,function() {});	
 	hideRightMenu();
 }

@@ -86,6 +86,7 @@ public final class FileToolkit {
 			zos = new ZipOutputStream(bos);
 			ZipEntry entry = new ZipEntry(fileName);
 			zos.putNextEntry(entry);
+			zos.setEncoding("gb2312");
 			while ((len = bis.read(cache)) > 0) {
 				zos.write(cache, 0, len);
 				transfered += len;

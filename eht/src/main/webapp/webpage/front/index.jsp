@@ -444,7 +444,10 @@ function isShareSubject(node){
 		subjectNode = zTree_Menu.getNodeByParam("id", subjectId, null);
 	}else if(node.dataType == 'RECYCLE'){
 		subjectNode = node.getParentNode();
-	}else{
+	}else if(node.dataType == 'REMENBER'){
+		subjectNode = node.getParentNode();
+	}
+	else{
 		return null;
 	}
 	
@@ -514,6 +517,29 @@ $(document).ready(function(){
 	buildMainMenu(0,null,true);
 	periodId = setInterval(getNoteMessage, msgPeriod);
 });
+
+function sendmessages(obj){
+	var urllink='get:${webRoot}/messageController/front/sendMessag.dht';
+    $.jBox(urllink, {
+	    title: "发送消息",
+	    width: 500,
+	    height: 350,
+	   	buttons: { '发送': 1, '关闭':0},
+	   	submit: function (v, h, f) {
+	            if (v == 1) {
+	              	AT.postFrm("addsendMessageForm",function(data){
+						if(data.success){  
+							MSG.alert('发送成功');
+						}
+					},true);
+	            } else{
+	            	
+	            }
+	            return true;
+        }
+	});
+    $("#jbox-content").css('overflow', 'hidden');
+}	
 //专题导出进度任务句柄
 var actionSchedule=null;
 /* $( document ).tooltip({

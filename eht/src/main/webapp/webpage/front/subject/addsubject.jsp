@@ -123,7 +123,7 @@ function addSubject(){
 			}else{
 				buildMainMenu(1,data.attributes.subjectId,false);
 			}
-				AT.load("iframepage","${webRoot}/subjectController/front/subjectManage.dht",function() {});
+				AT.load("iframepage","${webRoot}/subjectController/front/subjectManage.dht?subjectType=" + data.attributes.subjectType,function() {});
 			}else{
 				MSG.alert(data.msg);
 			}
@@ -267,9 +267,9 @@ function resetTree() {
 		       <tr>
 		         <td>专题类型：</td>
 		         <td>
-		         	<input type="radio" name="subjectType" id="subjectType_p" value="1" checked="checked"/>
+		         	<input type="radio" name="subjectType" id="subjectType_p" value="1" <c:if test="${subjectType ==1}"> checked="checked"  </c:if>/>
 		           	个人
-		           <input type="radio" name="subjectType" id="subjectType_m" value="2" />
+		           <input type="radio" name="subjectType" id="subjectType_m" value="2" <c:if test="${subjectType == 2}"> checked="checked"  </c:if> />
 		          	 多人
 				</td>
 		       </tr>

@@ -116,11 +116,16 @@ public class SubjectController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/front/subjectManage.dht")
-	public ModelAndView viewSubjectManage(HttpServletRequest request) {
+	public ModelAndView viewSubjectManage(int subjectType, HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		List<SubjectEntity> subjectList = subjectService.findUsersSubject(user.getId());
 		ModelAndView mv = new ModelAndView("front/subject/subjectmanage");
+		
+		if(subjectType <= 0){
+			subjectType = 1;
+		}
 		mv.addObject("subjectList", subjectList);
+		mv.addObject("subjectType", subjectType);
 		return mv;
 	}
 
@@ -225,10 +230,14 @@ public class SubjectController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/front/viewAddSubject.dht")
-	public ModelAndView viewAddSubject(HttpServletRequest request) {
+	public ModelAndView viewAddSubject(int subjectType, HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		List<TemplateEntity> templateList = templateService.findUserTemplates(user.getId(), Constants.TEMPLATE_SUBJECT_CLASSIFY);
 		ModelAndView mv = new ModelAndView("front/subject/addsubject");
+		if(subjectType <= 0){
+			subjectType = 1;
+		}
+		mv.addObject("subjectType", subjectType);
 		mv.addObject("templateList", templateList);
 		return mv;
 	}

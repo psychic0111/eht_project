@@ -60,7 +60,12 @@ function subjectManageDo(obj){
 	if($("#noteEditor_td").is(":visible")){
 		hideNotePage();
 	}
-	url = webRoot+"/subjectController/front/subjectManage.dht?pageNo=1&pageSize=20";
+	var url = webRoot+"/subjectController/front/subjectManage.dht?pageNo=1&pageSize=20";
+	if(obj.id==-2){
+		url=url+"&subjectType=2";
+	}else{
+		url=url+"&subjectType=1";
+	}
 	AT.load("iframepage",url,function() {
 	});
 	hideRightMenu();
@@ -204,4 +209,14 @@ function deleteChildNodes(){
 			showSearchDiv();
 		}, true);
 	}
+}
+//邀请成员
+function treeToMemberManage(obj){
+	url = webRoot+"/subjectController/front/memberManage.dht?id="+obj;
+	if($("#noteEditor_td").is(":visible")){
+		hideNotePage();
+	}
+	AT.load("iframepage",url,function() {
+		hideRightMenu();
+	});	
 }

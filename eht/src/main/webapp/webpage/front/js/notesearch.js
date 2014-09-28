@@ -410,7 +410,7 @@ function spellTag(noteId){
 	$("#tagSelectNode").empty();
 	$("input[name='noteTagId']").remove();
 	AT.get(url, function(data){
-		var maxWidth = $("#tagSelectNode").parents("div .Edit_others").width() - 180;
+		var maxWidth = $("#tagSelectNode").parents("div .Edit_others").width() - 200;
 		for(var i = 0; i < data.length; i ++){
 			var node = data[i];
 			var displayName = "<font color='#aa33ff'>" + node.name + "</font>";
@@ -526,11 +526,11 @@ function setHtmlDivHeight(){
 	var idoc = iframe.contentWindow && iframe.contentWindow.document || iframe.contentDocument; 
 	var height = Math.max(idoc.body.clientHeight, idoc.documentElement.clientHeight);
 	if(UE.browser.ie){
-		$("#htmlViewFrame").height(height+550);
-		$("#htmlViewDiv").height(height+570);
+		$("#htmlViewFrame").height(idoc.documentElement.scrollHeight);
+		$("#htmlViewDiv").height(height);
 	}else{
-	   $("#htmlViewFrame").height(height+50);
-	   $("#htmlViewDiv").height(height+70);
+	   $("#htmlViewFrame").height(height);
+	   $("#htmlViewDiv").height(height);
 	}
 }
 

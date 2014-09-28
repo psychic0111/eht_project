@@ -232,7 +232,7 @@ public class LogonController extends BaseController {
 		String linkname = null;
 		String linkpath = null;
 		try {
-			msg = "注册成功！请查看邮件并激活账号！";
+			msg = "注册成功!";
 			account.setStatus(Constants.ACTIVATE);
 			account.setDeleted(Constants.DATA_NOT_DELETED);
 			account.setCreatetime(new Date());
@@ -243,10 +243,40 @@ public class LogonController extends BaseController {
 				InviteMememberEntity inviteMememberEntity=subjectService.get(InviteMememberEntity.class,  request.getParameter("id"));
 				if(inviteMememberEntity!=null){
 					subjectService.acceptInviteMember(inviteMememberEntity,account);
+					MessageEntity msg = new MessageEntity();
+					msg.setClassName(AccountEntity.class.getName());
+					msg.setClassPk(account.getId());
+					msg.setContent("请完善自己的帐号信息。");
+					Date date = new Date();
+					msg.setCreateTime(date);
+					msg.setCreateTimeStamp(date.getTime());
+					msg.setCreateUser("SYSTEM");
+					msg.setId(com.eht.common.util.UUIDGenerator.uuid());
+					msg.setUserIsRead(Constants.NOT_READ_OBJECT);
+					msg.setOperate(DataSynchAction.UPDATE.toString());
+					msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
+					messageService.saveMessages(msg, account.getId());
+					account.setStatus(Constants.ENABLED);
+					subjectService.updateEntitie(account);
+					SubjectEntity subject = new SubjectEntity();
+					subject.setCreateUser(account.getId());
+					subject.setCreateTime(new Date());
+					subject.setId(com.eht.common.util.UUIDGenerator.uuid());
+					subject.setDescription("");
+					subject.setSubjectType(1);
+					subject.setStatus(0);
+					subject.setDeleted(0);
+					subject.setSubjectName("默认专题");	
+					List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
+					if(list == null || list.isEmpty()){
+						subjectService.addSubject(subject);
+					}
+				}else{
+					String path = AppRequstUtiles.getAppUrl(request);
+					SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"/center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
+					msg = "注册成功！请查看邮件并激活账号！";
 				}
 			}
-			String path = AppRequstUtiles.getAppUrl(request);
-			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"/center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 			//绑定账号信息
 			String openid = request.getParameter("reg_openid"),
 				   openuser = request.getParameter("reg_openuser"),

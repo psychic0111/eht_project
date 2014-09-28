@@ -482,6 +482,7 @@ public class JsonUtil {
 	 */
 	private static boolean IsIgnore(PropertyDescriptor prop){
 		if(exculdesList.contains(prop.getName())){
+			System.out.println(prop.getName());
 			return true;
 		}
 		Method method = prop.getReadMethod();

@@ -5,6 +5,11 @@ public interface Constants {
 	 * 用户session属性名称
 	 */
 	public static final String SESSION_USER_ATTRIBUTE = "SESSION_USER_ATTRIBUTE";
+	
+	/**
+	 * 专题类型session属性名称
+	 */
+	public static final String SESSION_USER_SUBJECTTYPE = "SESSION_USER_SUBJECTTYPE";
 	/**
 	 * 用户登录帐号字段名称
 	 */

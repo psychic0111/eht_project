@@ -1,15 +1,12 @@
 package com.eht.message.controller;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -27,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.JsonUtil;
@@ -163,13 +159,32 @@ public class MessageController extends BaseController {
 	
 	
 	/**
-	 * 标记消息已读
+	 * 
 	 * @return
 	 */
 	@RequestMapping(value="/front/sendMessag.dht")
-	public ModelAndView messageMark() {
-		ModelAndView mv = new ModelAndView("front/message/commentList");
+	public ModelAndView sendMessag(HttpServletRequest request) {
+		ModelAndView mv = new ModelAndView("front/message/messageList");
+		AccountEntity user  = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		List<MessageEntity> msgList = messageService.findUserMessages(user.getId(), Constants.MSG_USER_TYPE, null, "createTime", "DESC", 5, 1);
+		ModelMap mmap = new ModelMap();
+		mmap.put("msgList", msgList);
+		mv.addAllObjects(mmap);
 		return mv;
+	}
+	
+	/**
+	 *
+	 * @return
+	 */
+	@RequestMapping(value="/front/sendMessagAjax.dht", produces = { "application/json;charset=UTF-8" })
+	@ResponseBody
+	public String messageMark(HttpServletRequest request) {
+		int fist=Integer.valueOf(request.getParameter("count"));
+		int page=(fist%5)+2;
+		AccountEntity user  = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		List<MessageEntity> msgList = messageService.findUserMessages(user.getId(), Constants.MSG_USER_TYPE, null, "createTime", "DESC", 5, page);
+		return JsonUtil.list2json(msgList);
 	}
 	
 	@RequestMapping(value = "/front/noteMessage.dht", produces = { "application/json;charset=UTF-8" })

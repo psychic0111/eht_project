@@ -89,26 +89,7 @@ $("#message_list font").each(function(index){
 	  $(this).html(AnalyticEmotion(inputText,context));
 	});
 	
-function sendmessages(obj){
-	var urllink='get:${webRoot}/messageController/front/sendMessag.dht';
-    $.jBox(urllink, {
-    title: "发送消息",
-    width: 500,
-    height: 350,
-   buttons: { '发送': 1, '关闭': 0 },
-   submit: function (v, h, f) {
-            if (v == 1) {
-              AT.postFrm("addsendMessageForm",function(data){
-					if(data.success){  
-						MSG.alert('发送成功');
-					}
-				},true);
-            return true; 
-            } 
-            return true;
-        }
-	});
-}	
+
 
 $(document).ready(function(){
 	markMessage();
@@ -127,7 +108,6 @@ $(document).ready(function(){
                 <tr>
                   <td class="search_input"><input value="${content}" class="InputTxt1" style=" width:100%; " type="text" name="content" id="content" /></td>
                   <td class="search_btn"><input class="Button1" type="button" name="search_btn" id="search_btn" value="搜索" onclick="searchMessage()"/></td>
-				  <td class="search_btn"><input class="Button1" type="button" name="sendmessage_btn" id="sendmessage_btn" value="发送消息" onclick="sendmessages()"/></td>                  
                 </tr>
               </table>
             </div>
