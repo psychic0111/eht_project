@@ -98,7 +98,7 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 
     <div class="right_top">
        <div class="Nav" id="nav_div" style="position:absolute;">
-			<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ASSIGN_MEMBER %>">
+			<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ADD_NOTE %>">
 					<div id="attachment"></div> 
 			</xd:hasPermission>	    
        </div>

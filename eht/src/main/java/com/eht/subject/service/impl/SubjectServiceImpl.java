@@ -439,6 +439,19 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 				new Object[] { userId });
 		return mList;
 	}
+	
+	@Override
+	public List<SubjectEntity> findUsersSubjectByType(String userId, int subjectType) {
+		List<SubjectEntity> mList = findHql(
+				"select s from SubjectEntity s , RoleUser r where s.id=r.groupId and s.deleted="
+						+ Constants.DATA_NOT_DELETED
+						+ " and s.status="
+						+ Constants.ENABLED
+						+ " and s.subjectType=?"
+						+ " and r.userId=?",
+				new Object[] { subjectType, userId });
+		return mList;
+	}
 
 	@Override
 	public List<SubjectEntity> findPermissionSubject(String userId) {

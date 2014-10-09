@@ -4,7 +4,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
 <%@ page import="com.eht.subject.entity.SubjectEntity"%>
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>e划通</title>  
 <%@  include file="/webpage/front/include/front_common.jsp" %> 
@@ -154,8 +154,13 @@ var context='${imgPath}/biaoqing/';
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+<style type="text/css">
+#mainBody{
+width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
+}
+</style>
 </head>
-<body id="mainBody" style="width: auto;min-width: 1024px;position:relative;top:0;overflow:hidden;"> 
+<body id="mainBody"> 
 		<div id="pageloading_tree" style="display:none"></div> 
 <!-- Begin header-->
 <%@ include file="./include/head.jsp"%>
@@ -518,28 +523,6 @@ $(document).ready(function(){
 	periodId = setInterval(getNoteMessage, msgPeriod);
 });
 
-function sendmessages(obj){
-	var urllink='get:${webRoot}/messageController/front/sendMessag.dht';
-    $.jBox(urllink, {
-	    title: "发送消息",
-	    width: 500,
-	    height: 350,
-	   	buttons: { '发送': 1, '关闭':0},
-	   	submit: function (v, h, f) {
-	            if (v == 1) {
-	              	AT.postFrm("addsendMessageForm",function(data){
-						if(data.success){  
-							MSG.alert('发送成功');
-						}
-					},true);
-	            } else{
-	            	
-	            }
-	            return true;
-        }
-	});
-    $("#jbox-content").css('overflow', 'hidden');
-}	
 //专题导出进度任务句柄
 var actionSchedule=null;
 /* $( document ).tooltip({

@@ -25,10 +25,7 @@ $().ready(function() {
 
 </script>
 <body >
- <div class="right_top">
-      <div class="Nav" id="nav_div">导入专题</div>
- </div>
-    <div class="right_index" >
+
 	<form action="${webRoot}/subjectController/front/leadinginSuject.dht"  enctype="multipart/form-data"  method="post" id="addSubjectZipForm" name="addSubjectZipForm" target="leaddinginsubject"> 
 		<!-- Begin Information-->
 		<div class="Information">
@@ -62,4 +59,3 @@ $().ready(function() {
 	<iframe name="leaddinginsubject" style="display:none;">
 	
 	</iframe>
-</div>

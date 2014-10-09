@@ -222,7 +222,7 @@ function onNodeClickDo(e, treeId, node) {
 		if($("#noteEditor_td").is(":visible")){
 			hideNotePage();
 		}
-		var url = webRoot+"/messageController/front/messageList.dht?pageNo=1&pageSize=20&msgType=" + msgType;
+		var url = webRoot+"/messageController/front/messageList.dht?msgType=" + msgType;
 		AT.load("iframepage",url,function() {
 		});
 	}else if(node.dataType == "REMENBERCHILD"){
@@ -231,6 +231,9 @@ function onNodeClickDo(e, treeId, node) {
 		selectInfo.subjectId = node.subjectId;
 		selectInfo.curMenu = node;
 		selectInfo.userId=node.id;
+		if(!$("#noteEditor_td").is(":visible")){
+			showNotePage();
+		}
 		showSearchDiv();
 	}else{
 		selectInfo = new SelectInfo();

@@ -214,7 +214,7 @@ public class OperateLogInterceptor {
 								Date date = new Date();
 								msg.setCreateTime(date);
 								msg.setCreateTimeStamp(date.getTime());
-								msg.setCreateUser(user.getId());
+								msg.setCreateUser("SYSTEM");
 								msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
 								msg.setUserIsRead(Constants.NOT_READ_OBJECT);
 								messageService.saveMessages(msg, uid);

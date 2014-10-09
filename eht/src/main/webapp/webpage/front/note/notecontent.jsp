@@ -253,6 +253,22 @@ $(document).ready(function() {
 });
 
 function toComment(){
+	alert(isNoteStats());
+	if(isNoteStats()){//判断是否编辑状态
+	   var submit = function (v, h, f) {
+		if (v == true){ 
+			toCommentDo();
+		} 
+		return true;
+	   };
+		// 自定义按钮
+		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
+	 }else{
+		 toCommentDo();
+	 }
+}
+
+function toCommentDo(){
 	if($("#note_edit").hasClass("Button3")){
 		enableEditNote();
 	}

@@ -104,6 +104,7 @@ function toShowSubject(obj){
 		    </table>
 		    <div class="submit">
 		      <input class="Button1" type="button" name="sub_btn" id="sub_btn" value="保存" onclick="editSubject()"/>
+		      <input class="Button2" type="button" name="sub_btn" id="-${subject.subjectType}" value="返回" onclick="subjectManage(this)" style="margin-left:10px;"/>
 		    </div>
 		  </div>
 		</div>

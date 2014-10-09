@@ -9,7 +9,11 @@
   </div> 
   <div class="right1">
 		<div id="dd" class="wrapper-dropdown-5" tabindex="1" >
-		    <input class="Button1" type="button" name="sendmessage_btn" id="sendmessage_btn" style="margin-top:5px;" value="发送消息" onclick="sendmessages()"/>
+		    	<span onclick="sendmessages()" class="Button1" style="height:18px;padding:5px 5px;display:inline-block;">
+		    		<img alt="" style="margin:0;" width="24" height="24" src="<%=imgPath %>/20140821042246434_easyicon_net_32.png">
+		    		发送消息
+		    	</span>
+		    	<!-- <input class="Button1" type="button" name="sendmessage_btn" id="sendmessage_btn" style="margin-top:5px;" value="发送消息" onclick="sendmessages()"/> -->
   	        <img  src="<%=imgPath %>/Sline.png"  height="40" onclick="window.location.href='${webRoot}/accountController/front/viewEditUser.dht'" />
   		    <img src="${webRoot}/${SESSION_USER_ATTRIBUTE.photo}" width="22" height="22" onclick="window.location.href='${webRoot}/accountController/front/viewEditUser.dht'" onerror="loadDefaultPhoto(this)"/> 
   	        <a href="${webRoot}/accountController/front/viewEditUser.dht" title='${SESSION_USER_ATTRIBUTE.userName}'>
@@ -21,4 +25,30 @@
   </div>
   <div class="clear"></div>
 </div>
+<script type="text/javascript">
+<!--
+function sendmessages(obj){
+	var urllink='get:${webRoot}/messageController/front/sendMessag.dht';
+    $.jBox(urllink, {
+	    title: "发送消息",
+	    width: 500,
+	    height: 350,
+	   	buttons: { '发送': 1, '关闭':0},
+	   	submit: function (v, h, f) {
+	            if (v == 1) {
+	              	AT.postFrm("addsendMessageForm",function(data){
+						if(data.success){  
+							MSG.alert('发送成功');
+						}
+					},true);
+	            } else{
+	            	
+	            }
+	            return true;
+        }
+	});
+    $("#jbox-content").css('overflow', 'hidden');
+}	
+//-->
+</script>
 <!-- End header-->  

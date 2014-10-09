@@ -1,10 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
 	pageEncoding="UTF-8"%>
-<%@page import="com.eht.common.constant.*"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
-<%@ taglib prefix="xd" uri="http://www.xd-tech.com.cn/" %>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
@@ -73,66 +69,46 @@
 
 	function toLeadingSuject(){
 		url = "${webRoot}/subjectController/front/leadingSuject.dht";
-		AT.load("iframepage",url,function() {});		
-		}
+		AT.load("subject_list",url,function() {});		
+	}
 
 
 </script>
     <div class="right_top">
        <div class="Nav" id="nav_div" style="padding-top:8px;">
-			专题列表
-			<input style="width:100px;height:23px;margin-left:10px;" id="subject_import" onclick="toLeadingSuject()" class="Button2" type="button" value="导入专题" name="subject_import"/>        
+			专题管理
+			<input style="width:100px;height:23px;margin-left:10px;" id="subject_p" onclick="toSujectList(1)" class="Button4" type="button" value="个人专题" name="subject_p"/>
+			<input style="width:100px;height:23px;margin-left:1px;" id="subject_m" onclick="toSujectList(2)" class="Button4" type="button" value="多人专题" name="subject_m"/>
+			<input style="width:100px;height:23px;margin-left:1px;" id="subject_import" onclick="toLeadingSuject()" class="Button4" type="button" value="导入专题" name="subject_import"/>        
        </div>
     </div>
-         <div class="right_index" >
-         <input id="schedule_1409022827875" type="hidden"/>
-	<!-- Begin Subjects-->
-	<div class="Subjects">
-		<ul>
-			<c:forEach items="${subjectList}" var="sub">
-			<li>
-				<div class="img" style="cursor:pointer;">
-					<img src="${imgPath}/temp6.jpg" width="100%" <xd:hasPermission  resource="SubjectManage" subjectId="${sub.id}" action="<%=ActionName.ASSIGN_MEMBER %>"> onclick="toEditSubject('${sub.id}')" </xd:hasPermission> />
-				</div>
-				<div class="title" style="cursor:pointer;" title="${sub.subjectName }"  <xd:hasPermission  resource="SubjectManage" subjectId="${sub.id}" action="<%=ActionName.ASSIGN_MEMBER %>"> onclick="toEditSubject('${sub.id}')" </xd:hasPermission>   >
-				<c:choose>
-					<c:when test="${fn:length(sub.subjectName) > 10}">
-						<c:out value="${fn:substring(sub.subjectName, 0, 10)}......" />
-					</c:when>
-					<c:otherwise>
-						<c:out value="${sub.subjectName}" />
-					</c:otherwise>
-				</c:choose>
-				</div>
-				<div id="${sub.id}_schedule" style="height:5px;text-align:center" class="schedulesubjects" > 
-				
-				</div>
-				<div class="others" style="height:22px">
-					<input class="Button4 scheduleExportSubject" type="button" name="button"  style="width:80px;"
-						value="导出专题"  onclick="toExportSubject('${sub.id}')"/>
-					<xd:hasPermission  resource="SubjectManage" subjectId="${sub.id}" action="<%=ActionName.ASSIGN_MEMBER %>">
-						<c:if test="${sub.subjectType eq 2}">
-							<input class="Button1" type="button" style="width:80px;"  name="button" id="button" value="成员管理" onclick="toMemberManage('${sub.id}')" />
-						</c:if>
-					</xd:hasPermission>	
-				</div>
-			</li>
-			</c:forEach>
-			<li class="Add">
-				<div onclick="toAddSubject(${subjectType})" class="Add_type" style="cursor:pointer;">
-					<table width="100%" border="0" cellspacing="0" cellpadding="0" >
-						<tr>
-							<td><img src="${imgPath}/add.png" width="15" height="15" /></td>
-						</tr>
-					</table>
-				</div>
-			</li>
-		</ul>
+    <div class="right_index" id="subject_list">
+		<jsp:include page="subjectlist.jsp"></jsp:include>
 	</div>
-	<!-- End Subjects-->
-</div>
 <script type="text/javascript">
-		
+$(document).ready(function(){
+	var type = '${subjectType}';
+	if(type == 1){
+		$("#subject_p").attr("class", "Button3");
+	}else if(type == 2){
+		$("#subject_m").attr("class", "Button3");
+	}else{
+		$("#subject_import").attr("class", "Button3");
+	}
+});
+
+function toSujectList(subjectType){
+	if(subjectType == 1){
+		$("#subject_p").attr("class", "Button3");
+		$("#subject_m").attr("class", "Button4");
+	}else if(subjectType == 2){
+		$("#subject_m").attr("class", "Button3");
+		$("#subject_p").attr("class", "Button4");
+	}
+	var url = webRoot+"/subjectController/front/subjectList.dht?pageNo=1&pageSize=20&subjectType=" + subjectType;
+	AT.load("subject_list", url, function(){});
+}
+
 if(actionSchedule!=null){
 
 }else{

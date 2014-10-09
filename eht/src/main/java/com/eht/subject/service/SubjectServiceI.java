@@ -181,5 +181,12 @@ public interface SubjectServiceI extends CommonService{
      */
     public List<SubjectEntity> findSubjectByParam(String subjectName, String userId,
 			int subjectType);
+	/**
+	 * 专题查询
+	 * @param userId
+	 * @param subjectType
+	 * @return
+	 */
+    public List<SubjectEntity> findUsersSubjectByType(String userId, int subjectType);
     
 }

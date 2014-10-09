@@ -15,7 +15,7 @@ public class PageResult {
 	/**当前页*/
     private int pageNo=1;
     /**每页的记录数*/
-    private int pageSize=20;
+    private int pageSize=8;
     /** 分页的URL*/
     private String url;
     /**总页数*/

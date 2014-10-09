@@ -305,6 +305,7 @@ function resetTree() {
 		    </table>
 		    <div class="submit">
 		      <input class="Button1" type="button" name="sub_btn" id="sub_btn" value="创建" onclick="addSubject()"/>
+		      <input class="Button2" type="button" name="sub_btn" id="-${subjectType}" value="返回" onclick="subjectManage(this)" style="margin-left:10px;"/>
 		    </div>
 		  </div>
 		</div>

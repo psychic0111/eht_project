@@ -151,7 +151,9 @@ function delInvitemember(obj){
 </script>
 		
  		<div class="right_top mainer_right">
-          <div class="Nav">专题${subjectEntity.subjectName}&gt; <a href="#">成员管理</a></div>
+          <div class="Nav">
+          	<a href="#" style="color:#6969F5" id="-2" onclick="subjectManage(this)">专题管理</a> &gt; ${subjectEntity.subjectName} &gt; 成员管理
+          </div>
         </div>
         <!-- Begin mainer_index-->
          <div class="right_index">

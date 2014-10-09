@@ -49,7 +49,7 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 				map.put(mu.getMessageId(), mu.getIsRead());
 			}
 			DetachedCriteria dc = DetachedCriteria.forClass(MessageEntity.class);
-			dc.add(Restrictions.in("id", msgIds));
+			dc.add(Restrictions.or(Restrictions.in("id", msgIds), Restrictions.eq("createUser", userId)));
 			if(msgType != null){
 				dc.add(Restrictions.eq("msgType", msgType));
 			}
@@ -95,7 +95,7 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 			}
 			
 			dc = DetachedCriteria.forClass(MessageEntity.class);
-			dc.add(Restrictions.in("id", msgIds));
+			dc.add(Restrictions.or(Restrictions.in("id", msgIds), Restrictions.eq("createUser", userId)));
 			if(msgType != null){
 				dc.add(Restrictions.eq("msgType", msgType));
 			}
@@ -124,7 +124,7 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 			}
 			
 			dc = DetachedCriteria.forClass(MessageEntity.class);
-			dc.add(Restrictions.in("id", msgIds));
+			dc.add(Restrictions.or(Restrictions.in("id", msgIds), Restrictions.eq("createUser", userId)));
 			if(msgType != null){
 				dc.add(Restrictions.eq("msgType", msgType));
 			}
@@ -172,7 +172,7 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 			}
 			
 			dc = DetachedCriteria.forClass(MessageEntity.class);
-			dc.add(Restrictions.in("id", msgIds));
+			dc.add(Restrictions.or(Restrictions.in("id", msgIds), Restrictions.eq("createUser", userId)));
 			if(msgType != null){
 				dc.add(Restrictions.eq("msgType", msgType));
 			}

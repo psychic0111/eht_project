@@ -3,6 +3,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
+<%@ taglib prefix="xd" uri="http://www.xd-tech.com.cn/" %>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
@@ -22,7 +23,7 @@
 <script type="text/javascript" language="javascript">
 //分页
 function doPage(ths,pageNo,pageSize){
-	AT.load("iframepage","${webRoot}/messageController/front/messageList.dht?pageNo=${pageNo}&pageSize=${pageSize}&msgType=" + msgType,function() {});
+	AT.load("iframepage","${webRoot}/messageController/front/messageList.dht?pageNo="+pageNo+"&pageSize="+pageSize+"&msgType=${msgType}",function() {});
 }
 //排序方式
 function orderMsg(){
@@ -42,7 +43,7 @@ function markMessage(){
 	});
 	var nodes = zTree_Menu.getNodesByFilter(findMsgNode);
 	for(var i = 0; i < nodes.length; i++){
-		nodes[i].name = nodes[i].name.substring(0,4); 
+		nodes[i].name = nodes[i].name.substring(0,nodes[i].name.indexof('（')); 
 		zTree_Menu.updateNode(nodes[i]);
 	}
 	$("#noReadMsgNum").empty().append(0);
@@ -133,8 +134,8 @@ $(document).ready(function(){
                 	<tr class="TD1">
                 		<td width="35" align="center">
                 			<c:choose>
-                				<c:when test="${msg.createUser == 'SYSTEM' }">
-                					<img onerror="loadDefaultPhoto(this)" src="${imgPath}/97162.gif.png" width="35" height="34" />
+                				<c:when test="${msg.msgType == 1 }">
+                					<img onerror="loadDefaultPhoto(this)" src="${imgPath}/easyicon_net_32.png" width="35" height="34" />
                 				</c:when>
                 				<c:otherwise>
                 					<img onerror="loadDefaultPhoto(this)" src="${webRoot}/${msg.creator.photo}" width="35" height="34" />
@@ -145,7 +146,7 @@ $(document).ready(function(){
                 			<input type="hidden" name="id" value="${msg.id }">
                   			<span class="Font2">
                   				<c:choose>
-                				<c:when test="${msg.createUser == 'SYSTEM' }">
+                				<c:when test="${msg.msgType == 1 }">
                 					<strong>系统消息：</strong>
                 				</c:when>
                 				<c:otherwise>

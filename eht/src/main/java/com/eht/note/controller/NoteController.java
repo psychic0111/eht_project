@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -26,6 +28,7 @@ import org.jeecgframework.core.util.JSONHelper;
 import org.jeecgframework.core.util.SendMailUtil;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.tag.core.easyui.TagUtil;
+import org.jeecgframework.web.system.manager.ClientManager;
 import org.jeecgframework.web.system.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -181,23 +184,14 @@ public class NoteController extends BaseController {
 		AccountEntity user = accountService.getUser4Session(request.getParameter("jsessionid"));
 		request.setAttribute("jsessionid", request.getParameter("jsessionid"));
 		
-		 request.getSession(false).setAttribute(Constants.SESSION_USER_ATTRIBUTE, user);
-		
+		HttpSession session = request.getSession(false);
+		session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, user);
+		ClientManager.getInstance().addSession(session.getId(), session);
 		
 		// 来自
 		String dirId = request.getParameter("dirId");
 		String subjectId = request.getParameter("subjectId");
 		NoteEntity nodeEntity = null;
-		
-		//如果没有node数据则新插入一条
-		nodeEntity = noteService.getNote(noteid);
-		if(nodeEntity==null){
-			nodeEntity = new NoteEntity();
-			nodeEntity.setId(noteid);
-			nodeEntity.setContent("");
-			nodeEntity.setSubjectId(subjectId);
-			this.saveNote(nodeEntity, noteTagId, request);
-		}
 		
 		if (noteid != null && !noteid.isEmpty()) {
 			nodeEntity = noteService.getNote(noteid);
@@ -207,6 +201,15 @@ public class NoteController extends BaseController {
 		} else {
 			noteid = null;
 		}
+		//如果没有node数据则新插入一条
+		if(nodeEntity==null && StringUtil.isEmpty(dirId)){
+			nodeEntity = new NoteEntity();
+			nodeEntity.setId(noteid);
+			nodeEntity.setContent("");
+			nodeEntity.setSubjectId(subjectId);
+			this.saveNote(nodeEntity, noteTagId, request);
+		}
+		
 		String realPath = FilePathUtil.getFileUploadPath(nodeEntity, dirId);
 		try {
 			MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;

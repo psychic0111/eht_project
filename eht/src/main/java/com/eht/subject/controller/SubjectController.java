@@ -118,12 +118,31 @@ public class SubjectController extends BaseController {
 	@RequestMapping("/front/subjectManage.dht")
 	public ModelAndView viewSubjectManage(int subjectType, HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		List<SubjectEntity> subjectList = subjectService.findUsersSubject(user.getId());
-		ModelAndView mv = new ModelAndView("front/subject/subjectmanage");
-		
 		if(subjectType <= 0){
 			subjectType = 1;
 		}
+		List<SubjectEntity> subjectList = subjectService.findUsersSubjectByType(user.getId(), subjectType);
+		ModelAndView mv = new ModelAndView("front/subject/subjectmanage");
+		
+		mv.addObject("subjectList", subjectList);
+		mv.addObject("subjectType", subjectType);
+		return mv;
+	}
+	
+	/**
+	 * 前台添加专题 专题列表查询
+	 * 
+	 * @return
+	 */
+	@RequestMapping("/front/subjectList.dht")
+	public ModelAndView subjectList(int subjectType, HttpServletRequest request) {
+		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		if(subjectType <= 0){
+			subjectType = 1;
+		}
+		List<SubjectEntity> subjectList = subjectService.findUsersSubjectByType(user.getId(), subjectType);
+		ModelAndView mv = new ModelAndView("front/subject/subjectlist");
+		
 		mv.addObject("subjectList", subjectList);
 		mv.addObject("subjectType", subjectType);
 		return mv;
