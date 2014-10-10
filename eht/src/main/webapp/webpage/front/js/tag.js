@@ -63,9 +63,10 @@ function checkTagNode(event, treeId, treeNode){
 				parentNode = parentNode.getParentNode();
 			}
 			var maxWidth = $("#tagSelectNode").parents("div .Edit_others").width() - 200;
-			var w = $("#tagSelectNode").width();
+			var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ displayName +"</li>");
+			var _w = tagLbl.width();
+			var w = $("#tagSelectNode").width() + _w;
 			if(w < maxWidth){
-				var tagLbl = $("<li onclick='selectTagTree()' class='note_tag' id='li_"+ treeNode.id +"'>"+ displayName +"</li>");
 				$("#tagSelectNode").prepend(tagLbl);
 			}else{
 				if(!$("#tag_more").attr("id")){
@@ -159,9 +160,24 @@ function selectTagTree() {
 	AT.post(url, params,function(data) {
 		$.fn.zTree.init($("#tagSelectTree"),noteContent_Tag_TreeSetting, data);
 		tag_zTree_Menu = $.fn.zTree.getZTreeObj("tagSelectTree");
-		var tid = tag_zTree_Menu.getNodes()[0].tId;
+		
+		var nodes = tag_zTree_Menu.getNodes();
+		var tid = nodes[0].tId;
 		$("#" + tid + "_check").remove();
 		tag_zTree_Menu.expandAll(true);
+		nodes = tag_zTree_Menu.transformToArray(nodes);
+		//设置树节点选中状态
+		var selectedTags = $("input[name='noteTagId']");
+		for(var i = 1; i < nodes.length; i++){
+			var chked = false;
+			for(var j = 0; j < selectedTags.length; j++){
+				if($(selectedTags[j]).val() == nodes[i].id){
+					chked = true;
+					break;
+				}
+			}
+			tag_zTree_Menu.checkNode(nodes[i], chked, false);
+		}
 	});
 	$("#tagSelectTree").html("");
 	$("#tagSelectContent").css({

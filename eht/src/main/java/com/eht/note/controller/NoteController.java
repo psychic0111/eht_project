@@ -202,7 +202,7 @@ public class NoteController extends BaseController {
 			noteid = null;
 		}
 		//如果没有node数据则新插入一条
-		if(nodeEntity==null && StringUtil.isEmpty(dirId)){
+		if(nodeEntity==null){
 			nodeEntity = new NoteEntity();
 			nodeEntity.setId(noteid);
 			nodeEntity.setContent("");
@@ -210,6 +210,7 @@ public class NoteController extends BaseController {
 			this.saveNote(nodeEntity, noteTagId, request);
 		}
 		
+		dirId = dirId.equals("") ? null : dirId;
 		String realPath = FilePathUtil.getFileUploadPath(nodeEntity, dirId);
 		try {
 			MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;

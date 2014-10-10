@@ -204,7 +204,6 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
         		</ul>
         	</div>
         </div>
-        
         </td>
       <td class="Fold" style="text-align:center;">
         <div style="height:100%;position:absolute;top:210px;cursor:pointer;" onclick="hideTreeMenu()">
@@ -217,7 +216,6 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
       </td>
       <td id="noteEditor_td" class="mainer_right" valign="top" align="left">
       	<!-- Begin notes_new-->
-      	
 		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
 		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
 		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
@@ -228,8 +226,6 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
 		<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/uploadify_api.js" charset="utf-8"></script>
 		<!-- 附件上传 -->
 		<script type="text/javascript" src="<%=frontPath %>/js/uploadfile.js" charset="utf-8"></script>
-		
-		
 		<script type="text/javascript" src="${frontPath}/js/note.js"></script>
 		<script type="text/javascript" src="${frontPath}/js/tag.js"></script>
 		<script type="text/javascript" src="${frontPath}/js/noteshare.js"></script>
@@ -276,8 +272,6 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 				if(nodes[i].dataType == 'DIRECTORY' || nodes[i].dataType == 'TAG'){
 					zTree_Menu.removeNode(nodes[i]);
 					i--;
-				}else{
-					//$("#" + zTree_Menu.getNodes()[2].tId + "_a").append('<span id="noReadMsgNum" class="numb">'+ json.totalCount +'</span>');
 				}
 			}
 		}
@@ -525,10 +519,6 @@ $(document).ready(function(){
 
 //专题导出进度任务句柄
 var actionSchedule=null;
-/* $( document ).tooltip({
-	track: true
-}); */
-
 </script>
 </body>
 </html>

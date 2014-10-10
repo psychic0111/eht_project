@@ -253,7 +253,6 @@ $(document).ready(function() {
 });
 
 function toComment(){
-	alert(isNoteStats());
 	if(isNoteStats()){//判断是否编辑状态
 	   var submit = function (v, h, f) {
 		if (v == true){ 

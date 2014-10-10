@@ -35,7 +35,7 @@
           <table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td class="search_input"><input class="InputTxt1" style="width:85%;line-height:26px;" type="text" name="searchInput" id="searchNoteField" value="${searchInput }"/></td>
-              <td class="search_btn"><input class="Button1"  onclick="searchNotesclick()" type="button" name="note_search" id="note_search" value="搜索" /></td>
+              <td class="search_btn"><input class="Button1"  onclick='$("#tagSelect").val("");$("#note_tagId").val("");searchNotesclick();' type="button" name="note_search" id="note_search" value="搜索" /></td>
             </tr>
           </table>
         </div>

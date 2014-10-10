@@ -29,7 +29,7 @@ if($('#subjectName').val()=='个人专题'||$('#subjectName').val()=='多人专�
 				}else{
 					buildMainMenu(1,data.attributes.subjectId,false);
 				}
-				AT.load("iframepage","${webRoot}/subjectController/front/subjectManage.dht",function() {});	
+				AT.load("iframepage","${webRoot}/subjectController/front/subjectManage.dht?subjectType=" + data.attributes.subjectType,function() {});	
 			}else{
 				MSG.alert(data.msg);
 				}

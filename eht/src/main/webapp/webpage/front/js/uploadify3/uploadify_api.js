@@ -208,16 +208,17 @@ function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,session
 	
 } 
 
-
+// 上传条目附件
 function nBindUploadBtn(btnId,options,config){
 	$("#"+btnId).uploadify({
+		auto		  : true,
 		height        : 18,
 		swf           : options.basePath+'/js/uploadify3/uploadify.swf',
 		width         : 18,
-		buttonClassOut   : "outButtonDiv",
+		buttonClassOut: "outButtonDiv",
 		buttonText    : '',
 		buttonClass   : "upload-sa",
-		buttonImage	  :  options.basePath+'/js/uploadify3/button_1.png',
+		buttonImage	  : options.basePath+'/js/uploadify3/button_1.png',
 		uploader      : options.uploadPath,
 		queueSizeLimit: 10,
 		onSelect:function(file){
@@ -236,7 +237,7 @@ function nBindUploadBtn(btnId,options,config){
 			}
 			type=$.trim(type);
 			if(disableType[type]){
-				alert("您不能上传后缀为.exe .com .bat .sh的文件！");
+				MSG.alert("您不能上传后缀为.exe .com .bat .sh的文件！");
 				$("#"+btnId).uploadify("cancel",file.id);
 				return ;
 			}
@@ -245,6 +246,9 @@ function nBindUploadBtn(btnId,options,config){
 			var dirId=$('#noteForm_dirId').val();
 			//var formData={"noteid":noteid,"jsessionid":sessionId};
 			var url=options.uploadPath+"?noteid="+noteid+"&jsessionid="+sessionId+"&dirId="+dirId;
+			
+			//显示进度条，值过小会被UEDITOR挡住
+			$("#attTemp").css("z-index", "9999");
 			$("#"+btnId).uploadify("settings","uploader",url,true);
 		},
 		onUploadComplete:function(file){
@@ -253,6 +257,9 @@ function nBindUploadBtn(btnId,options,config){
 		onQueueComplete:function(){
 			loadAttachment("current");
 			loadAttachment("all");
+			
+			//隐藏进度条，值过大会在遮住UEDITOR的上传图片弹出框
+			$("#attTemp").css("z-index", "99");
 		}
 		
 	});

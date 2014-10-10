@@ -52,6 +52,7 @@ Released under the MIT License <http://www.opensource.org/licenses/mit-license.p
 	margin-top: 5px;
 	max-width: 350px;
 	padding: 10px;
+	position: relative;
 	z-index:99999999999999999;
 }
 .uploadify-error {

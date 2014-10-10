@@ -49,8 +49,7 @@ var treeSetting = {
 		showTitle: false,
 		selectedMulti: true,
 		dblClickExpand: false,
-		nameIsHTML: true,
-		addHoverDom: this.zTreeaddHoverDom
+		nameIsHTML: true
 	},
 	data: {
 		simpleData: {
@@ -132,32 +131,41 @@ function onNodeClickDo(e, treeId, node) {
 			}
 			showSearchDiv();
 		}
-	}else if(node.dataType == "DIRECTORY"&&!isDocumentFolder(node)){   //专题条目检索
-		if(!$("#noteEditor_td").is(":visible")){
-			showNotePage();
-		}
-		selectInfo = new SelectInfo();
-		var dirId = node.id.replace("_deleted", "");  // 回收站中的目录ID都加了 _deleted后缀
-		selectInfo.dirId = dirId;
-		if(node.branchId != 'RECYCLEP' && node.branchId != 'RECYCLE'){//拼接所有子目录的id
-			var nodes = zTree_Menu.getNodesByParam("dataType", "DIRECTORY", node);
-			var ids = getSonIds(nodes);
-			var strids = node.id;
-			if(ids!=null){
-				strids = strids + ","+ids.join(",");
+	}else if(node.dataType == "DIRECTORY"){   //专题条目检索
+		if(!isDocumentFolder(node)){
+			if(!$("#noteEditor_td").is(":visible")){
+				showNotePage();
 			}
-			selectInfo.searchDirIds = strids;
-			selectInfo.subjectId = node.subjectId;
-		}else{
-			selectInfo.isDeleted = 1;   // 查询回收站条目
-			selectInfo.searchDirIds = dirId;
-			selectInfo.dirIds = node.id;
-			selectInfo.newEnable = false;
-		}
-		selectInfo.curMenu = node;
-		if(node.name != '文档资料'){
+			selectInfo = new SelectInfo();
+			var dirId = node.id.replace("_deleted", "");  // 回收站中的目录ID都加了 _deleted后缀
 			selectInfo.dirId = dirId;
-			showSearchDiv();
+			if(node.branchId != 'RECYCLEP' && node.branchId != 'RECYCLE'){//拼接所有子目录的id
+				var nodes = zTree_Menu.getNodesByParam("dataType", "DIRECTORY", node);
+				var ids = getSonIds(nodes);
+				var strids = node.id;
+				if(ids!=null){
+					strids = strids + ","+ids.join(",");
+				}
+				selectInfo.searchDirIds = strids;
+				selectInfo.subjectId = node.subjectId;
+			}else{
+				selectInfo.isDeleted = 1;   // 查询回收站条目
+				selectInfo.searchDirIds = dirId;
+				selectInfo.dirIds = node.id;
+				selectInfo.newEnable = false;
+			}
+			selectInfo.curMenu = node;
+			if(node.name != '文档资料'){
+				selectInfo.dirId = dirId;
+				showSearchDiv();
+			}
+		}else{
+			//处理文档类
+				if($("#noteEditor_td").is(":visible")){
+					hideNotePage();
+				}
+				currentDirId = node.id; 
+				dirAttachmentManage(node.subjectId);
 		}
 	}else if(node.dataType == 'RECYCLEP' || node.dataType == 'RECYCLE'){
 		if(!$("#noteEditor_td").is(":visible")){
@@ -217,8 +225,6 @@ function onNodeClickDo(e, treeId, node) {
 			var parentNode = zTree_Menu.getNodeByParam("id", "-102", zTree_Menu.getNodes()[2]);
 			zTree_Menu.selectNode(parentNode);
 		}
-		
-		
 		if($("#noteEditor_td").is(":visible")){
 			hideNotePage();
 		}
@@ -235,28 +241,17 @@ function onNodeClickDo(e, treeId, node) {
 			showNotePage();
 		}
 		showSearchDiv();
+	}else if(node.id == "addDirectory"){
+		//添加目录
+		var parentNode = node.getParentNode();
+		var newNode = {id:"",name:"新目录",icon:imgPath+"/tree/folder.png"};
+		newNode = zTree_Menu.addNodes(parentNode, newNode, true);
+		zTree_Menu.editName(newNode[0]);
 	}else{
 		selectInfo = new SelectInfo();
 		selectInfo.newEnable = false;
 	}
 	
-	//处理文档类
-	if(isDocumentFolder(node)){ 
-		//currentSubjectId = currentSubjectId==null?node.subjectId:currentSubjectId;
-		if($("#noteEditor_td").is(":visible")){
-			hideNotePage();
-		}
-		currentDirId = node.id; 
-		dirAttachmentManage(node.subjectId);
-	}
-	
-	//添加目录
-	if(node.id == "addDirectory"){
-		var parentNode = node.getParentNode();
-		var newNode = {id:"",name:"新目录",icon:imgPath+"/tree/folder.png"};
-		newNode = zTree_Menu.addNodes(parentNode, newNode, true);
-		zTree_Menu.editName(newNode[0]);
-	}
 }
 //个人标签  多人标签 消息标签 点击时候修改样式
 function changeCss(node){
@@ -549,10 +544,6 @@ function toAddSubject(subjectType){
 	hideRightMenu();
 }
 
-//鼠标移动到节点后添加标签所属条目
-function zTreeaddHoverDom(treeId, treeNode) {
-	
-}
 function onExpand(event, treeId, treeNode)  {
 	if(treeNode.dataType=='REMENBER'&&treeNode.open){
 		var nodes = treeNode.children;
