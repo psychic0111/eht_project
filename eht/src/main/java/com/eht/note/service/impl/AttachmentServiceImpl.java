@@ -1,5 +1,6 @@
 package com.eht.note.service.impl;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 
@@ -63,12 +64,17 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	@Override
 	@RecordOperate(dataClass=DataType.ATTACHMENT, action=DataSynchAction.DELETE, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
 	public void markDelAttachment(AttachmentEntity attachment) {
-		attachment.setDeleted(Constants.DATA_DELETED);
-		updateEntitie(attachment);
+		//attachment.setDeleted(Constants.DATA_DELETED);
+		//updateEntitie(attachment);
+		deleteAttachment(attachment);
 	}
 	
 	@Override
 	public void deleteAttachment(AttachmentEntity attachment) {
+		File file = new File(attachment.getFilePath() + File.separator + attachment.getFileName());
+		if(file.exists()){
+			file.delete();
+		}
 		delete(attachment);
 	}
 
@@ -78,10 +84,6 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 		deleteAttachment(attachment);
 	}
 
-	public void deleteAttachment(String noteId){
-		commonDao.executeHql("delete from AttachmentEntity where noteId = '"+noteId+"'");
-	}
-	
 	@Override
 	public AttachmentEntity getAttachment(Serializable id) {
 		return get(AttachmentEntity.class, id);

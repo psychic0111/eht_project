@@ -250,7 +250,7 @@ public class LogonController extends BaseController {
 					Date date = new Date();
 					msg.setCreateTime(date);
 					msg.setCreateTimeStamp(date.getTime());
-					msg.setCreateUser("SYSTEM");
+					msg.setCreateUser(null);
 					msg.setId(com.eht.common.util.UUIDGenerator.uuid());
 					msg.setUserIsRead(Constants.NOT_READ_OBJECT);
 					msg.setOperate(DataSynchAction.UPDATE.toString());
@@ -486,7 +486,7 @@ public class LogonController extends BaseController {
 			Date date = new Date();
 			msg.setCreateTime(date);
 			msg.setCreateTimeStamp(date.getTime());
-			msg.setCreateUser("SYSTEM");
+			msg.setCreateUser(null);
 			msg.setId(com.eht.common.util.UUIDGenerator.uuid());
 			msg.setUserIsRead(Constants.NOT_READ_OBJECT);
 			msg.setOperate(DataSynchAction.UPDATE.toString());

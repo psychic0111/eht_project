@@ -19,7 +19,7 @@
 	<com.eht.role.entity.Role>
 		<id>bd57b343e4054e5e80b366bf4c6d6842</id>
 		<roleName>ADMIN</roleName>
-		<description>超级管理员</description>
+		<description>管理员</description>
 		<roleType>2</roleType>
 		<deleted>0</deleted>
 		<createTime>2014-04-03 08:37:46.33 UTC</createTime>

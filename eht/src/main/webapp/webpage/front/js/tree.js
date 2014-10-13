@@ -81,18 +81,7 @@ function onNodeClick(e, treeId, node) {
 	 if(node.name == "我的标签" || node.name == "专题标签"){
 		 return false;
 	 }
-	 if(isNoteStats()){//判断是否编辑状态
-	   var submit = function (v, h, f) {
-		if (v == true){ 
-			onNodeClickDo(e, treeId, node); 
-		} 
-		return true;
-	   };
-		// 自定义按钮
-		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
-	 }else{
-		 onNodeClickDo(e, treeId, node);
-	 }
+	 onNodeClickDo(e, treeId, node);
 }
 
 //树节点click事件
@@ -102,26 +91,7 @@ function onNodeClickDo(e, treeId, node) {
 	var showD = true;
 
 	if(node.dataType == "SUBJECT"){   //专题条目检索
-		//-1：个人专题    -2
-		var subjectId = (node.id == '-1' || node.id == '-2')&&  node.children.length>0 ? node.children[0].id : node.id;
-		if(node!=null&&node.name=="多人专题"/* && node.children.length>0*/){
-			/*zTree_Menu.selectNode(node.children[0]);
-			zTree_Menu.expandNode(node.children[0],true);*/
-			if(node.children.length>0){
-				node=node.children[0];
-				subjectId = node.id;	
-			}
-			showD = false;
-		}
-		if(node!=null&&node.name=="个人专题"/* &&  node.children.length>0*/){
-			/*zTree_Menu.selectNode(node.children[0],false);
-			zTree_Menu.expandNode(node.children[0],true);*/
-			if(node.children.length>0){
-				node=node.children[0];
-				subjectId = node.id;	
-			}
-			showD = false;
-		}
+		var subjectId = node.id;
 		selectInfo = new SelectInfo();
 		selectInfo.curMenu = node;
 		selectInfo.subjectId = subjectId; 
@@ -316,22 +286,12 @@ function beforeNodeClickDo(treeId, node) {
 function nodeOnRightClick(e, treeId, node){
 	//鼠标右键事件
 	zTree_Menu.selectNode(node);
+	
 } 
 function nodeBeforeRightClick(treeId, node) {
-	if(isNoteStats()){//判断是否编辑状态
-		   var submit = function (v, h, f) {
-			if (v == true){ 
-				nodeBeforeRightClickDo(treeId, node); 
-				onclickAndBefore = false;
-			} 
-			return true;
-		};
-		// 自定义按钮
-		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
-	 }else{
-		 nodeBeforeRightClickDo(treeId, node);
-		 onclickAndBefore = true;
-	 }
+     nodeBeforeRightClickDo(treeId, node);
+	 onclickAndBefore = true;
+	 return true;
 }
 
 //鼠标注右键点击前, 准备菜单

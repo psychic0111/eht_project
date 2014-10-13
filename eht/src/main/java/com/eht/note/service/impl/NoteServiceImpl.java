@@ -36,6 +36,7 @@ import com.eht.common.util.MD5FileUtil;
 import com.eht.group.entity.Group;
 import com.eht.group.entity.GroupUser;
 import com.eht.group.service.GroupService;
+import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.note.entity.NoteUserEntity;
 import com.eht.note.entity.NoteVersionEntity;
@@ -46,6 +47,7 @@ import com.eht.resource.service.ResourceActionService;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.DirectoryServiceI;
+import com.eht.tag.service.TagServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
 import com.eht.webservice.util.DataSynchizeUtil;
@@ -71,6 +73,9 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	
 	@Autowired
 	private CommentServiceI commentService;
+	
+	@Autowired
+	private TagServiceI tagService;
 	
 	@Override
 	public List<NoteEntity> findNotesByIds(String[] ids) { 
@@ -157,28 +162,46 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 
 	@Override
 	public void deleteNote(NoteEntity note) {
-		attachmentService.deleteAttachment(note.getId());
+		// 删除条目附件
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), null);
+		for(AttachmentEntity attachment : attaList){
+			attachmentService.deleteAttachment(attachment);
+		}
+		
+		// 删除条目标签
+		tagService.deleteNoteTagByNoteId(note.getId());
+		//删除评论
 		commentService.deleteComments(note.getId());
-		delete(note);
+		
+		// 删除组和黑名单信息
 		Group g = groupService.findGroup(NoteEntity.class.getName(), note.getId());
 		if (g != null) {
 			groupService.removeGUByGroupId(g.getGroupId());
 			groupService.deleteGroup(g);
 		}
+		
+		//删除已读未读关系
+		deleteNoteUser(note.getId());
+		
+		delete(note);
 	}
-
+	
+	@Override
+	public void deleteNoteUser(String noteId) {
+		List<NoteUserEntity> list = findByProperty(NoteUserEntity.class, "noteId", noteId);
+		deleteAllEntitie(list);
+	}
+	
 	@Override
 	public void deleteNote(Serializable id) {
 		deleteNote(getNote(id));
 	}
 
 	public void deleteNoteByDir(Serializable dirId){
-		Object[] param = new Object[]{dirId};
-		super.executeHql("delete from AttachmentEntity  where noteId in (select id from NoteEntity n where n.dirId = ? ) ", param);
-		super.executeHql("delete from CommentEntity c  where noteId in (select id from NoteEntity n where n.dirId = ? ) ", param);
-		super.executeHql("delete from GroupUser where GroupId in (select g.id from Group g ,NoteEntity n  where  g.classPk = n.id and  n.dirId = ?) ",param);
-		super.executeHql("delete from Group g where classPk in(select id from NoteEntity n where n.dirId = ? )",param);
-		super.executeHql("delete from NoteEntity where dirId = ? ",param);
+		List<NoteEntity> noteList = findNotesByDir(dirId.toString());
+		for(NoteEntity note : noteList){
+			deleteNote(note);
+		}
 	}
 
 	

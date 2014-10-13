@@ -1,12 +1,11 @@
 package com.eht.message.controller;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -165,10 +164,12 @@ public class MessageController extends BaseController {
 	@RequestMapping(value="/front/sendMessag.dht")
 	public ModelAndView sendMessag(HttpServletRequest request) {
 		ModelAndView mv = new ModelAndView("front/message/messageList");
+		Long createTimeStamp=new Date().getTime();
 		AccountEntity user  = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		List<MessageEntity> msgList = messageService.findUserMessages(user.getId(), Constants.MSG_USER_TYPE, null, "createTime", "DESC", 5, 1);
+		List<MessageEntity> msgList = messageService.findUserMessages(user.getId(), Constants.MSG_USER_TYPE, null, "createTime", "DESC", 5, 0,createTimeStamp);
 		ModelMap mmap = new ModelMap();
 		mmap.put("msgList", msgList);
+		mmap.put("createTimeStamp", createTimeStamp);
 		mv.addAllObjects(mmap);
 		return mv;
 	}
@@ -181,9 +182,9 @@ public class MessageController extends BaseController {
 	@ResponseBody
 	public String messageMark(HttpServletRequest request) {
 		int fist=Integer.valueOf(request.getParameter("count"));
-		int page=(fist%5)+2;
+		Long createTimeStamp=Long.valueOf(request.getParameter("createTimeStamp"));
 		AccountEntity user  = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		List<MessageEntity> msgList = messageService.findUserMessages(user.getId(), Constants.MSG_USER_TYPE, null, "createTime", "DESC", 5, page);
+		List<MessageEntity> msgList = messageService.findUserMessages(user.getId(), Constants.MSG_USER_TYPE, null, "createTime", "DESC", 5, fist,createTimeStamp);
 		return JsonUtil.list2json(msgList);
 	}
 	
@@ -233,7 +234,10 @@ public class MessageController extends BaseController {
 		if(obj != null){
 			AccountEntity user = (AccountEntity) obj;
 			messageService.deleteUserMessage(messageId, user.getId());
-		
+			int count = messageService.countRecievedMessage(messageId);
+			if(count == 0){
+				messageService.deleteMessage(messageId);
+			}
 			return messageList(msgType, content, orderField, orderType, request, pageResult);
 		}
 		return new ModelAndView(new RedirectView("/center/login.dht", true));

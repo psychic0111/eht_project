@@ -58,12 +58,6 @@ public interface AttachmentServiceI extends CommonService{
 	public void deleteAttachment(Serializable id);
 	
 	/**
-	 * 删除某个条目的所有附件
-	 * @param noteId
-	 */
-	public void deleteAttachment(String noteId); 
-	
-	/**
 	 * 上传附件
 	 * @param attachment
 	 * @return

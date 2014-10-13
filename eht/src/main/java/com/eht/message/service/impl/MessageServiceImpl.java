@@ -35,10 +35,52 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 	
 	@Autowired
 	private AccountServiceI accountServiceI;
-
+	
+	@Override
+	public List<MessageEntity> findUserMessages(String userId, Integer msgType, String content, String orderField, String orderType, int pageSize, int page, long timestap) {
+		List<MessageUserEntity> list =findHql(" from MessageUserEntity m where m.userId=? and m.messageEntity.createTimeStamp<? ",new Object[]{userId,timestap}); 
+		if(list != null && !list.isEmpty()){
+			List<String> msgIds = new ArrayList<String>();
+			Map<String, Integer> map = new HashMap<String, Integer>();
+			for(int i=0;i<list.size();i++){
+				MessageUserEntity mu = list.get(i);
+				msgIds.add(mu.getMessageId());
+				//保存消息已读状态
+				map.put(mu.getMessageId(), mu.getIsRead());
+			}
+			DetachedCriteria dc = DetachedCriteria.forClass(MessageEntity.class);
+			dc.add(Restrictions.or(Restrictions.in("id", msgIds), Restrictions.eq("createUser", userId)));
+			if(msgType != null){
+				dc.add(Restrictions.eq("msgType", msgType));
+			}
+			if(content != null && !"".equals(content)){
+				dc.add(Restrictions.like("content", content, MatchMode.ANYWHERE));
+			}
+			dc.add(Restrictions.lt("createTimeStamp", timestap));
+			//排序
+			if(orderField != null && !"".equals(orderField)){
+				if(orderType != null && !"".equals(orderType)){
+					if(orderType.equals("DESC")){
+						dc.addOrder(Order.desc(orderField));
+					}else{
+						dc.addOrder(Order.asc(orderField));
+					}
+				}
+			}
+			
+			//分页查询
+			List<MessageEntity> msgList = pageList(dc, page, pageSize);
+			//设置是否已读
+			for(MessageEntity me : msgList){
+				me.setUserIsRead(map.get(me.getId()));
+			}
+			return msgList;
+		}
+		return null;
+	}
 	@Override
 	public List<MessageEntity> findUserMessages(String userId, Integer msgType, String content, String orderField, String orderType, int pageSize, int page) {
-		List<MessageUserEntity> list = findByProperty(MessageUserEntity.class, "userId", userId);
+		List<MessageUserEntity> list =findHql(" from MessageUserEntity where userId=? ",new Object[]{userId}); //findByProperty(.class, "userId", userId);
 		if(list != null && !list.isEmpty()){
 			List<String> msgIds = new ArrayList<String>();
 			Map<String, Integer> map = new HashMap<String, Integer>();
@@ -78,6 +120,23 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 			return msgList;
 		}
 		return null;
+	}
+	
+	/**
+	 * 查询消息接收人数量
+	 * @param userId
+	 * @param msgType
+	 * @param content
+	 * @return
+	 */
+	@Override
+	public int countRecievedMessage(String messageId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(MessageUserEntity.class);
+		dc.add(Restrictions.eq("messageId", messageId));
+		
+		int count = oConvertUtils.getInt((dc.getExecutableCriteria(getSession())
+				.setProjection(Projections.rowCount())).uniqueResult(), 0);
+		return count;
 	}
 	
 	@Override

@@ -43,10 +43,15 @@ function markMessage(){
 	});
 	var nodes = zTree_Menu.getNodesByFilter(findMsgNode);
 	for(var i = 0; i < nodes.length; i++){
-		nodes[i].name = nodes[i].name.substring(0,nodes[i].name.indexof('（')); 
-		zTree_Menu.updateNode(nodes[i]);
+		var index = nodes[i].name.indexOf('（');
+		if(index >= 0){
+			nodes[i].name = nodes[i].name.substring(0, index); 
+			zTree_Menu.updateNode(nodes[i]);
+		}
 	}
-	$("#noReadMsgNum").empty().append(0);
+	if(!!$("#noReadMsgNum").attr("id")){
+		$("#noReadMsgNum").empty().append(0);
+	}
 }
 //删除消息
 function deleteMessage(obj){
@@ -161,12 +166,15 @@ $(document).ready(function(){
 	                  			<c:if test="${msg.userIsRead == 1}"> 
 	                  				${msg.content}<br />
 	                  			</c:if>
+	                  			<c:if test="${msg.userIsRead == null}"> 
+	                  				${msg.content}<br />
+	                  			</c:if>
                   			</font>
                     		<span class="Font1"><fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss" value="${msg.createTime}" type="both"/></span>
                     	</td>
                     	<td width="80" align="center">
 	                  		<span class="others">
-	                    		<input class="Button_other1" onclick="deleteMessage(this)" type="button" name="del_btn" id="${msg.id }" value="删除" />
+	                    		<input <c:if test="${msg.creator.id == SESSION_USER_ATTRIBUTE.id}">class="Button_other2" disabled="disabled" </c:if> <c:if test="${msg.creator.id != SESSION_USER_ATTRIBUTE.id}">class="Button_other1"</c:if> onclick="deleteMessage(this)" type="button" name="del_btn" id="${msg.id }" value="删除" />
 	                   		</span>
 	              		</td>
                 	</tr>

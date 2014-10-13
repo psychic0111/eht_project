@@ -277,4 +277,10 @@ public interface NoteServiceI extends CommonService{
 	 * @return
 	 */
 	public long countNotesBySubjectUser(String subjectId, String userId);
+	
+	/**
+	 * 删除已读未读关系
+	 * @param noteId
+	 */
+	public void deleteNoteUser(String noteId);
 }

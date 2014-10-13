@@ -112,7 +112,7 @@ li.over {background-color: #bcd4ec;}
           <div class="left" style="margin-top:-5px;width:60%;">
           	<input id="noteTitleField" class="InputTxt3" type="text" value="${title}" name="title" style=" width:100%;line-height:29px;" maxlength="200">
           </div>
-          <div class="note_comment"><a href="#" onclick="toComment()">评论</a></div>
+          <div class="note_comment" onclick="toComment()"><a href="#">评论</a></div>
            <div class="clear"></div>
         </div> 
         <div class="title">

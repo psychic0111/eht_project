@@ -892,6 +892,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			}
 		}
 		MessageEntity  m=new MessageEntity();
+		 m.setId(UUIDGenerator.uuid());
 		 m.setContent( message);
 		 m.setCreateTime(new Date());
 		 m.setCreateUser(user.getId());

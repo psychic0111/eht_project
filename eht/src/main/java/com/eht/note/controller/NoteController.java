@@ -16,7 +16,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
@@ -48,6 +47,7 @@ import com.eht.common.util.JsonUtil;
 import com.eht.common.util.MD5FileUtil;
 import com.eht.common.util.TreeUtils;
 import com.eht.common.util.UUIDGenerator;
+import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
@@ -137,6 +137,7 @@ public class NoteController extends BaseController {
 				}
 				file = null;
 				System.gc();
+				//方法里直接删除附件了
 				attachmentService.markDelAttachment(attachment);
 			}
 		}
@@ -197,20 +198,27 @@ public class NoteController extends BaseController {
 			nodeEntity = noteService.getNote(noteid);
 			if (nodeEntity != null) {
 				dirId = nodeEntity.getDirId();
+			}else{
+				//如果没有node数据则新插入一条
+				nodeEntity = new NoteEntity();
+				nodeEntity.setId(noteid);
+				nodeEntity.setContent("");
+				nodeEntity.setSubjectId(subjectId);
+				this.saveNote(nodeEntity, noteTagId, request);
 			}
 		} else {
 			noteid = null;
 		}
-		//如果没有node数据则新插入一条
-		if(nodeEntity==null){
+		
+		/*if(nodeEntity==null){
 			nodeEntity = new NoteEntity();
 			nodeEntity.setId(noteid);
 			nodeEntity.setContent("");
 			nodeEntity.setSubjectId(subjectId);
 			this.saveNote(nodeEntity, noteTagId, request);
-		}
+		}*/
 		
-		dirId = dirId.equals("") ? null : dirId;
+		dirId = (dirId != null && dirId.equals("")) ? null : dirId;
 		String realPath = FilePathUtil.getFileUploadPath(nodeEntity, dirId);
 		try {
 			MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
@@ -294,7 +302,7 @@ public class NoteController extends BaseController {
 			byte[] b = new byte[length];
 			fis.read(b);
 
-			response.setHeader("Content-Disposition", "attachment; filename=\"" + java.net.URLEncoder.encode(fileName, "UTF-8") + "\"");
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + java.net.URLEncoder.encode(fileName, "gb2312") + "\"");
 			response.addHeader("Content-Length", "" + length);
 			OutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
 			outputStream.write(b);
@@ -692,7 +700,6 @@ public class NoteController extends BaseController {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		NoteEntity note = noteService.getNote(id);
 		if (deleted == 1) {
-			tagServiceI.deleteNoteTagByNoteId(id);
 			noteService.deleteNote(note);
 		} else {
 			note.setUpdateUser(user.getId());
@@ -730,30 +737,33 @@ public class NoteController extends BaseController {
 	@RequestMapping(value = "/front/loadNote.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String loadNote(String id, HttpServletRequest request) {
 		AccountEntity user = accountService.getUser4Session();
-		NoteEntity note = noteService.getNote(id);
-		if (!noteService.noteIsRead(id, user.getId())) {
-			noteService.noteRead(id, user.getId());
-		}
-		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,"current");
-		note.setAttachmentEntitylist(attaList);
-
-		String residential = noteService.getNoteResidential(note.getDirectoryEntity(), note.getSubjectEntity()); // 还是个人专题
 		Map<String, Object> map = new HashMap<String, Object>();
-		Map<String, String> actionMap = resourcePermissionService.findSubjectPermissionsByUser(user.getId(), note.getSubjectId(), note.getId());
-		//是否有更多
-		String isMore = "false";
-		if(attaList.size()>7){
-			isMore="true";
-			attaList.remove(attaList.size()-1);
-		}
+		if(id!=null&&!id.equals("")){
+			NoteEntity note = noteService.getNote(id);
+			if (!noteService.noteIsRead(id, user.getId())) {
+				noteService.noteRead(id, user.getId());
+			}
+			List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,"current");
+			note.setAttachmentEntitylist(attaList);
+			String residential = noteService.getNoteResidential(note.getDirectoryEntity(), note.getSubjectEntity()); // 还是个人专题
 		
-		map.put("type", note.getSubjectEntity().getSubjectType() + "");
-		map.put("note", note);
-		map.put("version", note.getVersion());
+			map.put("note", note);
+			map.put("version", note.getVersion());
+			map.put("attaList", attaList);
+			map.put("residential", residential);
+			String isMore = "false";
+			//是否有更多
+			if(attaList.size()>7){
+				isMore="true";
+				attaList.remove(attaList.size()-1);
+			}
+			map.put("isMore", isMore);
+		}
+		SubjectEntity subjectEntity= subjectService.get(SubjectEntity.class, request.getParameter("subjectId"));
+		Map<String, String> actionMap = resourcePermissionService.findSubjectPermissionsByUser(user.getId(),request.getParameter("subjectId"), id);
 		map.put("action", actionMap);
-		map.put("attaList", attaList);
-		map.put("residential", residential);
-		map.put("isMore", isMore);
+		map.put("type", subjectEntity.getSubjectType() + "");
+		map.put("id", id);
 		return JsonUtil.map2json(map);
 
 	}
@@ -845,7 +855,7 @@ public class NoteController extends BaseController {
 		ModelAndView mv = new ModelAndView("front/note/blackListNote");
 		String subjectid = request.getParameter("subjectid");
 		String nodeId = request.getParameter("nodeId");
-		SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, subjectid);
+		SubjectEntity subjectEntity = subjectService.getSubject(subjectid);
 		List<RoleUser> list = roleService.findSubjectUsers(subjectEntity.getId(), pageResult);
 		for (RoleUser roleUser : list) {
 			roleUser.setBlackList(groupService.checkNoteUser(roleUser.getUserId(), nodeId));

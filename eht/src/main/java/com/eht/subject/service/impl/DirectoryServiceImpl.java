@@ -191,24 +191,19 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	}
 	
 	@Override
-	public void deleteDirectory(String id) {
-		//删除目录的关联群组信息
-		super.executeHql("delete from GroupUser where GroupId in (select g.id from Group g  where g.classPk = ? ) ",new Object[]{id});
-		super.executeHql("delete from Group g   where  g.classPk  = ? ",new Object[]{id});
-		//删除条目
-		noteService.deleteNoteByDir(id);
+	public void deleteOnlyDirectory(String id) {
 		//删除目录
-		super.executeHql("delete from DirectoryEntity where id = ? ", new Object[]{id});
+		deleteOnlyDirectory(getDirectory(id));
 	}
 	
 	@Override
 	public void deleteOnlyDirectory(DirectoryEntity dir) {
-		delete(dir);
 		Group g = groupService.findGroup(DirectoryEntity.class.getName(), dir.getId());
 		if(g != null){
 			groupService.removeGUByGroupId(g.getGroupId());
 			groupService.deleteGroup(g);
 		}
+		delete(dir);
 	}
 
 	@Override

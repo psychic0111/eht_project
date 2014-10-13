@@ -37,10 +37,12 @@ function sendmessages(obj){
 	   	submit: function (v, h, f) {
 	            if (v == 1) {
 	              	AT.postFrm("addsendMessageForm",function(data){
-						if(data.success){  
+						if(data.success){ 
+						   document.getElementById("addsendMessageForm").reset(); 
 							MSG.alert('发送成功');
 						}
 					},true);
+					return false;
 	            } else{
 	            	
 	            }

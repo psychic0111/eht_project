@@ -59,7 +59,7 @@ public class MessageEntity implements java.io.Serializable {
   
 	private AccountEntity creator;
 	
-	@JsonIgnore    //getList查询转换为列表时处理json转换异常
+	//@JsonIgnore    //getList查询转换为列表时处理json转换异常
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "createUser", updatable=false, insertable=false)
 	public AccountEntity getCreator() {

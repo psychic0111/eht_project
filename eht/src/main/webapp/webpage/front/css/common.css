@@ -46,6 +46,7 @@ IMG {
 .Button5{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn5.png) bottom repeat-x; border:1px #c9823c solid; color:#fff; background-color:#e39c51}
 .Button6{cursor:pointer; padding:0px 12px; margin:0; height:28px; background:url(../images/bg_btn6.png) bottom repeat-x; border:1px #4a4a4a solid; color:#fff; background-color:#626262}
 .Button_other1{cursor:pointer; padding:0px 12px; margin:0; height:18px; color:#fff; background-color:#ed5466; border:none}
+.Button_other2{cursor:pointer; padding:0px 12px; margin:0; height:18px; color:#EDE0E0; background-color:#565555; border:none}
 
 textarea{border:1px #dadada solid;}
 

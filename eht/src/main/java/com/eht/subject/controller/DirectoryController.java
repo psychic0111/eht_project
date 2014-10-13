@@ -48,7 +48,7 @@ import com.eht.user.entity.AccountEntity;
 public class DirectoryController extends BaseController {
 
 	@Autowired
-	private NoteServiceI noteServiceIMpl;
+	private NoteServiceI noteService;
 	@Autowired
 	private DirectoryServiceI directoryService;
 	
@@ -168,7 +168,9 @@ public class DirectoryController extends BaseController {
 	 */
 	@RequestMapping(value="/front/truncateDirectory.dht")
 	public @ResponseBody String truncateDirectory(String id, HttpServletRequest request){
-		directoryService.deleteDirectory(id.replace("_deleted", ""));
+		String dirId = id.replace("_deleted", "");
+		noteService.deleteNoteByDir(dirId);
+		directoryService.deleteOnlyDirectory(dirId);
 		return "true";
 	}
 	
@@ -189,14 +191,14 @@ public class DirectoryController extends BaseController {
 			dirList = directoryService.findDeletedDirs(user.getId(), Constants.SUBJECT_TYPE_P);
 			if(dirList != null && !dirList.isEmpty()){
 				for(DirectoryEntity dir : dirList){
-					directoryService.deleteDirectory(dir.getId());
+					directoryService.deleteOnlyDirectory(dir.getId());
 				}
 			}
 			//找到个人专题已经删除的节点
-			noteList = noteServiceIMpl.findDeletedNotes(user.getId(), Constants.SUBJECT_TYPE_P);
+			noteList = noteService.findDeletedNotes(user.getId(), Constants.SUBJECT_TYPE_P);
 			if(noteList != null && !noteList.isEmpty()){
 				for(NoteEntity note : noteList){
-					noteServiceIMpl.deleteNote(note);
+					noteService.deleteNote(note);
 				}
 			}
 		}else{
@@ -205,16 +207,16 @@ public class DirectoryController extends BaseController {
 			dirList = directoryService.findDeletedDirs(user.getId(), subjectId);
 			if(dirList != null && !dirList.isEmpty()){
 				for(DirectoryEntity dir : dirList){
-					directoryService.deleteDirectory(dir.getId());
+					directoryService.deleteOnlyDirectory(dir.getId());
 				}
 			}
 			try {
 				int subid = Integer.parseInt(subjectId);
 				//找到指定专题下已经删除的节点
-				noteList = noteServiceIMpl.findDeletedNotes(user.getId(), subid);
+				noteList = noteService.findDeletedNotes(user.getId(), subid);
 				if(noteList != null && !noteList.isEmpty()){
 					for(NoteEntity note : noteList){
-						noteServiceIMpl.deleteNote(note);
+						noteService.deleteNote(note);
 					}
 				}
 			} catch (NumberFormatException e) {
@@ -311,8 +313,9 @@ public class DirectoryController extends BaseController {
 	public AjaxJson del(DirectoryEntity directory, HttpServletRequest request) {
 		AjaxJson j = new AjaxJson();
 		directory = systemService.getEntity(DirectoryEntity.class, directory.getId());
-		directory.setDeleted(Constants.DATA_DELETED);
-		directoryService.saveOrUpdate(directory);
+		//删除条目
+		noteService.deleteNoteByDir(directory.getId());
+		directoryService.deleteOnlyDirectory(directory);
 		message = "目录信息删除成功";
 		systemService.addLog(message, Globals.Log_Type_DEL, Globals.Log_Leavel_INFO);
 		j.setMsg(message);

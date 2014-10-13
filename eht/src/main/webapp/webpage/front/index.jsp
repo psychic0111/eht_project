@@ -4,7 +4,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
 <%@ page import="com.eht.subject.entity.SubjectEntity"%>
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10"/>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>e划通</title>  
 <%@  include file="/webpage/front/include/front_common.jsp" %> 
@@ -176,7 +176,7 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
         	<div class="rightMenu" id="treeRightMenu">
         		<ul id="treeRightMenu_ul_subject">
        				<li id="treeRightMenu_add_dir" onclick="addChildDir()">新建目录</li>
-       				<li id="treeRightMenu_manage_subject" onclick="toAddSubject()">新建专题</li>
+       				<li id="-1" onclick="subjectManage(this)">新建专题</li>
        				<li id="treeRightMenu_delete_subject" onclick="deleteNode()">删除</li>
         		</ul>
         		<ul id="treeRightMenu_ul_directory">
@@ -427,13 +427,6 @@ function hideRightMenu(){
 }
 
 function isShareSubject(node){
-	if(node.level == 0 && node.id == '<%=Constants.SUBJECT_PID_P%>'){
-		return null;
-	}
-	
-	if(node.level == 0 && node.id == '<%=Constants.SUBJECT_PID_M%>'){
-		return node.children[0];
-	}
 	var subjectNode = null;
 	if(node.dataType == 'SUBJECT'){
 		subjectNode = node;
@@ -445,8 +438,7 @@ function isShareSubject(node){
 		subjectNode = node.getParentNode();
 	}else if(node.dataType == 'REMENBER'){
 		subjectNode = node.getParentNode();
-	}
-	else{
+	}else{
 		return null;
 	}
 	

@@ -39,7 +39,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * 删除目录
 	 * @param id
 	 */
-	public void deleteDirectory(String id);
+	public void deleteOnlyDirectory(String id);
 	/**
 	 * 删除目录
 	 * @param dir

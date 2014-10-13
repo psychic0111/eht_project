@@ -38,7 +38,7 @@
 				</c:if>
 				<li style="width:100%;">
 				<div class="title" style="font-size:16px;">
-					<a href="#" onclick="viewNoteclick('${note.id}')">
+					<a href="#" onclick="viewNoteclick('${note.id}','${note.subjectId}')">
 						<img src="${imgPath}/note.png" />
 						<c:choose>
     						<c:when test="${fn:length(note.title) > 15}">
@@ -55,7 +55,7 @@
 					<input type="hidden" name="id" value="${note.id }"/>
 				</div>
 				<div class="contents" style="word-wrap:break-word;">
-					<a href="#" onclick="viewNoteclick('${note.id}')">
+					<a href="#" onclick="viewNoteclick('${note.id}','${note.subjectId}')">
 						<div class="txts">
 							${note.summary}
 							<br/>

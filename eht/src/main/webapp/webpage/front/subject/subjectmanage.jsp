@@ -68,6 +68,10 @@
 	}
 
 	function toLeadingSuject(){
+		$("#subject_import").attr("class", "Button3");
+		$("#subject_m").attr("class", "Button4");
+		$("#subject_p").attr("class", "Button4");
+		
 		url = "${webRoot}/subjectController/front/leadingSuject.dht";
 		AT.load("subject_list",url,function() {});		
 	}
@@ -101,9 +105,11 @@ function toSujectList(subjectType){
 	if(subjectType == 1){
 		$("#subject_p").attr("class", "Button3");
 		$("#subject_m").attr("class", "Button4");
+		$("#subject_import").attr("class", "Button4");
 	}else if(subjectType == 2){
 		$("#subject_m").attr("class", "Button3");
 		$("#subject_p").attr("class", "Button4");
+		$("#subject_import").attr("class", "Button4");
 	}
 	var url = webRoot+"/subjectController/front/subjectList.dht?pageNo=1&pageSize=20&subjectType=" + subjectType;
 	AT.load("subject_list", url, function(){});

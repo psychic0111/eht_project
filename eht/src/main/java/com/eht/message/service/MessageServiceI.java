@@ -27,6 +27,14 @@ public interface MessageServiceI extends CommonService{
 	 * @return
 	 */
 	public List<MessageEntity> findUserMessages(String userId, Integer msgType, String content, String orderField, String orderType, int pageSize, int page);
+	
+	
+	/**
+	 * 查询用户消息
+	 * @return
+	 */
+	public List<MessageEntity> findUserMessages(String userId, Integer msgType, String content, String orderField, String orderType, int pageSize, int page,long timestap);
+	
 	/**
 	 * 根据类型获取用户消息数量
 	 * @param userId
@@ -106,4 +114,13 @@ public interface MessageServiceI extends CommonService{
 	 * @param targetUser
 	 */
 	public List<MessageEntity> findUserNoteMessages(String targetUser);
+	
+	/**
+	 * 查询消息接收人数量
+	 * @param userId
+	 * @param msgType
+	 * @param content
+	 * @return
+	 */
+	public int countRecievedMessage(String messageId);
 }
