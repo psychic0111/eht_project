@@ -35,11 +35,11 @@
 <script type="text/javascript" src="${frontPath}/js/plugins/messages_zh.js"></script>
 <script type="text/javascript" src="${frontPath}/js/plugins/additional-methods.min.js"></script>
 <script type="text/javascript" src="${webRoot}/plug-in/My97DatePicker/WdatePicker.js"></script>
-<script type="text/javascript" src="${frontPath}/js/jquery.ztree.all-3.5.js"></script>
+<script type="text/javascript" src="${frontPath}/js/jquery.ztree.all-3.5.min.js"></script>
 <script type="text/javascript" src="${frontPath}/js/easydialog.js"></script>
 <script type="text/javascript" src="${frontPath}/js/userAutoTips.js"></script>
 <script type="text/javascript" src="${frontPath}/js/json2.js"></script>
-<script type="text/javascript" src="${frontPath}/js/jBox/jquery.jBox.src.js"></script>
+<script type="text/javascript" src="${frontPath}/js/jBox/jquery.jBox-2.3.min.js"></script>
 
 <script type="text/javascript"  >
 var webRoot = "${webRoot}";
@@ -243,4 +243,5 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 		img.attr("src", '${webRoot}/uptem/user.png');
 		img.attr("onerror", null);
 	}
+	
 </script> 

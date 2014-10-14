@@ -201,6 +201,8 @@ li.over {background-color: #bcd4ec;}
 	<input type="hidden" name="prevTrIndex" id="prevTrIndex" value="-1" />    
 </div>
 <div id="divhiden" style="display:none;"></div>
+
+<script type="text/javascript" charset="utf-8" src="${frontPath}/js/plugins/jquery.wresize.js"></script>
 <script>
 function reloadEditor(){
 	var hidden = false;
@@ -222,22 +224,28 @@ function reloadEditor(){
 	}
 }
 
-$(document).ready(function() {
-	showLoading_edit(); 
-	if(editorheight==null){
-		editorheight = document.body.clientHeight;
-	}
+function setNoteEditorHeight(){
+	editorheight = document.documentElement.clientHeight;
 	var frameHeight = editorheight - 278;
 	editorheight = frameHeight - $("#edui1_toolbarbox").outerHeight() - 54;
 	if(UE.browser.ie){
 		editorheight = editorheight -10;
 	}
-	editorWidth = $("#notes_new").width() - 4; 
-	noteEditor = UE.getEditor('note_editor', {initialFrameWidth:editorWidth, initialFrameHeight:editorheight,autoHeightEnabled:false});
+	editorWidth = $("#notes_new").width() - 4;
+	if(frameHeight <= 0){
+		frameHeight = 35;
+	}
+	return {editorWidth : editorWidth, editorheight : editorheight, frameHeight : frameHeight};
+}
+
+$(document).ready(function() {
+	showLoading_edit(); 
+	var obj = setNoteEditorHeight();
+	noteEditor = UE.getEditor('note_editor', {initialFrameWidth:obj.editorWidth, initialFrameHeight:obj.editorheight,autoHeightEnabled:false});
 	noteEditor.addListener("ready", function(){
 		noteEditor.hide();
 	});
-	$("#parentHtmlViewDiv").height(frameHeight);
+	$("#parentHtmlViewDiv").height(obj.frameHeight);
 	//$("#htmlViewFrame").height(editorheight);
 	//$("#notes_new").height($("#right_index").height()+100);
 	var downloadPath = webRoot+"/noteController/front/downloadNodeAttach.dht";
@@ -272,5 +280,17 @@ function toCommentDo(){
 		enableEditNote();
 	}
 	$("#pinglun").focus();
+}
+
+//窗口大小改变事件
+var resizeId;
+$(window).wresize(function(){
+	window.clearTimeout(resizeId);
+	resizeId = window.setTimeout('setNotePageHeight();', 500);
+});
+function setNotePageHeight(){
+	var obj = setNoteEditorHeight();
+	$("#parentHtmlViewDiv").height(obj.frameHeight);
+	setHtmlDivHeight();
 }
 </script>

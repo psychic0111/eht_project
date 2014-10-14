@@ -99,6 +99,10 @@ function togComment(){
 //编辑条目按钮事件
 function enableEditNote(){
 	if($("#note_edit").hasClass("Button4")){
+		var source=noteEditor.queryCommandState( 'source' );
+		if(source==1){
+			noteEditor.execCommand( 'source');
+		}
 		noteEditor.setContent($("#divhiden").text());
 		$("#htmlViewFrame").contents().find('body').html("");
 		$("#selectDir").show();

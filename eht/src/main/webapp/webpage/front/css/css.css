@@ -230,6 +230,15 @@ color:#002e68}
 	border:1px #d5d5d5 solid;
 	font-size:12px;
 }
+
+.mainer_right .right_index .notes .notes_list li .cur_content{
+	background-color: beige;
+}
+
+.mainer_right .right_index .notes .notes_list li .cur_title{
+	border-bottom:1px solid #C5AAE3;
+}
+
 .mainer_right .right_index .notes .notes_list li .contents .txts{
 	padding-left:10px;
 	border-left:5px #d9d9d9 solid;

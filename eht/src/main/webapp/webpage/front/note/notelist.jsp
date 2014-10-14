@@ -37,9 +37,9 @@
 					<c:set var="first" value="false"></c:set>
 				</c:if>
 				<li style="width:100%;">
-				<div class="title" style="font-size:16px;">
+				<div class="title" id="title_${note.id}" style="font-size:15px;">
 					<a href="#" onclick="viewNoteclick('${note.id}','${note.subjectId}')">
-						<img src="${imgPath}/note.png" />
+						<img src="${imgPath}/note2.png" style="max-height:16px;"/>
 						<c:choose>
     						<c:when test="${fn:length(note.title) > 15}">
     							<c:out value="${fn:substring(note.title, 0, 15)}......" />
@@ -54,7 +54,7 @@
 					</span>
 					<input type="hidden" name="id" value="${note.id }"/>
 				</div>
-				<div class="contents" style="word-wrap:break-word;">
+				<div class="contents" id="content_${note.id}" style="word-wrap:break-word;">
 					<a href="#" onclick="viewNoteclick('${note.id}','${note.subjectId}')">
 						<div class="txts">
 							${note.summary}
@@ -82,10 +82,14 @@
 	</div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){
-	var height = document.body.clientHeight-190;
+function initScrollBar(){
+	var height = $("#noteList_div").height() - 10;//document.documentElement.clientHeight;//document.body.clientHeight;
 	$("#scrollbar1").height(height);
-	$('#scrollbar1').tinyscrollbar({wheelSpeed:300,trackSize:height});
+}
+$(document).ready(function(){
+	var height = $("#noteList_div").height() - 10;//document.documentElement.clientHeight;//document.body.clientHeight;
+	$("#scrollbar1").height(height);
+	var b = $('#scrollbar1').tinyscrollbar({wheelSpeed:300,size:height});
 	
 	if($("#note_deleted").val()==1){
 		$("span.recycle_png").show();
@@ -104,5 +108,12 @@ $(document).ready(function(){
 			}
 		},false);
 	});
+});
+
+//窗口大小改变事件
+var rId;
+$(window).wresize(function(){
+	//window.clearTimeout(rId);
+	//rId = window.setTimeout('initScrollBar();', 1000);
 });
 </script>

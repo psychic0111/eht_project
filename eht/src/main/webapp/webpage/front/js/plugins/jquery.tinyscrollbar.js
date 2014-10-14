@@ -80,7 +80,7 @@
             var list = $("#contentListUl > li");
             $(list).each(function(i, item){
             	var h = item.offsetHeight;
-            	totalHeight += (h + 35);   //li样式margin-bottom:15px
+            	totalHeight += (h + 48);   //li样式margin-bottom:15px
             });
             this.contentSize = totalHeight;
             this.contentRatio = this.viewportSize / this.contentSize;
@@ -139,6 +139,7 @@
             $(window).resize(function()
             {
                 self.update("relative");
+                //self.update("");
             });
 
             if(self.options.wheel && window.addEventListener)

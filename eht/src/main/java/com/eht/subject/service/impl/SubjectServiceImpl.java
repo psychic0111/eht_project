@@ -1224,11 +1224,16 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					}
 					if (noteEntity.getTagId() != null) {
 						if (!noteEntity.getTagId().equals("")) {
+							boolean savetagId=false;
 							for (TagEntity tagEntity : tagList) {
 								if (tagEntity.getOldId().equals(
 										noteEntity.getTagId())) {
+									savetagId=true;
 									noteEntity.setTagId(tagEntity.getId());
 								}
+							}
+							if(!savetagId){
+								noteEntity.setTagId(null);
 							}
 						} else {
 							noteEntity.setTagId(null);

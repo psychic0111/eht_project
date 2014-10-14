@@ -555,10 +555,6 @@ public class SubjectController extends BaseController {
 				}
 				mv.addObject("linkname", "登录");
 				mv.addObject("linkpath", "webpage/login.jsp");
-				//accountEntity.setStatus(Constants.ENABLED);
-			    //session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, accountEntity);
-				//ClientManager.getInstance().addSession(session.getId(), session);
-				// 跳转到用户主页面
 				return mv;
 			}
 		} else {

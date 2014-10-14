@@ -4,7 +4,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
 <%@ page import="com.eht.subject.entity.SubjectEntity"%>
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>e划通</title>  
 <%@  include file="/webpage/front/include/front_common.jsp" %> 
@@ -205,12 +205,12 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
         	</div>
         </div>
         </td>
-      <td class="Fold" style="text-align:center;">
-        <div style="height:100%;position:absolute;top:210px;cursor:pointer;" onclick="hideTreeMenu()">
-        	<img id="hideTree_img" src="<%=imgPath %>/button_fold.png" width="8" height="110" />
-        	</div>
+      <td class="Fold" style="text-align:center;min-width:8px;">
+        <div id="switchDiv" style="height:100%;cursor:pointer;border:2px solid #9CD7D0;border-radius:3px;" onclick="hideTreeMenu()">
+        	<img id="hideTree_img" src="<%=imgPath %>/button_fold.png" width="8" height="110"/>
+        </div>
       </td>
-      <td id="iframepage" valign="top" class="mainer_right" style="width:350px;">
+      <td id="iframepage" valign="top" class="mainer_right" style="width:350px;min-width:350px;">
         <!-- Begin mainer_index-->
         <!-- End mainer_index-->
       </td>
@@ -250,6 +250,7 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
 </div>
 <jsp:include page="./include/footer.jsp" />
 
+<script type="text/javascript" charset="utf-8" src="${frontPath}/js/plugins/jquery.wresize.js"></script>
 <script type="text/javascript">
 //构造左边整棵树 
 //selectNode1 需要默认选中的一级节点的序号 0=个人专题 1=多人专题 3=消息中心
@@ -477,7 +478,7 @@ function hideTreeMenu(){
 	}else{
 		$("#hideTree_img").attr("src", "${imgPath}/button_fold2.png");
 	}
-	editorWidth = $("#notes_new").width()-20; 
+	editorWidth = $("#notes_new").width(); 
 	reloadEditor();
 }
 
@@ -496,14 +497,21 @@ function showNotePage(){
 	$("#noteEditor_td").show();
 }
 
-//打开页面 加载树
-$(document).ready(function(){
+function setWindowHeight(){
 	var contentHeight = (document.documentElement.clientHeight - 72);
 	/* if(UE.browser.ie){
 		contentHeight = contentHeight - 0;
 	} */
 	document.getElementById("mainBody").style.height = contentHeight + "px";
 	document.getElementById("mainTreeDiv").style.height = contentHeight + "px";
+	//$("#switchDiv").css("top", (contentHeight / 2) + "px");
+	$("#right_index_mid").height(contentHeight);
+	$("#noteList_div").height(contentHeight + 100);
+}
+
+//打开页面 加载树
+$(document).ready(function(){
+	setWindowHeight();
 	rightMenu = $("#treeRightMenu").html();
 	buildMainMenu(0,null,true);
 	periodId = setInterval(getNoteMessage, msgPeriod);
@@ -511,6 +519,13 @@ $(document).ready(function(){
 
 //专题导出进度任务句柄
 var actionSchedule=null;
+
+//窗口大小改变事件
+var resizeTimeoutId;
+$(window).wresize(function(){
+	window.clearTimeout(resizeTimeoutId);
+    resizeTimeoutId = window.setTimeout('setWindowHeight();', 200);
+});
 </script>
 </body>
 </html>
