@@ -24,7 +24,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>专题管理</title>
+<title>附件信息</title>
 <!-- 附件上传 -->
 <link rel="stylesheet" type="text/css" href="<%=frontPath %>/js/uploadify3/uploadify.css"/>
 <script type="text/javascript" src="<%=frontPath %>/js/uploadify3/jquery.uploadify.js"></script>
@@ -84,6 +84,10 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 			});
 		});
 	 
+	// 关闭分享、黑名单窗口
+	if(!!$("#easyDialogWrapper").attr("id")){
+		$("#easyDialogWrapper").remove();
+	}
 	/**上传完之后刷新列表页面**/
 	function refresh_wdzl(){
 		var url="${webRoot}/subjectController/front/dirAttaManage.dht?subjectId=${subjectId}&dirId=${dirId}&ispage=true";

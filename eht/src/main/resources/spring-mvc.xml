@@ -160,6 +160,7 @@
 						<value>/center/checkuser.dht</value>
 						<value>/center/checkemail.dht</value>
 						<value>/center/register.dht</value>
+						<value>/noteController/front/uploadNodeAttach.dht</value>
 						<value>/service/**</value>
 					</list>
 				</property>

@@ -35,11 +35,11 @@ function markMessage(){
 	var param = $("#messageListForm").serialize();
 	var url = "${webRoot}/messageController/front/messageMark.dht";
 	AT.post(url, param, function(data){
-		var ary = $(".msgContent");
+		/* var ary = $(".msgContent");
 		for(var i = 0; i < ary.length; i++){
 			var obj = $(ary[i]).text();
 			$(ary[i]).text(obj);
-		}
+		} */
 	});
 	var nodes = zTree_Menu.getNodesByFilter(findMsgNode);
 	for(var i = 0; i < nodes.length; i++){

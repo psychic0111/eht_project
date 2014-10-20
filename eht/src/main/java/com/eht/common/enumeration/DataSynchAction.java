@@ -17,6 +17,21 @@ public enum DataSynchAction {
 	UPDATE,
 	
 	/**
+	 * 同步添加或更新数据
+	 */
+	CREATEORUPDATE,
+	
+	/**
+	 * 同步还原数据
+	 */
+	RESTORE,
+	
+	/**
+	 * 同步更新数据
+	 */
+	BAN,
+	
+	/**
 	 * 同步删除数据
 	 */
 	DELETE,

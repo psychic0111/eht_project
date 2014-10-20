@@ -11,7 +11,7 @@
 <script type="text/javascript">
 //分页
 function doPage(ths,pageNo,pageSize){
-	AT.load("datadiv","${webRoot}/subjectController/front/dirAttaManage.dht?dirId=${dirId}&pageNo="+pageNo+"&pageSize="+pageSize+"&ispage=true",function() {});
+	AT.load("datadiv","${webRoot}/subjectController/front/dirAttaManage.dht?subjectId=${subjectId}&dirId=${dirId}&pageNo="+pageNo+"&pageSize="+pageSize+"&ispage=true",function() {});
 }
 function removeCurrAttachment(obj){
 	var submit = function (v, h, f) {

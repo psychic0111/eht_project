@@ -364,8 +364,9 @@ public class MessageServiceImpl extends CommonServiceImpl implements MessageServ
 			
 			DetachedCriteria deta = DetachedCriteria.forClass(MessageEntity.class);
 			deta.add(Restrictions.in("id", msgIds));
-			deta.add(Restrictions.eq("msgType", Constants.MSG_SYSTEM_TYPE));
-			deta.add(Restrictions.eq("className", SynchDataCache.getDataClass(DataType.NOTE.toString()).getName()));
+			/*deta.add(Restrictions.eq("msgType", Constants.MSG_SYSTEM_TYPE));
+			deta.add(Restrictions.eq("className", SynchDataCache.getDataClass(DataType.NOTE.toString()).getName()));*/
+			deta.addOrder(Order.asc("msgType"));
 			
 			List<MessageEntity> msgList = findByDetached(deta);
 			return msgList;

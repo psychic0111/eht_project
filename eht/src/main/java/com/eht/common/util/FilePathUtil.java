@@ -2,6 +2,7 @@ package com.eht.common.util;
 
 import java.io.File;
 
+import org.jeecgframework.core.util.PropertiesUtil;
 import org.jeecgframework.core.util.StringUtil;
 
 import com.eht.note.entity.AttachmentEntity;
@@ -34,7 +35,9 @@ public class FilePathUtil {
 	}
 	
 	public static String getFileUploadPath(NoteEntity note, String dirId){
-		StringBuilder sb = new StringBuilder(webRootPath + "upload");
+		PropertiesUtil p = new PropertiesUtil("sysConfig.properties");
+		String rootPath = p.readProperty("note.attachment.path");
+		StringBuilder sb = new StringBuilder(rootPath);
 		
 		String subjectId = null;
 		if(note != null){

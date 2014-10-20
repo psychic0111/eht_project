@@ -160,7 +160,7 @@ public class SubjectController extends BaseController {
 			pageResult.setPageSize(10);
 		}
 		// pageResult.setPageSize(Constants.PER_PAGE_COUNT);
-		if (pageResult != null && pageResult.getPageSize() > 10) {
+		if (pageResult != null && pageResult.getPageSize() != 10) {
 			pageResult.setPageSize(10);
 		}
 		List<AttachmentEntity> attList = attachmentService.findAttachmentsByDir(subjectId, dirId, pageResult.getPageNo(), pageResult.getPageSize());

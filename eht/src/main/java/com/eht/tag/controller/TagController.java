@@ -87,7 +87,7 @@ public class TagController extends BaseController {
 	public @ResponseBody String deleteTag(String id, HttpServletRequest request){
 		try{
 			TagEntity tagOld = tagService.get(TagEntity.class, id);
-			tagService.deleteTag(tagOld);
+			tagService.deleteTagAll(tagOld);
 			return "true";
 		}catch(Exception e){
 			e.printStackTrace();

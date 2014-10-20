@@ -65,7 +65,7 @@ function getNoteMessage(){
 						}
 					};
 					
-					$.jBox.messager(data[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+data[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>', "系统通知", 2000, options
+					$.jBox.messager(data[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+data[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>', "新消息", 2000, options
 					);
 					
 				}
@@ -263,7 +263,7 @@ function noteblacklist(){
 		MSG.alert("请选择条目!");
 		return false;
 	}
-	 var params = {'nodeId':note_id,"subjectid":$('#noteForm_subjectId').val()};
+	var params = {'nodeId':note_id,"subjectid":$('#noteForm_subjectId').val()};
 	 AT.post(webRoot+"/noteController/front/blackListNote.dht",params,function(data){
 		 easyDialog.open({
 				container : {

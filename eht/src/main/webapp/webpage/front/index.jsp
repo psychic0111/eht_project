@@ -216,10 +216,6 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
       </td>
       <td id="noteEditor_td" class="mainer_right" valign="top" align="left">
       	<!-- Begin notes_new-->
-		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.config.js"></script>
-		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/ueditor.all.min.js"> </script>
-		<script type="text/javascript" charset="utf-8" src="${frontPath}/js/ueditor/lang/zh-cn/zh-cn.js"></script>
-		
 		<!-- 附件上传 -->
 		<link rel="stylesheet" type="text/css" href="<%=frontPath %>/js/uploadify3/uploadify.css"/>
 		<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/jquery.uploadify.js"></script>

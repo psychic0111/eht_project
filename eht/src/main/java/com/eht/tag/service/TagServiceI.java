@@ -149,4 +149,13 @@ public interface TagServiceI extends CommonService{
 	 * @return
 	 */
 	public  long findCoutNoteforRemenber(String subejectId,String userId);
+
+	/**
+	 * 查询子标签
+	 * @param parentId
+	 * @param tagList  返回结果集合
+	 */
+	public void findChildTagsByParentId(String parentId, List<TagEntity> tagList);
+
+	public void deleteTagAll(TagEntity parentTag);
 }

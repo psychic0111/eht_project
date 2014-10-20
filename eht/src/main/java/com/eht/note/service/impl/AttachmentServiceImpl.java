@@ -204,7 +204,7 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 		dc.setProjection(pList);
 		dc.setResultTransformer(Transformers.aliasToBean(AttachmentEntity.class));*/
 		
-		//dc.addOrder(Order.desc("a.directoryId"));
+		dc.addOrder(Order.desc("a.noteId"));
 		dc.addOrder(Order.desc("a.createTime"));
 		//分页查询
 		int firstRow = (firstResult - 1) * maxResult;
@@ -213,10 +213,10 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 	@Override
 	public Long findAttachmentsByDirCount(String subjectId, String directoryId) {
-		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
+		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class, "a");
 		dc.createCriteria("noteEntity", "n", JoinType.LEFT_OUTER_JOIN);
-		Criterion criterion = Restrictions.and(Restrictions.isNull("directoryId"), Restrictions.eq("n.subjectId", subjectId));
-		Criterion dirCriterion = Restrictions.eq("directoryId", directoryId); 
+		Criterion criterion = Restrictions.and(Restrictions.isNotNull("a.noteId"), Restrictions.eq("n.subjectId", subjectId));
+		Criterion dirCriterion = Restrictions.eq("a.directoryId", directoryId);
 		
 		dc.add(Restrictions.or(criterion, dirCriterion));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));

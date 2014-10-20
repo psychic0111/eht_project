@@ -56,7 +56,7 @@ function searchNotes(deleted,unloadfirst,undir){
 	if(!dirId){
 		dirId = '';
 	}
-	if(undir){
+	if(undir&&dirId!='recycle_personal'){
 		dirId = '';
 	}
 	if(!tagId){
@@ -107,18 +107,7 @@ var tagTreeSetting = {
 	}; 
 
 function onTagClick() {
-	 if(isNoteStats()){//判断是否编辑状态
-		   var submit = function (v, h, f) {
-			if (v == true){ 
-				onTagClickDo(); 
-			} 
-			return true;
-		};
-		// 自定义按钮
-		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
-	 }else{
 		 onTagClickDo();
-	 }
 }
 
 //点击标签事件
@@ -128,19 +117,18 @@ function onTagClickDo(){
 	var v = nodes[0].name;
 	var tagObj = $("#tagSelect");
 	tagObj.attr("value", v);
-	
+	var tagIds = [];
 	//找到所有叶标签
 	var leafNodes = [];
 	if(!nodes[0].isParent){
-		leafNodes[0] = nodes[0];
+		tagIds[0] = nodes[0].id;
 	}else{
+		tagIds[0] = nodes[0].id;
 		leafNodes = zTree.getNodesByParam("isParent", false, nodes[0]);
+		for (var i=0;i<leafNodes.length; i++) {
+			tagIds[i+1] = leafNodes[i].id;
+		}
 	}
-	var tagIds = [];
-	for (var i=0, l=leafNodes.length; i<l; i++) {
-		tagIds[i] = leafNodes[i].id;
-	}
-	
 	$("#note_tagId").val(tagIds.join(","));
 	searchNotes();
 	hideM();
@@ -207,6 +195,10 @@ function viewNoteclickDo(id,subjectId){
 function viewNote(id,subjectId){
 	showLoading_edit();
 	clearAttaMore();
+	// 关闭分享、黑名单窗口
+	if(!!$("#easyDialogWrapper").attr("id")){
+		$("#easyDialogWrapper").remove();
+	}
 	AT.post(webRoot+"/noteController/front/loadNote.dht?id=" + id+"&subjectId=" + subjectId, null,function(data) {
 		if (data['id'] == null || data['id'] == ''){
 				$("#note_new").show();
@@ -233,6 +225,7 @@ function viewNote(id,subjectId){
 			}
 			var node = zTree_Menu.getSelectedNodes()[0];
 			if(node.branchId == 'RECYCLE' || node.dataType == 'RECYCLE' || node.branchId == 'RECYCLEP' || node.dataType == 'RECYCLEP'){ //回收站下
+				$("#note_new").hide();
 				$('#saveNote_btn').hide();
 				$("#note_edit").hide();
 				$("#restoreNote_btn").show();
@@ -581,38 +574,6 @@ function makeBtnAppear(btnId){
 	$("#"+btnId).show();
 }
 
-//判断权限， 按钮是否可用
-/*
-function buttonStatus(node,noteId){
-	var subjectNode = isShareSubject(node);
-	if(subjectNode != null){
-		var url = webRoot+"/indexController/front/subjectPermission.dht?subjectId=" + subjectNode.id+"&noteId="+noteId;
-		AT.get(url, function(data){
-			data = data[subjectNode.id];
-			if(data.ADD_NOTE == 'true'){
-				makeBtnAppear('note_new');
-			}else{
-				makeBtnDisappear('note_new');
-			}
-			if(data.UPDATE_NOTE == 'true'){
-				makeBtnAppear('note_edit');
-				$('#attachment').show();
-				$("selectTag").show();
-			}else{
-				makeBtnDisappear('note_edit');
-			}
-			if(data.DELETE_NOTE == 'true'){
-				makeBtnAppear('deleteNote_btn');
-			}else{
-				makeBtnDisappear('deleteNote_btn'); 
-			}
-		}, false);
-	}else{
-		$("#note_new").show();
-	}
-}
-*/
-
 function addNewNote() {
 	 if(isNoteStats()){//判断是否编辑状态
 		   var submit = function (v, h, f) {
@@ -627,6 +588,7 @@ function addNewNote() {
 		 addNewNotedo();
 	 }
 }
+
 function addNewNotedo() {
 	$("#selectDir").hide();
 	if ($("#note_new").val() != "- 撤消条目") {
@@ -710,9 +672,6 @@ function isNoteStats(){
 		if(edui1.is(":visible")){
 		   var uecontent=noteEditor.getContent();
 		   if(uecontent!=$("#divhiden").text()){
-			   //alert(uecontent);
-			   //alert($("#divhiden").text());
-			   //var issure=confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？");
 				return true;
 		   }
 		}

@@ -24,6 +24,7 @@ import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
 import com.eht.note.entity.NoteTag;
+import com.eht.note.service.NoteServiceI;
 import com.eht.resource.entity.ClassName;
 import com.eht.resource.service.ResourceActionService;
 import com.eht.subject.entity.SubjectEntity;
@@ -37,6 +38,9 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 
 	@Autowired
 	private ResourceActionService resourceActionService;
+	
+	@Autowired
+	private NoteServiceI noteService;
 	
 	@Autowired
 	private GroupService groupService;
@@ -73,13 +77,30 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	@Override
 	@RecordOperate(dataClass=DataType.TAG, action=DataSynchAction.DELETE, keyIndex=0, keyMethod="getId")
 	public void deleteTag(TagEntity tag) {
+		deleteNoteTagByTagId(tag.getId());
 		delete(tag);
 	}
-
+	
+	/**
+	 * 删除标签及子标签
+	 * @param parentTag
+	 */
+	@Override
+	public void deleteTagAll(TagEntity parentTag) {
+		List<TagEntity> tagList = new ArrayList<TagEntity>();
+		findChildTagsByParentId(parentTag.getId(), tagList);
+		if(tagList != null && !tagList.isEmpty()){
+			for(TagEntity tag : tagList){
+				deleteTag(tag);
+			}
+		}
+		deleteTag(parentTag);
+	}
+	
 	@Override
 	public void deleteTagById(String id) {
 		TagEntity tag = getTag(id);
-		deleteTag(tag);
+		deleteTagAll(tag);
 	}
 
 	@Override
@@ -90,7 +111,18 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 		List<TagEntity> list = findByDetached(dc);
 		return list;
 	}
-
+	
+	@Override
+	public void findChildTagsByParentId(String parentId, List<TagEntity> tagList) {
+		List<TagEntity> list = findByProperty(TagEntity.class, "parentId", parentId);
+		if(list != null && !list.isEmpty()){
+			tagList.addAll(list);
+			for(TagEntity tag : tagList){
+				findChildTagsByParentId(tag.getId(), tagList);
+			}
+		}
+	}
+	
 	@Override
 	public List<TreeData> buildTagTreeJson(String tagid,List<TagEntity>  tagList) {
 		List<TreeData> dataList = new ArrayList<TreeData>(); 

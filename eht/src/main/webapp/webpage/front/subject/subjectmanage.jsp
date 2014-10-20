@@ -15,6 +15,11 @@
 <c:set var="cssPath" value="<%=cssPath%>" />
 <c:set var="imgPath" value="<%=imgPath%>" />
 <script type="text/javascript">
+	//关闭分享、黑名单窗口
+	if(!!$("#easyDialogWrapper").attr("id")){
+		$("#easyDialogWrapper").remove();
+	}
+
 	function toEditSubject(obj){
 		url = "${webRoot}/subjectController/front/viewEditSubject.dht?id="+obj;
 		AT.load("iframepage",url,function() {});	

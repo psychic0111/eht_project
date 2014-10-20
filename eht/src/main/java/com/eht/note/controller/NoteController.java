@@ -47,7 +47,6 @@ import com.eht.common.util.JsonUtil;
 import com.eht.common.util.MD5FileUtil;
 import com.eht.common.util.TreeUtils;
 import com.eht.common.util.UUIDGenerator;
-import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
@@ -240,7 +239,10 @@ public class NoteController extends BaseController {
 						fileName += "_重复文件_" + df.format(new Date()).toString() + "_."+ extend;
 					}
 					File file = new File(realPath);
-					String savePath = realPath + "\\" + fileZipName;// 文件保存全路径
+					if(!file.exists()){
+						file.mkdirs();
+					}
+					String savePath = realPath + File.separator + fileZipName;// 文件保存全路径
 					File savefile = new File(savePath);
 
 					// 判断是否已存在
@@ -758,12 +760,12 @@ public class NoteController extends BaseController {
 				attaList.remove(attaList.size()-1);
 			}
 			map.put("isMore", isMore);
+			SubjectEntity subjectEntity= subjectService.get(SubjectEntity.class, request.getParameter("subjectId"));
+			Map<String, String> actionMap = resourcePermissionService.findSubjectPermissionsByUser(user.getId(),request.getParameter("subjectId"), id);
+			map.put("action", actionMap);
+			map.put("type", subjectEntity.getSubjectType() + "");
+			map.put("id", id);
 		}
-		SubjectEntity subjectEntity= subjectService.get(SubjectEntity.class, request.getParameter("subjectId"));
-		Map<String, String> actionMap = resourcePermissionService.findSubjectPermissionsByUser(user.getId(),request.getParameter("subjectId"), id);
-		map.put("action", actionMap);
-		map.put("type", subjectEntity.getSubjectType() + "");
-		map.put("id", id);
 		return JsonUtil.map2json(map);
 
 	}

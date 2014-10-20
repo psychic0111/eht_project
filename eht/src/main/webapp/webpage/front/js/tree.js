@@ -538,3 +538,10 @@ function onExpand(event, treeId, treeNode)  {
 	}
 	return true;
 }
+
+//移除弹出的窗口
+function removeOpenDialogs(selectors){
+	for(var i = 0; i < selectors.length; i++){
+		$(selectors[i]).remove();
+	}
+}
