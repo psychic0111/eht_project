@@ -25,7 +25,7 @@
 	$().ready(function() {
 		 $("#addCommentForm").validate({
 				rules:{
-				 content:{required:true,maxlength:200}
+					comment_content:{required:true,maxlength:200}
 				}
 			}
 		);
@@ -41,7 +41,7 @@
 <div style="margin-bottom:1px;padding-right:10px;width:100%;">
    <div style="margin-top:-4px;width:80%;" class="left">
      	<font color="#999999">选择最近@的人或直接输入加空格</font>
-     	<textarea style="width:100%;height:50px"  name="content" cols="" rows="" id="pinglun"></textarea>
+     	<textarea style="width:100%;height:50px"  name="comment_content" cols="" rows="" id="pinglun"></textarea>
    </div>
    <div class="left"  style="margin-top:15px;margin-left:5px;width:17%;">
    		<input type="button" value="评论" class="Button5" style="height:53px;" onclick="addComment()">

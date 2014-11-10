@@ -8,12 +8,11 @@
     	response.setCharacterEncoding("utf-8");
     	String url = request.getParameter("upfile");
     	String state = "远程图片抓取成功！";
-    	
     	String filePath = "upload";
     	String[] arr = url.split("ue_separate_ue");
     	String[] outSrc = new String[arr.length];
     	for(int i=0;i<arr.length;i++){
-
+	
     		//保存文件路径
     		String str = application.getRealPath(request.getServletPath());
 			File f = new File(str);

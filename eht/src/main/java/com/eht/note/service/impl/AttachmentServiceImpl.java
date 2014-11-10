@@ -13,6 +13,7 @@ import org.hibernate.sql.JoinType;
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.core.util.oConvertUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +23,16 @@ import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.note.entity.AttachmentEntity;
+import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.AttachmentServiceI;
+import com.eht.note.service.NoteServiceI;
 
 @Service("attachmentService")
 @Transactional
 public class AttachmentServiceImpl extends CommonServiceImpl implements AttachmentServiceI {
+	
+	@Autowired
+	private NoteServiceI noteService;
 	
 	@Override
 	public String uploadAttachment(AttachmentEntity attachment) {
@@ -91,9 +97,17 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 
 	@Override
 	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType) {
+		NoteEntity note = noteService.getNote(noteId);
+		
+		List<AttachmentEntity> list = findAttachmentByNote(note, fileType);
+		return list;
+	}
+	
+	@Override
+	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note, Integer fileType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
-		dc.add(Restrictions.eq("noteId", noteId));
-		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("noteId", note.getId()));
+		dc.add(Restrictions.eq("deleted", note.getDeleted() == Constants.DATA_NOT_DELETED ? Constants.DATA_NOT_DELETED : Constants.DATA_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_COMPLETED));
 		if(fileType != null && fileType > 0){
 			dc.add(Restrictions.eq("fileType", fileType));
@@ -124,20 +138,15 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 	
 	@Override
-	public AttachmentEntity findNeedUploadAttachmentByNote(String noteId, String fileName) {
+	public List<AttachmentEntity> findNeedUploadAttachmentByNote(String noteId, Integer fileType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
-		dc.add(Restrictions.eq("fileName", fileName));
+		dc.add(Restrictions.eq("fileType", fileType));
 		dc.add(Restrictions.eq("noteId", noteId));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_NOT_COMPLETED));
 		
 		List<AttachmentEntity> list = findByDetached(dc);
-		if(list != null && !list.isEmpty()){
-			return list.get(0);
-		}else{
-			return null;
-		}
-	
+		return list;
 	}
 	
 	@Override
@@ -163,9 +172,9 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 
 	@Override
-	public List<AttachmentEntity> findAttachmentByDir(String subjectId) {
+	public List<AttachmentEntity> findAttachmentByDir(String dirId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
-		dc.add(Restrictions.eq("directoryId", subjectId));
+		dc.add(Restrictions.eq("directoryId", dirId));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_COMPLETED));
 		List<AttachmentEntity> list = findByDetached(dc);
@@ -252,12 +261,12 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	 * @return
 	 */
 	@Override
-	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId, Integer fileType) {
+	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId, Integer[] fileType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_NOT_COMPLETED));
 		if(fileType != null){
-			dc.add(Restrictions.eq("fileType", fileType.intValue()));
+			dc.add(Restrictions.in("fileType", fileType));
 		}
 		dc.add(Restrictions.eq("createUser", userId));
 		dc.addOrder(Order.asc("fileType"));

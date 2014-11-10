@@ -10,6 +10,9 @@ import com.eht.user.entity.AccountEntity;
 import com.eht.user.entity.GadUserEntity;
 
 public interface AccountServiceI extends CommonService{
+	
+	public final String uppath="uptem";
+	
 	/**
 	 * 查找用户id
 	 * @param account

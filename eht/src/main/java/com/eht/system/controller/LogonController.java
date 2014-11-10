@@ -269,7 +269,7 @@ public class LogonController extends BaseController {
 					subject.setSubjectName("默认专题");	
 					List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
 					if(list == null || list.isEmpty()){
-						subjectService.addSubject(subject);
+						subjectService.addSubject(subject, account.getId());
 					}
 				}else{
 					String path = AppRequstUtiles.getAppUrl(request);
@@ -507,7 +507,7 @@ public class LogonController extends BaseController {
 			subject.setSubjectName("默认专题");	
 			List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
 			if(list == null || list.isEmpty()){
-				subjectService.addSubject(subject);
+				subjectService.addSubject(subject, account.getId());
 			}
 			return new ModelAndView(new RedirectView("/webpage/login.jsp", true));
 		}

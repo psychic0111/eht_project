@@ -18,6 +18,7 @@ import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.UUIDGenerator;
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.role.entity.Role;
 import com.eht.role.entity.RoleUser;
 import com.eht.role.service.RoleService;
@@ -30,9 +31,11 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	
 	@Autowired
 	private DirectoryServiceI directoryService;
-
+	
+	@Autowired
+	private SynchLogServiceI synchLogService;
+	
 	@Override
-	@RecordOperate(dataClass=DataType.ROLE, action=DataSynchAction.ADD, keyMethod="getId")
 	public void addRole(Role role) {
 		save(role);
 	}
@@ -69,15 +72,17 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	 * 参数顺序不能改变,记录日志时用到
 	 */
 	@Override
-	@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.ADD, keyIndex=0, targetUser=-1)
-	public boolean addRoleUser(String subjectId, String userId, String roleId) {
+	//@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.ADD, keyIndex=0, targetUser=-1)
+	public String addRoleUser(String subjectId, String userId, String roleId, String creator, long timestamp) {
 		RoleUser ru = new RoleUser();
 		ru.setId(UUIDGenerator.uuid());
-		ru.setGroupId(subjectId);
+		ru.setSubjectId(subjectId);
 		ru.setRoleId(roleId);
 		ru.setUserId(userId);
+		ru.setCreateUserId(creator);
+		ru.setCreateTimeStamp(timestamp);
 		addRoleUser(ru);
-		return true;
+		return ru.getId();
 	}
 	
 	@Override
@@ -88,11 +93,11 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	}
 	
 	@Override
-	@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.DELETE, keyIndex=0, targetUser=-1)
+	//@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.DELETE, keyIndex=0, targetUser=-1)
 	public boolean removeRoleUser(String subjectId, String userId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(RoleUser.class);
 		dc.add(Restrictions.eq("userId", userId));
-		dc.add(Restrictions.eq("groupId", subjectId));
+		dc.add(Restrictions.eq("subjectId", subjectId));
 		List<RoleUser> list = findByDetached(dc);
 		for(RoleUser ru : list){
 			removeRoleUser(ru);
@@ -104,7 +109,7 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	public boolean removeRUByRole(String roleId, String subjectId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(RoleUser.class);
 		dc.add(Restrictions.eq("roleId", roleId));
-		dc.add(Restrictions.eq("groupId", subjectId));
+		dc.add(Restrictions.eq("subjectId", subjectId));
 		List<RoleUser> list = findByDetached(dc);
 		for(RoleUser ru : list){
 			removeRoleUser(ru);
@@ -116,7 +121,7 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	public RoleUser findUserRole(String userId, String subjectId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(RoleUser.class);
 		dc.add(Restrictions.eq("userId", userId));
-		dc.add(Restrictions.eq("groupId", subjectId));
+		dc.add(Restrictions.eq("subjectId", subjectId));
 		List<RoleUser> list = findByDetached(dc);
 		if(list != null && !list.isEmpty()){
 			return list.get(0);
@@ -132,7 +137,7 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	@Override
 	public List<RoleUser> findSubjectUsers(String subjectId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(RoleUser.class);
-		dc.add(Restrictions.eq("groupId", subjectId));
+		dc.add(Restrictions.eq("subjectId", subjectId));
 		List<RoleUser> list = findByDetached(dc);
 		return list;
 	}
@@ -144,12 +149,12 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 		}
 		pageResult.setPageSize(10);
 		DetachedCriteria count = DetachedCriteria.forClass(RoleUser.class);
-		count.add(Restrictions.eq("groupId", subjectId)).createCriteria("role").add( Restrictions.like("roleType", 2)).add( Restrictions.ne("roleName", RoleName.ADMIN));
+		count.add(Restrictions.eq("subjectId", subjectId)).createCriteria("role").add( Restrictions.like("roleType", 2)).add( Restrictions.ne("roleName", RoleName.ADMIN));
 			
 		Long total=(Long) count.getExecutableCriteria(getSession()).setProjection(Projections.rowCount()).uniqueResult();
 		pageResult.setTotal(total);
 		DetachedCriteria dc = DetachedCriteria.forClass(RoleUser.class);
-		dc.add(Restrictions.eq("groupId", subjectId)).createCriteria("role").add( Restrictions.like("roleType", 2)).add( Restrictions.ne("roleName", RoleName.ADMIN));
+		dc.add(Restrictions.eq("subjectId", subjectId)).createCriteria("role").add( Restrictions.like("roleType", 2)).add( Restrictions.ne("roleName", RoleName.ADMIN));
 		int firstRow = (pageResult.getPageNo() - 1) * pageResult.getPageSize();
 		pageResult.setRows(pageList(dc, firstRow, pageResult.getPageSize()));
 		return (List<RoleUser>) pageResult.getRows();
@@ -189,24 +194,33 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	public void updateRoleUser(String subjectId, String userId, String roleId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(RoleUser.class);
 		dc.add(Restrictions.eq("userId", userId));
-		dc.add(Restrictions.eq("groupId", subjectId));
-		dc.add(Restrictions.eq("roleId", roleId));
+		dc.add(Restrictions.eq("subjectId", subjectId));
+		//dc.add(Restrictions.eq("roleId", roleId));
 		List<RoleUser> list = findByDetached(dc);
 		if(list != null && !list.isEmpty()){
-			updateRoleUser(list.get(0));
+			RoleUser ru = list.get(0);
+			ru.setRoleId(roleId);
+			updateRoleUser(ru);
 		}
 	}
 	
 	@Override
-	@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.UPDATE, keyIndex=0, keyMethod="getId")
+	//@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.UPDATE, keyIndex=0, keyMethod="getId")
 	public void updateRoleUser(RoleUser ru) {
 		updateEntitie(ru);
+		synchLogService.recordLog(ru, ru.getClassName(), DataSynchAction.UPDATE.toString(), null, System.currentTimeMillis());
 	}
 
 	@Override
 	public List<Role> findAllRoles() {
 		DetachedCriteria dc = DetachedCriteria.forClass(Role.class);
 		return findByDetached(dc);
+	}
+
+	@Override
+	public RoleUser getRoleUser(String id) {
+		RoleUser ru = get(RoleUser.class, id);
+		return ru;
 	}
 
 

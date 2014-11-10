@@ -85,7 +85,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param subjectId
 	 * @return
 	 */
-	public List<NoteEntity> findNotesBySubject(String subjectId);
+	public List<NoteEntity> findNotesBySubject(String subjectId, boolean includeDeleted);
 	
 	/**
 	 * 查询专题下条目
@@ -155,7 +155,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param noteId
 	 * @return
 	 */
-	public void blacklistedUser(String userId, String noteId);
+	public void blacklistedUser(String userId, String noteId, long timestamp);
 	
 	/**
 	 * 将用户从黑名单移除
@@ -163,7 +163,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param noteId
 	 * @return
 	 */
-	public void removeUser4blacklist(String userId, String noteId);
+	public void removeUser4blacklist(String userId, String noteId, long timestamp);
 	
 	/**
 	 * 是否在条目黑名单
@@ -223,7 +223,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param subjectId
 	 * @return
 	 */
-	public List<NoteEntity> findDeletedNotesBySubjectId(String userId, String subjectId);
+	public List<NoteEntity> findDeletedNotesBySubjectId(String subjectId);
 	
 	/**
 	 * 查询标记删除的条目
@@ -283,4 +283,7 @@ public interface NoteServiceI extends CommonService{
 	 * @param noteId
 	 */
 	public void deleteNoteUser(String noteId);
+	
+	public List<NoteEntity> findNotesInRecycleBySubject(String userId,
+			String subjectId, String dirId, String orderField, int subjectType);
 }

@@ -87,9 +87,9 @@ public class CommentController extends BaseController {
 	public AjaxJson commentAdd(HttpServletRequest request){
 		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		AjaxJson j = new AjaxJson();
-		
+		String content = request.getParameter("comment_content");
 		 Pattern p = Pattern.compile("@[^@&&[^\\s]]+[\\s]");
-	        Matcher m = p.matcher(request.getParameter("content"));  
+	        Matcher m = p.matcher(content);  
 	        List<String> list=new ArrayList<String>();
 	        while(m.find()) {  
 	        	list.add(m.group());
@@ -100,7 +100,7 @@ public class CommentController extends BaseController {
 		comment.setAccout(list);
 		comment.setCreateUser(user.getId());
 		comment.setCreateTime(new Date());
-		comment.setContent(request.getParameter("content"));
+		comment.setContent(content);
 		comment.setDeleted(Constants.DATA_NOT_DELETED);
 		comment.setNoteId(request.getParameter("noteId"));
 		try {

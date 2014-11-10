@@ -36,6 +36,7 @@ import com.eht.common.util.MD5FileUtil;
 import com.eht.group.entity.Group;
 import com.eht.group.entity.GroupUser;
 import com.eht.group.service.GroupService;
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.note.entity.NoteUserEntity;
@@ -76,6 +77,9 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	
 	@Autowired
 	private TagServiceI tagService;
+	
+	@Autowired
+	private SynchLogServiceI synchLogService;
 	
 	@Override
 	public List<NoteEntity> findNotesByIds(String[] ids) { 
@@ -136,6 +140,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		}
 		long parentGroupId = 0L;
 		if(!StringUtil.isEmpty(note.getSubjectId())){
+			//在group表中存放条目所属专题的group
 			Group group = groupService.findGroup(SubjectEntity.class.getName(), note.getSubjectId());
 			parentGroupId = group.getGroupId();
 		}
@@ -161,6 +166,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
+	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.TRUNCATE, keyIndex = 0, keyMethod = "getId")
 	public void deleteNote(NoteEntity note) {
 		// 删除条目附件
 		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), null);
@@ -168,7 +174,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			attachmentService.deleteAttachment(attachment);
 		}
 		
-		// 删除条目标签
+		// 删除条目标签关系
 		tagService.deleteNoteTagByNoteId(note.getId());
 		//删除评论
 		commentService.deleteComments(note.getId());
@@ -220,9 +226,11 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public List<NoteEntity> findNotesBySubject(String subjectId) {
+	public List<NoteEntity> findNotesBySubject(String subjectId, boolean includeDeleted) {
 		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class);
-		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		if(!includeDeleted){
+			dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		}
 		dc.add(Restrictions.eq("subjectId", subjectId));
 		List<NoteEntity> list = findByDetached(dc);
 		return list;
@@ -390,25 +398,76 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
+	public List<NoteEntity> findNotesInRecycleBySubject(String userId, String subjectId, String dirId, String orderField, int subjectType) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
+		
+		//点击回收站节点，查询专题下所有已删除条目
+		if (!StringUtil.isEmpty(subjectId)) {
+			Criterion criterionSub = Restrictions.and(Restrictions.eq("note.subjectId", subjectId), Restrictions.ne("note.deleted", Constants.DATA_NOT_DELETED));
+			Criterion criterionDir = null;
+			if (!StringUtil.isEmpty(dirId)) {
+				String[] ids = dirId.split(",");
+				if (ids.length > 1) {
+					criterionDir = Property.forName("note.dirId").in(ids);
+				} else if (ids.length == 1) {
+					criterionDir = Property.forName("note.dirId").eq(ids[0]);
+				}
+			}
+			if(criterionDir != null){
+				dc.add(Restrictions.or(criterionSub, criterionDir));
+			}else{
+				dc.add(criterionSub);
+			}
+		}
+
+		dc.addOrder(Order.asc(orderField));
+		List<NoteEntity> list = findByDetached(dc);
+		
+		if(subjectType == Constants.SUBJECT_TYPE_M){
+			List<NoteEntity> resultList = new ArrayList<NoteEntity>();
+			for(NoteEntity note : list){
+				if(!inNoteBlackList(userId, note.getId())){
+					resultList.add(note);
+				}
+			}
+			return resultList;
+		}
+		return list;
+	}
+	
+	@Override
 	public boolean inNoteBlackList(String userId, String noteId) {
 		Group group = groupService.findGroup(NoteEntity.class.getName(), noteId);
-		GroupUser gu = groupService.findGroupUser(group.getGroupId(), userId);
-		return gu != null;
+		if(group!=null){
+			GroupUser gu = groupService.findGroupUser(group.getGroupId(), userId);
+			if(gu!=null){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
-	@RecordOperate(dataClass = {DataType.NOTE, DataType.NOTEBLACK}, action = {DataSynchAction.DELETE, DataSynchAction.ADD}, keyIndex = {1, 1}, targetUser = {0, 0}, timeStamp = {"", ""}, keyMethod = {"", ""})
-	public void blacklistedUser(String userId, String noteId) {
+	//@RecordOperate(dataClass = {DataType.NOTE, DataType.NOTEBLACK}, action = {DataSynchAction.DELETE, DataSynchAction.ADD}, keyIndex = {1, 1}, targetUser = {0, 0}, timeStamp = {"", ""}, keyMethod = {"", ""})
+	public void blacklistedUser(String userId, String noteId, long timestamp) {
 		Group group = groupService.findGroup(NoteEntity.class.getName(), noteId);
 		// 将用户放入group-user关系表
 		groupService.addGroupUser(group.getGroupId(), userId);
+		
+		//生成黑名单中的用户在客户端删除此条目的日志
+		NoteEntity note = getNote(noteId);
+		synchLogService.recordLog(note, note.getClassName(), DataSynchAction.BAN.toString(), userId, timestamp);
 	}
 
 	@Override
-	@RecordOperate(dataClass = {DataType.NOTE, DataType.NOTEBLACK}, action = {DataSynchAction.ADD, DataSynchAction.DELETE}, keyIndex = {1, 1}, targetUser = {0, 0}, timeStamp = {"", ""}, keyMethod = {"", ""})
-	public void removeUser4blacklist(String userId, String noteId) {
+	//@RecordOperate(dataClass = {DataType.NOTE, DataType.NOTEBLACK}, action = {DataSynchAction.ADD, DataSynchAction.DELETE}, keyIndex = {1, 1}, targetUser = {0, 0}, timeStamp = {"", ""}, keyMethod = {"", ""})
+	public void removeUser4blacklist(String userId, String noteId, long timestamp) {
 		Group group = groupService.findGroup(NoteEntity.class.getName(), noteId);
 		groupService.removeGroupUser(group.getGroupId(), userId);
+		
+		//生成黑名单中的用户在客户端删除此条目的日志
+		NoteEntity note = getNote(noteId);
+		synchLogService.recordLog(note, note.getClassName(), DataSynchAction.CREATEORUPDATE.toString(), userId, timestamp);
 	}
 
 	@Override
@@ -490,10 +549,10 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	}
 
 	@Override
-	public List<NoteEntity> findDeletedNotesBySubjectId(String userId, String subjectId) {
+	public List<NoteEntity> findDeletedNotesBySubjectId(String subjectId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(NoteEntity.class, "note");
 		dc.add(Restrictions.eq("note.subjectId", subjectId));
-		dc.add(Restrictions.eq("note.createUser", userId));
+		//dc.add(Restrictions.eq("note.createUser", userId));
 		dc.add(Restrictions.eq("note.deleted", Constants.DATA_DELETED));
 		List<NoteEntity> list = findByDetached(dc);
 		return list;
@@ -512,6 +571,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	@Override
 	public DirectoryEntity restoreNote(NoteEntity note,List <String>list) {
 		if (note.getDeleted() == Constants.DATA_DELETED) {
+			note.setUpdateTime(new Date());
 			markNoteUnDeleted(note);
 		}
 		String dirId = note.getDirId();
@@ -519,12 +579,12 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			DirectoryEntity dir = directoryService.getDirectory(dirId);
 			dir.setUpdateTime(note.getUpdateTime());
 			dir.setUpdateUser(note.getUpdateUser());
-			return	directoryService.restoreDirectory(dir, list,false);
+			return directoryService.restoreDirectory(dir, list,false);
 		}
 		return null;
 	}
 
-	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
+	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.RESTORE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
 	public void markNoteUnDeleted(NoteEntity note) {
 		note.setDeleted(Constants.DATA_NOT_DELETED);
 		updateEntitie(note);
@@ -647,6 +707,13 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		savefile = new File(savePath + note.getId() + ".html");
 		String pcontet=HtmlParser.repleceHtmlImg(note.getContent(), "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/", "");
 		FileCopyUtils.copy(pcontet.getBytes("UTF-8"), savefile);
+		
+		try {
+			File zipFile = new File(savePath + FilePathUtil.getNoteZipFileName(note.getId(), null));
+			DataSynchizeUtil.zipNoteHtml(zipFile, savefile);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override

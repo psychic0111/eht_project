@@ -175,7 +175,7 @@ li.over {background-color: #bcd4ec;}
         <div class="Edit_input">
           <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;display:none;"></script>
         </div>
-        <div id="parentHtmlViewDiv" style="height:100%;border-top:1px solid #d9d9d9;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;overflow:auto;">
+        <div id="parentHtmlViewDiv" style="width:100%;height:100%;border-top:1px solid #d9d9d9;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;overflow:auto;">
         	<div id="htmlViewDiv">
     		 	<iframe id="htmlViewFrame" scrolling="no" frameborder="0" style="border:none;outline:0; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;height:100%;" >
    				</iframe>
@@ -246,7 +246,7 @@ $(document).ready(function() {
 		noteEditor.hide();
 	});
 	$("#parentHtmlViewDiv").height(obj.frameHeight);
-	//$("#htmlViewFrame").height(editorheight);
+	$("#parentHtmlViewDiv").width(obj.editorWidth);
 	//$("#notes_new").height($("#right_index").height()+100);
 	var downloadPath = webRoot+"/noteController/front/downloadNodeAttach.dht";
 	var upLoadPath =webRoot+"/noteController/front/uploadNodeAttach.dht";

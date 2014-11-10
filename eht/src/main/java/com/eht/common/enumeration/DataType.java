@@ -100,5 +100,10 @@ public enum DataType {
 	/**
 	 * 同步数据类别：批量删除数据时使用的类型
 	 */
-	BATCHDATA
+	BATCHDATA,
+	
+	/**
+	 * 同步数据类别：批量TRUNCATE数据时使用的类型
+	 */
+	TRUNCDATA
 }

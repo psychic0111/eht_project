@@ -13,6 +13,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.constant.Constants;
+import com.eht.common.enumeration.DataType;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.user.entity.AccountEntity;
 
@@ -33,9 +36,15 @@ public class RoleUser implements Serializable {
 	private String roleId;
 	
 	/**
+	 * 角色英文名
+	 * 返回客户端
+	 */
+	private String roleName;
+	
+	/**
 	 * 专题ID
 	 */
-	private String groupId;
+	private String subjectId;
 	
 	private AccountEntity accountEntity;
 	
@@ -46,6 +55,20 @@ public class RoleUser implements Serializable {
 	private boolean blackList;
 	
 	private long noteCount;
+	
+	private String operation;
+	
+	private String className = DataType.SUBJECTUSER.toString();
+	
+	/**创建时间毫秒*/
+	private Long createTimeStamp;
+	/**修改时间毫秒*/
+	private Long updateTimeStamp;
+	
+	/**创建人,接口使用*/
+	private java.lang.String createUserId;
+	/**修改者,接口使用*/
+	private java.lang.String updateUserId;
 	
 	@Id
 	public String getId() {
@@ -74,14 +97,15 @@ public class RoleUser implements Serializable {
 	}
 	
 	@Column(name ="groupId",nullable=true)
-	public String getGroupId() {
-		return groupId;
+	public String getSubjectId() {
+		return subjectId;
 	}
 	
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
+	public void setSubjectId(String groupId) {
+		this.subjectId = groupId;
 	}
 	
+	@ClientJsonIgnore
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "groupId",insertable=false,updatable=false)
 	public SubjectEntity getSubjectEntity() {
@@ -92,6 +116,7 @@ public class RoleUser implements Serializable {
 		this.subjectEntity = subjectEntity;
 	}
 	
+	@ClientJsonIgnore
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "roleId",insertable=false,updatable=false)
 	public Role getRole() {
@@ -102,6 +127,7 @@ public class RoleUser implements Serializable {
 		this.role = role;
 	}
 	
+	@ClientJsonIgnore
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId",insertable=false,updatable=false)
 	public AccountEntity getAccountEntity() {
@@ -121,6 +147,7 @@ public class RoleUser implements Serializable {
 		this.blackList = blackList;
 	}
 
+	@ClientJsonIgnore
 	@Transient
 	public long getNoteCount() {
 		return noteCount;
@@ -129,5 +156,64 @@ public class RoleUser implements Serializable {
 	public void setNoteCount(long noteCount) {
 		this.noteCount = noteCount;
 	}
-	
+
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	@Transient
+	public String getRoleName() {
+		return getRole().getRoleName();
+	}
+
+	public void setRoleName(String roleName) {
+		this.roleName = roleName;
+	}
+
+	public Long getCreateTimeStamp() {
+		return createTimeStamp;
+	}
+
+	public void setCreateTimeStamp(Long createTimeStamp) {
+		this.createTimeStamp = createTimeStamp;
+	}
+
+	public Long getUpdateTimeStamp() {
+		return updateTimeStamp;
+	}
+
+	public void setUpdateTimeStamp(Long updateTimeStamp) {
+		this.updateTimeStamp = updateTimeStamp;
+	}
+
+	public java.lang.String getCreateUserId() {
+		return createUserId;
+	}
+
+	public void setCreateUserId(java.lang.String createUserId) {
+		this.createUserId = createUserId;
+	}
+
+	public java.lang.String getUpdateUserId() {
+		return updateUserId;
+	}
+
+	public void setUpdateUserId(java.lang.String updateUserId) {
+		this.updateUserId = updateUserId;
+	}
+
 }

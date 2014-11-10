@@ -16,6 +16,8 @@ import org.jeecgframework.core.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import weibo4j.Account;
+
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
 import com.eht.common.constant.SynchConstants;
@@ -177,16 +179,32 @@ public class OperateLogInterceptor {
 				log.setTargetUser(args[rp.targetUser()[i]].toString());
 				synchLogService.saveSynchLog(log);
 			}else{ 
-				//是否需要查询操作影响用户，多人专题下的数据变更
-				Map<String, String> map = isOwnShareSubject(paramEntity);
-				if(map != null){
-					//查询多人专题下所有成员
-					List<String> userIdList = getTargetUsers(map.get("subjectId"), map.get("directoryId"), map.get("noteId"));
-					if(log.getClassName().equals(DataType.SUBJECTUSER.toString()) && log.getAction().equals(DataSynchAction.ADD.toString())){
-						String newMemberId = args[1].toString();
-						userIdList.add(newMemberId);  // 包括刚刚加入的成员
+				List<String> userIdList = null;
+				//用户信息改变日志
+				if(paramEntity instanceof AccountEntity){
+					List<AccountEntity> accList = noteService.getShareEmail();
+					if(accList != null && !accList.isEmpty()){
+						userIdList = new ArrayList<String>(accList.size() + 1);
+						for(AccountEntity us : accList){
+							userIdList.add(us.getId());
+						}
+						userIdList.add(userId);
 					}
-					
+				}
+				if(userIdList == null){
+					//是否需要查询操作影响用户，多人专题下的数据变更
+					Map<String, String> map = isOwnShareSubject(paramEntity);
+					if(map != null){
+						//查询多人专题下所有成员
+						userIdList = getTargetUsers(map.get("subjectId"), map.get("directoryId"), map.get("noteId"));
+						
+						if(log.getClassName().equals(DataType.SUBJECTUSER.toString()) && log.getAction().equals(DataSynchAction.ADD.toString())){
+							String newMemberId = args[1].toString();
+							userIdList.add(newMemberId);  // 包括刚刚加入的成员
+						}
+					}
+				}
+				if(userIdList != null && !userIdList.isEmpty()){
 					for(String uid : userIdList){
 						SynchLogEntity newLog = new SynchLogEntity();
 						try {
@@ -274,7 +292,7 @@ public class OperateLogInterceptor {
 		//专题成员关系
 		if (paramEntity.getClass().getName().equals(RoleUser.class.getName())) {
 			RoleUser ru = (RoleUser) paramEntity;
-			subjectId = ru.getGroupId();
+			subjectId = ru.getSubjectId();
 		}
 		//附件
 		if (paramEntity.getClass().getName().equals(AttachmentEntity.class.getName())) {
@@ -292,6 +310,7 @@ public class OperateLogInterceptor {
 				}
 			}
 		}
+		
 		if(!StringUtil.isEmpty(subjectId)){
 			SubjectEntity subject = subjectService.getSubject(subjectId);
 			if (subject.getSubjectType() == Constants.SUBJECT_TYPE_M) {

@@ -23,7 +23,7 @@
 <script type="text/javascript" language="javascript">
 //分页
 function doPage(ths,pageNo,pageSize){
-	AT.load("iframepage","${webRoot}/messageController/front/messageList.dht?pageNo="+pageNo+"&pageSize="+pageSize+"&msgType=${msgType}",function() {});
+	AT.load("iframepage","${webRoot}/messageController/front/messageList.dht?pageNo="+pageNo+"&pageSize="+pageSize+"&msgType=${msgType}&orderField=${orderField}&orderType=${orderType}",function() {});
 }
 //排序方式
 function orderMsg(){

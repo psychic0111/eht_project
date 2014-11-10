@@ -17,7 +17,7 @@ public interface SubjectServiceI extends CommonService{
 	 * @param subject
 	 * @return 返回专题groupId
 	 */
-	public Serializable addSubject(SubjectEntity subject);
+	public Serializable addSubject(SubjectEntity subject, String creator);
 	/**
 	 * 更新专题
 	 * @param subject
@@ -53,7 +53,7 @@ public interface SubjectServiceI extends CommonService{
 	 * @param 默认读者角色
 	 * @return
 	 */
-	public void addSubjectMember(String subjectId, String userId, String roleId);
+	public void addSubjectMember(String subjectId, String userId, String roleId, String creator, long createTimestamp);
 	
 	/**
 	 * 删除专题成员
@@ -108,7 +108,7 @@ public interface SubjectServiceI extends CommonService{
 	 * 多人专题邀请成员
 	 * @return
 	 */
-	public void inviteMemember(String email[],String type[],HttpServletRequest request,SubjectEntity SubjectEntity)throws Exception;
+	public void inviteMemember(String email[],String type[],HttpServletRequest request,SubjectEntity SubjectEntity, String inviter)throws Exception;
 	
 	/**
 	 * 多人专题邀请成员

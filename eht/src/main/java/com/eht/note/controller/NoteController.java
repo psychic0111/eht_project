@@ -615,7 +615,7 @@ public class NoteController extends BaseController {
 			
 			//保存条目标签关系
 			if(noteTagId != null && noteTagId.length > 0){
-				tagServiceI.saveNoteTags(note.getId(), noteTagId);
+				tagServiceI.saveNoteTags(note.getId(), noteTagId, user.getId());
 			}
 			return JsonUtil.bean2json(note);
 		} else {
@@ -697,8 +697,7 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/front/deleteNote.dht")
-	public @ResponseBody
-	String deleteNote(String id, int deleted, HttpServletRequest request) {
+	public @ResponseBody String deleteNote(String id, int deleted, HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		NoteEntity note = noteService.getNote(id);
 		if (deleted == 1) {
@@ -830,7 +829,6 @@ public class NoteController extends BaseController {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		NoteEntity note = noteService.getNote(id);
 		note.setUpdateUser(user.getId());
-		note.setUpdateTime(new Date());
 		List<String> list = new ArrayList<String>();
 		noteService.restoreNote(note, list);
 		StringBuffer str = new StringBuffer("");
@@ -884,9 +882,9 @@ public class NoteController extends BaseController {
 		try {
 			boolean c = groupService.checkNoteUser(userId, nodeId);
 			if (c) {
-				noteService.removeUser4blacklist(userId, nodeId);
+				noteService.removeUser4blacklist(userId, nodeId, System.currentTimeMillis());
 			} else {
-				noteService.blacklistedUser(userId, nodeId);
+				noteService.blacklistedUser(userId, nodeId, System.currentTimeMillis());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

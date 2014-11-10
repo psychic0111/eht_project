@@ -17,6 +17,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.enumeration.DataType;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.user.entity.AccountEntity;
 
@@ -41,7 +42,7 @@ public class AttachmentEntity implements java.io.Serializable {
 	private java.lang.String fileName;
 	/**文件后缀*/
 	private java.lang.String suffix;
-	/**文件类型 1.条目、目录附件 2.条目内容图片 3.条目内容css 4.条目内容js */
+	/**文件类型 1.条目、目录附件 2.条目内容图片 3.条目内容css 4.条目内容js 5.条目HTML包*/
 	private java.lang.Integer fileType;
 	/**所属条目*/
 	private java.lang.String noteId;
@@ -90,10 +91,15 @@ public class AttachmentEntity implements java.io.Serializable {
 	private java.lang.String createUserId;
 	/**修改者,接口使用*/
 	private java.lang.String updateUserId;
+	
 	private  String tempFilePath;
 	
-	
 	private java.lang.String fileNameMht;
+	
+	private String operation;
+	
+	private String className = DataType.ATTACHMENT.toString();
+	
 	@Transient
 	public java.lang.String getCreateUserId() {
 		return createUser;
@@ -423,6 +429,24 @@ public class AttachmentEntity implements java.io.Serializable {
 
 	public void setFileNameMht(java.lang.String fileNameMht) {
 		this.fileNameMht = fileNameMht;
+	}
+
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 		
 }

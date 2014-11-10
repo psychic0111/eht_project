@@ -80,9 +80,9 @@ public class FilePathUtil {
 	public static String getNoteZipFileName(String noteId, Integer version){
 		StringBuilder fileName = new StringBuilder(noteId);
 		if(version != null && version.intValue() > 0){
-			fileName.append("_").append(version).append(".zip");
+			fileName.append("_").append(version).append(".eht");
 		}else{
-			fileName.append(".zip");
+			fileName.append(".eht");
 		}
 		return fileName.toString();
 	}

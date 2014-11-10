@@ -179,4 +179,9 @@ public interface Constants {
 	 * 附件类型：条目内容中的js
 	 */
 	public static final int FILE_TYPE_JS = 4;
+	
+	/**
+	 * 附件类型：条目zip文件
+	 */
+	public static final int FILE_TYPE_NOTEHTML = 5;
 }

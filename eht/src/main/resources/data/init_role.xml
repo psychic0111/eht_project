@@ -2,7 +2,7 @@
 <list>
 	<com.eht.role.entity.Role>
 		<id>add7596ea054402dace15fcb71a737bb</id>
-		<roleName>USER</roleName>
+		<roleName>User</roleName>
 		<description>用户</description>
 		<roleType>1</roleType>
 		<deleted>0</deleted>
@@ -10,7 +10,7 @@
 	</com.eht.role.entity.Role>
 	<com.eht.role.entity.Role>
 		<id>add7596ea054402dace15fcb71a737aa</id>
-		<roleName>OWNER</roleName>
+		<roleName>Owner</roleName>
 		<description>所有者</description>
 		<roleType>1</roleType>
 		<deleted>0</deleted>
@@ -18,7 +18,7 @@
 	</com.eht.role.entity.Role>
 	<com.eht.role.entity.Role>
 		<id>bd57b343e4054e5e80b366bf4c6d6842</id>
-		<roleName>ADMIN</roleName>
+		<roleName>Admin</roleName>
 		<description>管理员</description>
 		<roleType>2</roleType>
 		<deleted>0</deleted>
@@ -26,7 +26,7 @@
 	</com.eht.role.entity.Role>
 	<com.eht.role.entity.Role>
 		<id>ddccebff396148bcaf8b1441ea844e8e</id>
-		<roleName>EDITOR</roleName>
+		<roleName>Editor</roleName>
 		<description>编辑</description>
 		<roleType>2</roleType>
 		<deleted>0</deleted>
@@ -34,7 +34,7 @@
 	</com.eht.role.entity.Role>
 	<com.eht.role.entity.Role>
 		<id>db6d95953739445a9de78b4e5bb39032</id>
-		<roleName>AUTHOR</roleName>
+		<roleName>Writer</roleName>
 		<description>作者</description>
 		<roleType>2</roleType>
 		<deleted>0</deleted>
@@ -42,7 +42,7 @@
 	</com.eht.role.entity.Role>
 	<com.eht.role.entity.Role>
 		<id>e14a36c1461d4802929edfb8d0a39785</id>
-		<roleName>READER</roleName>
+		<roleName>Reader</roleName>
 		<description>读者</description>
 		<roleType>2</roleType>
 		<deleted>0</deleted>
@@ -50,7 +50,7 @@
 	</com.eht.role.entity.Role>
 	<com.eht.role.entity.Role>
 		<id>8affa54c5003492e841b1e024d26d96e</id>
-		<roleName>GUEST</roleName>
+		<roleName>Guest</roleName>
 		<description>访客</description>
 		<roleType>2</roleType>
 		<deleted>0</deleted>

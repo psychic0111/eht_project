@@ -28,13 +28,13 @@
                     	<td width="20%" align="center">
 	                  		<span class="others">
 	                  			<c:if test="${ RoleUser.accountEntity.id != SESSION_USER_ATTRIBUTE.id}">
-	                  		     <c:if test="${RoleUser.blackList eq true}">
-	                  		     <input type="button" value="移除黑名单" id="3" name="del_btn" onclick="addBlackListNote('${RoleUser.accountEntity.id}','${nodeId}',this)" class="Button_other1">
-	                  		     </c:if>
-	                  		    <c:if test="${RoleUser.blackList eq false}">
-	                  		    <input type="button" value="加入黑名单" id="3" name="del_btn" onclick="addBlackListNote('${RoleUser.accountEntity.id}','${nodeId}',this)" class="Button_other1">
-	                  		     </c:if>
-	                  		     </c:if>
+	                  		     	<c:if test="${RoleUser.blackList eq true}">
+	                  		     		<input type="button" value="移除黑名单" id="3" name="del_btn" onclick="addBlackListNote('${RoleUser.accountEntity.id}','${nodeId}',this)" class="Button_other1">
+	                  		     	</c:if>
+	                  		    	<c:if test="${RoleUser.blackList eq false}">
+	                  		    		<input type="button" value="加入黑名单" id="3" name="del_btn" onclick="addBlackListNote('${RoleUser.accountEntity.id}','${nodeId}',this)" class="Button_other1">
+	                  		     	</c:if>
+	                  		    </c:if>
 	                   		</span>
 	              		</td>
                 	</tr>

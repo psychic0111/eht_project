@@ -6,6 +6,7 @@ import java.util.List;
 import org.jeecgframework.core.common.service.CommonService;
 
 import com.eht.note.entity.AttachmentEntity;
+import com.eht.note.entity.NoteEntity;
 
 public interface AttachmentServiceI extends CommonService{
 
@@ -135,13 +136,16 @@ public interface AttachmentServiceI extends CommonService{
 	 * @param fileType
 	 * @return
 	 */
-	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId,	Integer fileType);
+	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId,	Integer[] fileType);
 	
 	/**
-	 * 根据条目ID，文件名查询要上传的附件
+	 * 根据条目ID，文件类型查询要上传的附件
 	 * @param noteId
 	 * @param fileName
 	 * @return
 	 */
-	public AttachmentEntity findNeedUploadAttachmentByNote(String noteId, String fileName);
+	public List<AttachmentEntity> findNeedUploadAttachmentByNote(String noteId, Integer fileType);
+	
+	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note,
+			Integer fileType);
 }

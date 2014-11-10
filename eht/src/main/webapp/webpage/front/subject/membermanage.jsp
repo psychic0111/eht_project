@@ -36,7 +36,7 @@ $().ready(function() {
 		});
 });
 
-	function delInvitemember(){
+	function delSubjectmember(){
          if($("[name=ids]:checked").length==0){
              MSG.alert("请选择用户");
              return false;
@@ -117,6 +117,8 @@ function viewInvitemember(){
 					AT.postFrm("addInvitemember",function(data){
 						if(data==''){
 								 MSG.alert('操作成功');
+							}else{
+							 MSG.alert(data);
 							}
 							AT.load("iframepage","${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}",function() {});
 					},true);
@@ -174,7 +176,7 @@ function delInvitemember(obj){
               </form>          	
 			</div>
             <div class="others">
-              <input class="Button3" type="button" name="button4" id="button3" onclick="delInvitemember();" value="删除成员" />
+              <input class="Button3" type="button" name="button4" id="button3" onclick="delSubjectmember();" value="删除成员" />
               <input class="Button4" type="button" name="button4" id="button4" onclick="invitememberRole(this);" value="更改角色" />
               <div class="rightMenu" id="invitememberMenu">
         		<ul id="treeRightMenu_ul_tag">
@@ -213,9 +215,9 @@ function delInvitemember(obj){
                   <c:choose>
                   <c:when test="${roleUser.accountEntity.id eq user.userId}">
                   </c:when>
-                   <c:when test="${user.role.roleName eq 'ADMIN' && (roleUser.role.roleName eq 'ADMIN' || roleUser.role.roleName eq 'OWNER')}">
+                   <c:when test="${user.role.roleName eq 'Admin' && (roleUser.role.roleName eq 'Admin' || roleUser.role.roleName eq 'Owner')}">
                   </c:when>
-                  <c:when test="${user.role.roleName ne 'ADMIN' && user.role.roleName ne 'OWNER'}">
+                  <c:when test="${user.role.roleName ne 'Admin' && user.role.roleName ne 'Owner'}">
                   </c:when>
                   <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.id}" /></c:otherwise>
                   </c:choose>

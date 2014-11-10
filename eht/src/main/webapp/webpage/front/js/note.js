@@ -51,13 +51,13 @@ function getNoteMessage(){
 						buttons: btns,
 						showType: "show",
 						submit: function(v, h, f){
-							/*
+							
 							var i = parseInt($("#msgIndex").val()) + 1;
 							if(i >= msgData.length){
 								i = 0;
 							}
 							$.jBox.messager(msgData[i].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[i].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+i+'"/>', "系统通知", 2000, options
-							);*/
+							);
 							return true;
 						},
 						closed: function(){
@@ -143,6 +143,9 @@ function saveNote(){
 	showLoading_edit();
 	noteEditor.sync("noteForm");
 	$("#divhiden").text(noteEditor.getContent());
+	/*for(var i = 0; i < $("#noteForm [name='content']").length; i++){
+		alert($("#noteForm [name='content']")[0].id);
+	}*/
 	AT.post($("#noteForm").attr("action"),$("#noteForm").serialize(), function(data){
 		//刷新当前条目id
 		$("#noteForm_id").val(data.id);
@@ -271,7 +274,7 @@ function noteblacklist(){
 					content : data
 				},
 				follow : 'note_blacklist',
-				followX : 0,
+				followX : -80,
 				followY : 34
 			}); 
 	});
@@ -286,9 +289,9 @@ function addBlackListNote(userId,nodeId,obj){
 					 var k=obj.value;
 					 if(k=='移除黑名单'){
 						 obj.value='加入黑名单';
-						 }else{
-							 obj.value='移除黑名单';
-							 }
+					 }else{
+						 obj.value='移除黑名单';
+					 }
 				}else{
 					 MSG.alert(data.msg);
 				}	

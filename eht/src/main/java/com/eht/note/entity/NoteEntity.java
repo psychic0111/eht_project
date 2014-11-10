@@ -18,6 +18,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.enumeration.DataType;
 import com.eht.common.util.HtmlParser;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
@@ -104,7 +105,7 @@ public class NoteEntity implements java.io.Serializable {
 	
 	private String operation;
 	
-	private String className;
+	private String className = DataType.NOTE.toString();
 	
 	@Transient
 	public java.lang.String getCreateUserId() {

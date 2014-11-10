@@ -1008,19 +1008,16 @@ style=3D'font-size:12.0pt'><a href=3D"${basePath}3D${attr.id}">${attr.fileNameMh
 Calibri;mso-ascii-theme-font:minor-latin;mso-fareast-font-family:SimSun;
 mso-fareast-theme-font:minor-fareast;mso-hansi-font-family:Calibri;mso-hans=
 i-theme-font:
-minor-latin'>${note.titleMht}</span><span lang=3DEN-US style=3D'font-size:16.0pt'><=
-o:p></o:p></span></p>
+minor-latin'>${note.titleMht}</span><span lang=3DEN-US style=3D'font-size:16.0pt'><o:p></o:p></span></p>
 
 <p class=3DMsoNormal><span style=3D'font-size:12.0pt;font-family:SimSun;mso=
 -ascii-font-family:
 Calibri;mso-ascii-theme-font:minor-latin;mso-fareast-font-family:SimSun;
 mso-fareast-theme-font:minor-fareast;mso-hansi-font-family:Calibri;mso-hans=
 i-theme-font:
-minor-latin'>${note.contentMht}</span><span lang=3DEN-US style=3D'font-size:12.0pt'><=
-o:p></o:p></span></p>
+minor-latin'>${note.contentMht}</span><span lang=3DEN-US style=3D'font-size:12.0pt'><o:p></o:p></span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:12.0pt'><o:p>&nb=
-sp;</o:p></span></p>
+<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
 <#list note.attachmentEntitylist as yuhao>
 <p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:12.0pt'><a
 href=3D"${basePath}3D${yuhao.id}">${yuhao.fileNameMht}</a><o:p></o:p></span></=

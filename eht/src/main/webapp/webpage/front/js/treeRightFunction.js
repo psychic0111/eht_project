@@ -60,7 +60,7 @@ function subjectManageDo(obj){
 	if($("#noteEditor_td").is(":visible")){
 		hideNotePage();
 	}
-	var url = webRoot+"/subjectController/front/subjectManage.dht?pageNo=1&pageSize=20";
+	var url = webRoot+"/subjectController/front/viewAddSubject.dht?pageNo=1&pageSize=20";
 	if(obj.id==-2){
 		url=url+"&subjectType=2";
 	}else{

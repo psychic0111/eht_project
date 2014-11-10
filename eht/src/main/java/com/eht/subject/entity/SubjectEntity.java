@@ -18,6 +18,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import com.eht.common.annotation.ClientJsonIgnore;
 import com.eht.common.constant.Constants;
+import com.eht.common.enumeration.DataType;
 import com.eht.user.entity.AccountEntity;
 
 /**   
@@ -84,7 +85,7 @@ public class SubjectEntity implements java.io.Serializable {
 	
 	private String operation;
 	
-	private String className;
+	private String className = DataType.SUBJECT.toString();
 	
 	@Transient
 	public java.lang.String getCreateUserId() {

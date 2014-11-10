@@ -51,6 +51,11 @@ public class InviteMememberEntity  implements java.io.Serializable {
 	private Role role;
 	
 	private String username;
+	
+	private String createUserId;
+	
+	private long createTimeStamp;
+	
 	@Id
 	@GenericGenerator(name = "idGenerator", strategy = "uuid")
 	@GeneratedValue(generator = "idGenerator")
@@ -106,6 +111,22 @@ public class InviteMememberEntity  implements java.io.Serializable {
 	
 	public void setRole(Role role) {
 		this.role = role;
+	}
+
+	public String getCreateUserId() {
+		return createUserId;
+	}
+
+	public void setCreateUserId(String createUserId) {
+		this.createUserId = createUserId;
+	}
+
+	public long getCreateTimeStamp() {
+		return createTimeStamp;
+	}
+
+	public void setCreateTimeStamp(long createTimeStamp) {
+		this.createTimeStamp = createTimeStamp;
 	}
 	
 	

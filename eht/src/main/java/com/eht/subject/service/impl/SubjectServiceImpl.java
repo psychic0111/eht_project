@@ -54,6 +54,7 @@ import com.eht.common.util.FileToolkit;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.entity.MessageUserEntity;
 import com.eht.message.service.MessageServiceI;
@@ -122,16 +123,18 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	@Autowired
 	private  MessageServiceI MessageServiceI;
 	
-	@Override
+	@Autowired
+	private  SynchLogServiceI synchLogService;
 	
-	@RecordOperate(dataClass = DataType.SUBJECT, action = DataSynchAction.ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "createTime")
-	public Serializable addSubject(SubjectEntity subject) {
+	@Override
+	@RecordOperate(dataClass = DataType.SUBJECT, action = DataSynchAction.ADD, keyIndex = 0, keyMethod = "getId", timeStamp = "createTime", targetUser=1)
+	public Serializable addSubject(SubjectEntity subject, String creator) {
 		subject.setStatus(Constants.ENABLED);
 		subject.setDeleted(Constants.DATA_NOT_DELETED);
 		save(subject);
 		Role ownerRole = roleService.findRoleByName(RoleName.OWNER);
 		roleService.addRoleUser(subject.getId(), subject.getCreateUser(),
-				ownerRole.getId());
+				ownerRole.getId(), creator, System.currentTimeMillis());
 		ClassName c = resourceActionService
 				.findResourceByName(SubjectEntity.class.getName());
 		if (c == null) {
@@ -145,8 +148,15 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		grantSubjectPermissions(subject);
 		if (subject.getOldId() == null) {// 判断是否是导入专题
 			// 给新增专题添加文档资料文件夹
-			directoryService.addDirectory(subject, null,
-					Constants.SUBJECT_DOCUMENT_DIRNAME);
+			DirectoryEntity dir = new DirectoryEntity();
+			dir.setId(UUIDGenerator.uuid());
+			dir.setDeleted(0);
+			dir.setCreateTime(new Date());
+			dir.setCreateUser(subject.getCreateUser());
+			dir.setDirName(Constants.SUBJECT_DOCUMENT_DIRNAME);
+			dir.setSubjectId(subject.getId());
+			dir.setParentId(null);
+			directoryService.addDirectory(dir);
 			// if(subject.getSubjectType() == Constants.SUBJECT_TYPE_M){
 			// 给新增多人专题添加标签文件夹
 			// directoryService.addDirectory(subject, null,
@@ -313,6 +323,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
+	@RecordOperate(dataClass = DataType.SUBJECT, action = DataSynchAction.TRUNCATE, keyIndex = 0, keyMethod = "getId")
 	public void deleteSubject(SubjectEntity subject) {
 		//删除专题下的所有目录
 		List<DirectoryEntity> dirList = directoryService.findByDetached(DetachedCriteria.forClass(DirectoryEntity.class).add(Restrictions.eq("subjectId", subject.getId())));
@@ -336,7 +347,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		}else{
 			//多人专题
 			//把条目放到每个创建人员的回收站
-			//查找所有闯进人员的默认专题
+			//查找所有创建人员的默认专题
 			List<SubjectEntity> defaultSubjects = super.findHql("select distinct s from SubjectEntity s , NoteEntity n where s.createUser = n.createUser and  n.subjectId = ?  and  s.subjectName = '默认专题'", new Object[]{subject.getId()});
 			for(SubjectEntity defaultSubject : defaultSubjects){
 				//把某个用户在该专题下创建的条目，放入某个用户的回收站下
@@ -354,28 +365,32 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
-	@RecordOperate(dataClass = { DataType.SUBJECT, DataType.SUBJECTUSER }, action = {
-			DataSynchAction.ADD, DataSynchAction.ADD }, keyIndex = {
+	/*@RecordOperate(dataClass = DataType.SUBJECTUSER, action = DataSynchAction.ADD, keyIndex = {
 			0, 0 }, targetUser = { 1, -1 }, timeStamp = { "", "" }, keyMethod = {
-			"", "" })
-	public void addSubjectMember(String subjectId, String userId, String roleId) {
+			"", "" })*/
+	public void addSubjectMember(String subjectId, String userId, String roleId, String creator, long timestamp) {
 		Group group = groupService.findGroup(SubjectEntity.class.getName(),
 				subjectId);
 		groupService.addGroupUser(group.getGroupId(), userId);
-		roleService.addRoleUser(subjectId, userId, roleId);
+		String id = roleService.addRoleUser(subjectId, userId, roleId, creator, timestamp);
+		
+		synchLogService.generateAddSubjectUserLogs(id, subjectId, userId, roleId, DataSynchAction.ADD.toString(), creator, timestamp);
+		synchLogService.generateUserSubjectAddLog(subjectId, userId, roleId);
 	}
 
 	@Override
-	@RecordOperate(dataClass = { DataType.SUBJECT, DataType.SUBJECTUSER }, action = {
+	/*@RecordOperate(dataClass = { DataType.SUBJECT, DataType.SUBJECTUSER }, action = {
 			DataSynchAction.DELETE,
 			DataSynchAction.DELETE }, keyIndex = { 0, 0 }, targetUser = {
-			1, -1 }, timeStamp = { "", "" }, keyMethod = { "", "" })
-	
+			1, -1 }, timeStamp = { "", "" }, keyMethod = { "", "" })*/
 	public void removeSubjectMember(String subjectId, String userRoleId) {
 		Group group = groupService.findGroup(SubjectEntity.class.getName(),subjectId);
-		RoleUser u=roleService.get(RoleUser.class, Long.valueOf(userRoleId));
+		RoleUser u=roleService.get(RoleUser.class, userRoleId);
 		groupService.removeGroupUser(group.getGroupId(), u.getUserId());
 		roleService.removeRoleUser(u);
+		
+		synchLogService.generateDelSubjectUserLogs(userRoleId, subjectId, u.getUserId(), DataSynchAction.TRUNCATE.toString());
+		synchLogService.generateUserSubjectDelLog(subjectId, u.getUserId());
 	}
 
 	@Override
@@ -432,7 +447,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	@Override
 	public List<SubjectEntity> findUsersSubject(String userId) {
 		List<SubjectEntity> mList = findHql(
-				"select s from SubjectEntity s , RoleUser r where s.id=r.groupId and s.deleted="
+				"select s from SubjectEntity s , RoleUser r where s.id=r.subjectId and s.deleted="
 						+ Constants.DATA_NOT_DELETED
 						+ " and s.status="
 						+ Constants.ENABLED + " and r.userId=?",
@@ -443,7 +458,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	@Override
 	public List<SubjectEntity> findUsersSubjectByType(String userId, int subjectType) {
 		List<SubjectEntity> mList = findHql(
-				"select s from SubjectEntity s , RoleUser r where s.id=r.groupId and s.deleted="
+				"select s from SubjectEntity s , RoleUser r where s.id=r.subjectId and s.deleted="
 						+ Constants.DATA_NOT_DELETED
 						+ " and s.status="
 						+ Constants.ENABLED
@@ -456,7 +471,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 	@Override
 	public List<SubjectEntity> findPermissionSubject(String userId) {
 		List<SubjectEntity> mList = findHql(
-				"select s from SubjectEntity s , RoleUser r where s.id=r.groupId and s.deleted="
+				"select s from SubjectEntity s , RoleUser r where s.id=r.subjectId and s.deleted="
 						+ Constants.DATA_NOT_DELETED
 						+ " and s.subjectType="
 						+ Constants.SUBJECT_TYPE_M
@@ -479,12 +494,14 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 
 	@Override
 	public void inviteMemember(String email[], String types[],
-			HttpServletRequest request, SubjectEntity SubjectEntity)
+			HttpServletRequest request, SubjectEntity SubjectEntity, String inviter)
 			throws Exception {
 		if (email != null) {
 			String basePath = AppRequstUtiles.getAppUrl(request);
 			for (int i = 0; i < email.length; i++) {
 				InviteMememberEntity inviteMemember = new InviteMememberEntity();
+				inviteMemember.setCreateUserId(inviter);
+				inviteMemember.setCreateTimeStamp(System.currentTimeMillis());
 				inviteMemember.setEmail(email[i]);
 				Role ownerRole = null;
 				String type=types[i];
@@ -545,12 +562,14 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 			AccountEntity user) throws Exception {
 		String roleid = inviteMememberEntity.getRoleid();
 		SubjectEntity SubjectEntity = getSubject(inviteMememberEntity.getSubjectid());
-		RoleUser ru = roleService.findUserRole(user.getId(),SubjectEntity.getId());
-		if (ru != null) {
-			ru.setRoleId(roleid);
-			roleService.updateRoleUser(ru);
-		} else {
-			addSubjectMember(SubjectEntity.getId(), user.getId(),roleid);
+		if(SubjectEntity != null){
+			RoleUser ru = roleService.findUserRole(user.getId(),SubjectEntity.getId());
+			if (ru != null) {
+				ru.setRoleId(roleid);
+				roleService.updateRoleUser(ru);
+			} else {
+				addSubjectMember(SubjectEntity.getId(), user.getId(), roleid, inviteMememberEntity.getCreateUserId(), inviteMememberEntity.getCreateTimeStamp());
+			}
 		}
 		delete(inviteMememberEntity);
 	}
@@ -578,8 +597,13 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		if (ownerRole != null) {
 			for (int i = 0; i < ids.length; i++) {
 				RoleUser u = get(RoleUser.class, ids[i]);
+				String roleId = u.getRoleId();
+				String newRoleId = ownerRole.getId();
+				
 				u.setRoleId(ownerRole.getId());
 				roleService.updateEntitie(u);
+				
+				synchLogService.generateRecycleLogs(u.getSubjectId(), u.getUserId(), roleId, newRoleId);
 			}
 		}
 
@@ -1160,7 +1184,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 					userId, realPath, zipFile);
 			subjectEntity.setId(UUIDGenerator.uuid());
 			subjectEntity.setSubjectName(request.getParameter("subjectName"));
-			addSubject(subjectEntity);
+			addSubject(subjectEntity, subjectEntity.getCreateUser());
 			for (DirectoryEntity directoryEntity : directoryList) {
 				directoryEntity.setSubjectId(subjectEntity.getId());
 				directoryEntity.setId(UUIDGenerator.uuid());
@@ -1487,7 +1511,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		treeData.setChecked("true");
 		treeData.setDataType("SUBJECT");
 		listTreeData.add(treeData);
-		List<DirectoryEntity> list=	directoryService.findDirsBySubjectOderByTime(subjectId,true);
+		List<DirectoryEntity> list=	directoryService.findDirsBySubjectOderByTime(subjectId,true,false);
 		if(remvdocument){
 			findRemoveDirDOCUMENT(list,subjectId);
 		}

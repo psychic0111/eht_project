@@ -45,8 +45,6 @@ import com.eht.user.service.AccountServiceI;
 @Transactional
 public class AccountServiceImpl extends CommonServiceImpl implements AccountServiceI {
 
-	public  final String uppath="uptem"; 
-	
 	@Autowired
 	private SubjectServiceI subjectService;
 	
@@ -109,7 +107,7 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 				if (!file.exists()) {
 					file.mkdirs();// 创建根目录
 				}
-				String noextfilename=DataUtils.getDataString(DataUtils.yyyymmddhhmmss)+StringUtil.random(8);//自定义文件名称
+				String noextfilename = UUIDGenerator.uuid();//自定义文件名称
 			    String myfilename=noextfilename+"."+extend;
 			    String savePath = realPath + myfilename;// 文件保存全路径
 			    File savefile = new File(savePath);
@@ -181,7 +179,7 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 		subject.setSubjectName("默认专题");	
 		List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
 		if(list == null || list.isEmpty()){
-			subjectService.addSubject(subject);
+			subjectService.addSubject(subject, account.getId());
 		}
 	}
 	

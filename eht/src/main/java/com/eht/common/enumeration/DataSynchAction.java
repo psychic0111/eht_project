@@ -32,9 +32,14 @@ public enum DataSynchAction {
 	BAN,
 	
 	/**
-	 * 同步删除数据
+	 * 同步删除数据(放入回收站)
 	 */
 	DELETE,
+	
+	/**
+	 * 同步删除数据(真删除，不可恢复)
+	 */
+	TRUNCATE,
 	
 	/**
 	 * 同步发送

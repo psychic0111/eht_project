@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.Constants;
+import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.AppContextUtils;
@@ -23,6 +24,8 @@ import com.eht.common.util.TreeUtils;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
+import com.eht.log.entity.SynchLogEntity;
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.NoteTag;
 import com.eht.note.service.NoteServiceI;
 import com.eht.resource.entity.ClassName;
@@ -44,6 +47,9 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	
 	@Autowired
 	private GroupService groupService;
+	
+	@Autowired
+	private SynchLogServiceI synchLogService;
 	
 	@Override
 	@RecordOperate(dataClass=DataType.TAG, action=DataSynchAction.ADD, keyIndex=0, keyMethod="getId", timeStamp="createTime")
@@ -75,7 +81,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	}
 
 	@Override
-	@RecordOperate(dataClass=DataType.TAG, action=DataSynchAction.DELETE, keyIndex=0, keyMethod="getId")
+	@RecordOperate(dataClass=DataType.TAG, action=DataSynchAction.TRUNCATE, keyIndex=0, keyMethod="getId")
 	public void deleteTag(TagEntity tag) {
 		deleteNoteTagByTagId(tag.getId());
 		delete(tag);
@@ -108,6 +114,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 		DetachedCriteria dc = DetachedCriteria.forClass(TagEntity.class);
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("subjectId", subjectId));
+		dc.addOrder(Order.asc("createTime"));
 		List<TagEntity> list = findByDetached(dc);
 		return list;
 	}
@@ -209,24 +216,31 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	}
 
 	@Override
-	public String saveNoteTag(String uuid, String noteId, String tagId) {
-		NoteTag noteTag = new NoteTag();
-		noteTag.setId(uuid);
-		noteTag.setNoteId(noteId);
-		noteTag.setTagId(tagId);
-		saveNoteTag(noteTag);
+	public String saveNoteTag(String uuid, String noteId, String tagId, String userId) {
+		NoteTag noteTag = findNoteTag(noteId, tagId);
+		if(noteTag == null){
+			noteTag = new NoteTag();
+			noteTag.setId(uuid);
+			noteTag.setNoteId(noteId);
+			noteTag.setTagId(tagId);
+			noteTag.setCreateUserId(userId);
+			noteTag.setCreateTimeStamp(System.currentTimeMillis());
+			saveNoteTag(noteTag);
+		}
 		return noteTag.getId();
 	}
 	
 	@Override
-	@RecordOperate(dataClass=DataType.NOTETAG, action=DataSynchAction.ADD, keyIndex=0, keyMethod = "getId")
+	//@RecordOperate(dataClass=DataType.NOTETAG, action=DataSynchAction.ADD, keyIndex=0, keyMethod = "getId")
 	public String saveNoteTag(NoteTag noteTag) {
 		save(noteTag);
+		
+		synchLogService.recordLog(noteTag, noteTag.getClassName(), DataSynchAction.ADD.toString(), null, System.currentTimeMillis());
 		return noteTag.getId();
 	}
 	
 	@Override
-	public String saveNoteTags(String noteId, String[] tagIds) {
+	public String saveNoteTags(String noteId, String[] tagIds, String userId) {
 		//原标签集合
 		List<String> tagList = findTagIdsByNote(noteId);
 		
@@ -248,7 +262,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 				//需添加的标签
 				for(String tagId : newList){
 					if(!tagList.contains(tagId)){
-						saveNoteTag(UUIDGenerator.uuid(), noteId, tagId);
+						saveNoteTag(UUIDGenerator.uuid(), noteId, tagId, userId);
 					}
 				}
 			}else{
@@ -258,7 +272,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 			}
 		}else{
 			for(String tagId : tagIds){
-				saveNoteTag(UUIDGenerator.uuid(), noteId, tagId);
+				saveNoteTag(UUIDGenerator.uuid(), noteId, tagId, userId);
 			}
 		}
 		return null;
@@ -275,9 +289,10 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	}
 
 	@Override
-	@RecordOperate(dataClass=DataType.NOTETAG, action=DataSynchAction.DELETE, keyIndex=0, keyMethod="getId")
+	//@RecordOperate(dataClass=DataType.NOTETAG, action=DataSynchAction.TRUNCATE, keyIndex=0, keyMethod="getId")
 	public String deleteNoteTag(NoteTag noteTag) {
 		delete(noteTag);
+		synchLogService.recordLog(noteTag, noteTag.getClassName(), DataSynchAction.TRUNCATE.toString(), null, System.currentTimeMillis());
 		return noteTag.getId();
 	}
 
@@ -298,7 +313,15 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 		}
 		return null;
 	}
-
+	
+	@Override
+	public List<NoteTag> findNoteTagsByNote(String noteId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(NoteTag.class);
+		dc.add(Restrictions.eq("noteId", noteId));
+		List<NoteTag> list = findByDetached(dc);
+		return list;
+	}
+	
 	@Override
 	public void deleteNoteTagByNoteId(String noteId) {
 		DetachedCriteria dc = DetachedCriteria.forClass(NoteTag.class);

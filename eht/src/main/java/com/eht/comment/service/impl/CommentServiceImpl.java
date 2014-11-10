@@ -58,7 +58,7 @@ public class CommentServiceImpl extends CommonServiceImpl implements CommentServ
 	}
 
 	@Override
-	@RecordOperate(dataClass=DataType.COMMENT, action=DataSynchAction.DELETE, keyMethod="getId")
+	@RecordOperate(dataClass=DataType.COMMENT, action=DataSynchAction.TRUNCATE, keyMethod="getId")
 	public boolean deleteComment(CommentEntity comment) {
 		delete(comment);
 		return true;

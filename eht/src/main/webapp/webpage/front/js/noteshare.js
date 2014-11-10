@@ -57,7 +57,7 @@ function shareNote() {
 		},
 		lock : true,
 		follow : 'note_share',
-		followX : 0,
+		followX : -80,
 		followY : 34
 	});
 

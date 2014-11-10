@@ -1,6 +1,8 @@
 package com.eht.user.entity;
 
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,6 +15,8 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
 import com.eht.auth.bean.User;
+import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.enumeration.DataType;
 
 /**   
  * @Title: Entity
@@ -55,11 +59,25 @@ public class AccountEntity extends User implements java.io.Serializable {
 	
 	/** 用户正在使用的客户端ID */
 	private String clientId;
+
+	private String operation;
+	
+	private String className = DataType.USER.toString();
+	
+	/**创建时间毫秒*/
+	private Long createTimeStamp;
+	/**修改时间毫秒*/
+	private Long updateTimeStamp;
+	
+	/**创建人,接口使用*/
+	private java.lang.String createUserId;
+	/**修改者,接口使用*/
+	private java.lang.String updateUserId;
+	
 	/**
 	 *方法: 取得java.lang.String
 	 *@return: java.lang.String  主键
 	 */
-	
 	@Id
 	@GenericGenerator(name = "idGenerator", strategy = "uuid")
 	@GeneratedValue(generator = "idGenerator")
@@ -95,6 +113,7 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 *方法: 取得java.lang.String
 	 *@return: java.lang.String  密码
 	 */
+	@ClientJsonIgnore
 	public java.lang.String getPassword(){
 		return this.password;
 	}
@@ -170,6 +189,7 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 *方法: 取得java.lang.Integer
 	 *@return: java.lang.Integer  创建者
 	 */
+	@ClientJsonIgnore
 	public java.lang.String getCreateuser(){
 		return this.createuser;
 	}
@@ -185,6 +205,7 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 *方法: 取得java.util.Date
 	 *@return: java.util.Date  创建时间
 	 */
+	@ClientJsonIgnore
 	public java.util.Date getCreatetime(){
 		return this.createtime;
 	}
@@ -195,11 +216,15 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 */
 	public void setCreatetime(java.util.Date createtime){
 		this.createtime = createtime;
+		if(this.createtime != null && this.createTimeStamp == null){
+			this.createTimeStamp = this.createtime.getTime(); 
+		}
 	}
 	/**
 	 *方法: 取得java.lang.Integer
 	 *@return: java.lang.Integer  修改者
 	 */
+	@ClientJsonIgnore
 	public java.lang.String getUpdateuser(){
 		return this.updateuser;
 	}
@@ -215,6 +240,7 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 *方法: 取得java.util.Date
 	 *@return: java.util.Date  修改时间
 	 */
+	@ClientJsonIgnore
 	public java.util.Date getUpdatetime(){
 		return this.updatetime;
 	}
@@ -225,6 +251,9 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 */
 	public void setUpdatetime(java.util.Date updatetime){
 		this.updatetime = updatetime;
+		if(this.updatetime != null && this.updateTimeStamp == null){
+			this.updateTimeStamp = this.updatetime.getTime();
+		}
 	}
 	
 	@Column(name="path")
@@ -240,6 +269,62 @@ public class AccountEntity extends User implements java.io.Serializable {
 	}
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
+	}
+	
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+	
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+	public void setClassName(String className) {
+		this.className = className;
+	}
+	
+	@Transient
+	public Long getCreateTimeStamp() {
+		return createTimeStamp;
+	}
+	public void setCreateTimeStamp(Long createTimeStamp) {
+		this.createTimeStamp = createTimeStamp;
+		if(this.createTimeStamp != null && this.createtime == null){
+			this.createtime = new Date(this.createTimeStamp);
+		}
+	}
+	
+	@Transient
+	public Long getUpdateTimeStamp() {
+		return updateTimeStamp;
+	}
+	public void setUpdateTimeStamp(Long updateTimeStamp) {
+		this.updateTimeStamp = updateTimeStamp;
+		if(this.updateTimeStamp != null && this.updatetime == null){
+			this.updatetime = new Date(this.updateTimeStamp);
+		}
+	}
+	
+	@Transient
+	public java.lang.String getCreateUserId() {
+		return createUserId;
+	}
+	public void setCreateUserId(java.lang.String createUserId) {
+		this.createUserId = createUserId;
+		this.createuser = createUserId;
+	}
+	
+	@Transient
+	public java.lang.String getUpdateUserId() {
+		return updateUserId;
+	}
+	public void setUpdateUserId(java.lang.String updateUserId) {
+		this.updateUserId = updateUserId;
+		this.updateuser = updateUserId;
 	}
 
 	

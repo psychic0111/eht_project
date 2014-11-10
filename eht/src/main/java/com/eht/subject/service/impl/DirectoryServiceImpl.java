@@ -1,6 +1,7 @@
 package com.eht.subject.service.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,6 +26,7 @@ import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.entity.GroupUser;
 import com.eht.group.service.GroupService;
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.NoteServiceI;
 import com.eht.resource.entity.ClassName;
@@ -55,6 +57,9 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	
 	@Autowired
 	private NoteServiceI noteService;
+	
+	@Autowired
+	private SynchLogServiceI synchLogService;
 	
 	@Override
 	@RecordOperate(dataClass=DataType.DIRECTORY, action=DataSynchAction.ADD, keyIndex=0, keyMethod="getId", timeStamp="createTime")
@@ -165,6 +170,7 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		}
 	}
 
+	@RecordOperate(dataClass=DataType.DIRECTORY, action=DataSynchAction.RESTORE, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
 	private void restorDir(DirectoryEntity dir,List<String> dirIdList){
 		//设置目录状态为未删除
 		if(dir.getDeleted() == Constants.DATA_DELETED){
@@ -184,7 +190,7 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		}
 	}
 	
-	@RecordOperate(dataClass=DataType.DIRECTORY, action=DataSynchAction.ADD, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
+	@RecordOperate(dataClass=DataType.DIRECTORY, action=DataSynchAction.RESTORE, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
 	public void markDirectoryUndeleted(DirectoryEntity dir) {
 		dir.setDeleted(Constants.DATA_NOT_DELETED);
 		updateEntitie(dir);
@@ -197,6 +203,7 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	}
 	
 	@Override
+	@RecordOperate(dataClass=DataType.DIRECTORY, action=DataSynchAction.TRUNCATE, keyIndex=0, keyMethod="getId")
 	public void deleteOnlyDirectory(DirectoryEntity dir) {
 		Group g = groupService.findGroup(DirectoryEntity.class.getName(), dir.getId());
 		if(g != null){
@@ -221,10 +228,12 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	}
 	
 	@Override
-	public List<DirectoryEntity> findDirsBySubjectOderByTime(String subjectId,boolean isasc) {
+	public List<DirectoryEntity> findDirsBySubjectOderByTime(String subjectId,boolean isasc,boolean includeDeleted) {
 		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class);
 		dc.add(Restrictions.eq("subjectId", subjectId));
-		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		if(!includeDeleted){
+			dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		}
 		if(isasc){
 			dc.addOrder( Order.asc("createTime"));
 		}else{
@@ -259,26 +268,33 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	}
 
 	@Override
-	@RecordOperate(dataClass={DataType.DIRECTORY,DataType.DIRECTORYBLACK}, action={DataSynchAction.DELETE, DataSynchAction.ADD}, keyIndex={1, 1}, targetUser={0, 0}, timeStamp={"",""}, keyMethod={"", ""})
-	public void blacklistedUser(String userId, String dirId) {
+	//@RecordOperate(dataClass=DataType.DIRECTORY, action=DataSynchAction.BAN, keyIndex=1, targetUser=0, timeStamp="", keyMethod="")
+	public void blacklistedUser(String userId, String dirId, long timestamp) {
 		Group group = groupService.findGroup(DirectoryEntity.class.getName(), dirId);
 		//将用户放入group-user关系表
 		groupService.addGroupUser(group.getGroupId(), userId);
+		
+		//生成黑名单中的用户在客户端删除此目录的日志
+		DirectoryEntity dir = getDirectory(dirId);
+		synchLogService.recordLog(dir, dir.getClassName(), DataSynchAction.BAN.toString(), userId, timestamp);
 	}
 	
 	@Override
-	public void blackListedAllUser(String userId, String dirId) {
-		blacklistedUser(userId,dirId);
+	public void blackListedAllUser(String userId, String dirId, long timestamp) {
+		timestamp --;
+		blacklistedUser(userId,dirId,timestamp);
 		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class);
 		dc.add(Restrictions.eq("parentId", dirId));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		List<NoteEntity> noteList=noteService.findNotesByDir(dirId);
 		for (NoteEntity noteEntity : noteList) {
-			noteService.blacklistedUser(userId, noteEntity.getId());
+			timestamp --;
+			noteService.blacklistedUser(userId, noteEntity.getId(), timestamp);
 		}
 		List<DirectoryEntity> dirList = findByDetached(dc);
 		for (DirectoryEntity directoryEntity : dirList) {
-			blackListedAllUser(userId, directoryEntity.getId());
+			timestamp --;
+			blackListedAllUser(userId, directoryEntity.getId(), timestamp);
 		}
 	}
 
@@ -323,27 +339,47 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	public boolean inDirBlackList(String userId, String dirId) {
 		Group group = groupService.findGroup(DirectoryEntity.class.getName(), dirId);
 		GroupUser gu = groupService.findGroupUser(group.getGroupId(), userId);
-		return gu != null;
+		if(gu != null){
+			return true;
+		}else{
+			List<String> list = new ArrayList<String>();
+			findUpDirs(dirId, list);
+			for(String id : list){
+				Group g = groupService.findGroup(DirectoryEntity.class.getName(), id);
+				GroupUser gur = groupService.findGroupUser(g.getGroupId(), userId);
+				if(gur != null){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override
-	@RecordOperate(dataClass={DataType.DIRECTORY,DataType.DIRECTORYBLACK}, action={DataSynchAction.ADD, DataSynchAction.DELETE}, keyIndex={1, 1}, targetUser={0, 0}, timeStamp={"",""}, keyMethod={"", ""})
-	public void removeUser4lacklist(String userId, String dirId) {
+	//@RecordOperate(dataClass={DataType.DIRECTORY,DataType.DIRECTORYBLACK}, action={DataSynchAction.ADD, DataSynchAction.DELETE}, keyIndex={1, 1}, targetUser={0, 0}, timeStamp={"",""}, keyMethod={"", ""})
+	public void removeUser4lacklist(String userId, String dirId, long timestamp) {
 		Group group = groupService.findGroup(DirectoryEntity.class.getName(), dirId);
 		groupService.removeGroupUser(group.getGroupId(), userId);
+		
+		//生成黑名单中的用户在客户端删除此目录的日志
+		DirectoryEntity dir = getDirectory(dirId);
+		synchLogService.recordLog(dir, dir.getClassName(), DataSynchAction.CREATEORUPDATE.toString(), userId, timestamp);
 	}
-	public void removeUserALL4lacklist(String userId, String dirId){
-		removeUser4lacklist(userId,dirId);
+	public void removeUserALL4lacklist(String userId, String dirId, long timestamp){
+		timestamp ++;
+		removeUser4lacklist(userId,dirId,timestamp);
 		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class);
 		dc.add(Restrictions.eq("parentId", dirId));
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		List<NoteEntity> noteList=noteService.findNotesByDir(dirId);
 		for (NoteEntity noteEntity : noteList) {
-			noteService.removeUser4blacklist(userId, noteEntity.getId());
+			timestamp ++;
+			noteService.removeUser4blacklist(userId, noteEntity.getId(), timestamp);
 		}
 		List<DirectoryEntity> dirList = findByDetached(dc);
 		for (DirectoryEntity directoryEntity : dirList) {
-			removeUser4lacklist(userId, directoryEntity.getId());
+			timestamp ++;
+			removeUserALL4lacklist(userId, directoryEntity.getId(), timestamp);
 		}
 	}
 	@Override
@@ -367,6 +403,36 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		List<DirectoryEntity> list = findByDetached(dc);
 		return list;
 	}
+	
+	@Override
+	public List<DirectoryEntity> findDeletedDirsBySubject(String userId, String subjectId, String orderField, boolean asc, int subjectType) {
+		DetachedCriteria dc = DetachedCriteria.forClass(DirectoryEntity.class, "d");
+		dc.add(Restrictions.ne("d.deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("d.subjectId", subjectId));
+		
+		if(!StringUtil.isEmpty(orderField)){
+			if(asc){
+				dc.addOrder(Order.asc(orderField));
+			}else{
+				dc.addOrder(Order.desc(orderField));
+			}
+		}
+		
+		List<DirectoryEntity> list = findByDetached(dc);
+		
+		if(subjectType == Constants.SUBJECT_TYPE_M){
+			List<DirectoryEntity> resultList = new ArrayList<DirectoryEntity>();
+			for(DirectoryEntity dir : list){
+				if(!inDirBlackList(userId, dir.getId())){
+					resultList.add(dir);
+				}
+			}
+			return resultList;
+		}
+		
+		return list;
+	}
+	
 	@Override
 	public List<DirectoryEntity> findDirsByIds(String[] ids) {
 		String query = "from DirectoryEntity d where id=-1 ";

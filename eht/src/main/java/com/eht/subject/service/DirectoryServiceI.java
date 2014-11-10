@@ -73,7 +73,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * @param subjectId
 	 * @return
 	 */
-	public List<DirectoryEntity> findDirsBySubjectOderByTime(String subjectId,boolean isasc);
+	public List<DirectoryEntity> findDirsBySubjectOderByTime(String subjectId,boolean isasc, boolean includeDeleted);
 	/**
 	 * 查询专题下目录
 	 * @param subjectId
@@ -99,7 +99,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * @param dirId
 	 * @return
 	 */
-	public void blackListedAllUser(String userId, String dirId);
+	public void blackListedAllUser(String userId, String dirId, long timestamp);
 	
 	/**
 	 * 将用户加入黑名单，用户将不能访问该目录及目录下资源
@@ -107,7 +107,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * @param dirId
 	 * @return
 	 */
-	public void blacklistedUser(String userId, String dirId);
+	public void blacklistedUser(String userId, String dirId, long timestamp);
 	
 	/**
 	 * 将用户从黑名单移除
@@ -115,7 +115,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * @param dirId
 	 * @return
 	 */
-	public void removeUser4lacklist(String userId, String dirId);
+	public void removeUser4lacklist(String userId, String dirId, long timestamp);
 	
 	
 	/**
@@ -124,7 +124,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * @param dirId
 	 * @return
 	 */
-	public void removeUserALL4lacklist(String userId, String dirId);
+	public void removeUserALL4lacklist(String userId, String dirId, long timestamp);
 	
 	/**
 	 * 检查目录名是否存在，同级目录不能重名
@@ -175,4 +175,7 @@ public interface DirectoryServiceI extends CommonService{
 	 * @return
 	 */
 	public void findUpDirs(String dirId,List<String> list);
+	
+	public List<DirectoryEntity> findDeletedDirsBySubject(String userId,
+			String subjectId, String orderField, boolean asc, int subjectType);
 }

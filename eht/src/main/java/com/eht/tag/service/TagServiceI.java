@@ -78,7 +78,7 @@ public interface TagServiceI extends CommonService{
 	 * @param tagIds
 	 * @return
 	 */
-	public String saveNoteTag(String uuid, String noteId, String tagId);
+	public String saveNoteTag(String uuid, String noteId, String tagId, String userId);
 	
 	/**
 	 * 保存条目标签关系
@@ -86,7 +86,7 @@ public interface TagServiceI extends CommonService{
 	 * @param tagIds
 	 * @return
 	 */
-	public String saveNoteTags(String noteId, String[] tagIds);
+	public String saveNoteTags(String noteId, String[] tagIds, String userId);
 	
 	/**
 	 * 删除条目标签关系
@@ -158,4 +158,11 @@ public interface TagServiceI extends CommonService{
 	public void findChildTagsByParentId(String parentId, List<TagEntity> tagList);
 
 	public void deleteTagAll(TagEntity parentTag);
+	
+	/**
+	 * 查询条目标签关系
+	 * @param noteId
+	 * @return
+	 */
+	public List<NoteTag> findNoteTagsByNote(String noteId);
 }

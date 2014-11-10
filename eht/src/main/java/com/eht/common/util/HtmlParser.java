@@ -241,6 +241,7 @@ public class HtmlParser {
 		for (int i = 0; i < imgs.size(); i++) {
 			String url = imgs.get(i).attr("src");
 			url = url.replaceAll(replace, replaceTo);
+			imgs.get(i).attr("r_src", url);
 			imgs.get(i).attr("src", url);
 		}
 		return doc.html();
@@ -253,12 +254,30 @@ public class HtmlParser {
 	 * @param replaceTo
 	 * @return
 	 */
-	static public String replaceHtmlImg(String content, String replace) {
+	static public String replaceHtmlImg(String content, String concat) {
 		Document doc = Jsoup.parseBodyFragment(content);
 		Elements imgs = doc.select("img");
 		for (int i = 0; i < imgs.size(); i++) {
 			String url = imgs.get(i).attr("src");
-			url = replace + url;
+			url = concat + url;
+			imgs.get(i).attr("src", url);
+		}
+		return doc.html();
+	}
+	
+	/**
+	 * 把客户端上传的html文件中的img路径替换成编辑器中可显示路径
+	 * @param content
+	 * @param replace
+	 * @param replaceTo
+	 * @return
+	 */
+	static public String replaceClientHtmlImg(String content, String concat) {
+		Document doc = Jsoup.parseBodyFragment(content);
+		Elements imgs = doc.select("img");
+		for (int i = 0; i < imgs.size(); i++) {
+			String url = imgs.get(i).attr("r_src");
+			url = concat + url;
 			imgs.get(i).attr("src", url);
 		}
 		return doc.html();

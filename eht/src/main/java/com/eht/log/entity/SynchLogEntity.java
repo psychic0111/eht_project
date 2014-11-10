@@ -103,7 +103,7 @@ public class SynchLogEntity implements java.io.Serializable {
 		if(action != null){
 			if(action.equals(DataSynchAction.ADD.toString())){
 				this.operateType = 1;
-			}else if(action.equals(DataSynchAction.DELETE.toString())){
+			}else if(action.equals(DataSynchAction.DELETE.toString()) || action.equals(DataSynchAction.TRUNCATE.toString())){
 				this.operateType = -1;
 			}else if(action.equals(DataSynchAction.UPDATE.toString())){
 				this.operateType = 0;

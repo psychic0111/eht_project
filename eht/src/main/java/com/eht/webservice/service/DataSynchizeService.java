@@ -6,13 +6,9 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -31,8 +27,6 @@ public interface DataSynchizeService {
 	 * @param clientType 客户端类型
 	 * @return	客户端标识
 	 */
-	@POST
-	@Path("/send/client/a/{clientType}")
 	public String registerClient(@PathParam("clientType") String clientType, @Context HttpServletResponse res);
 
 	/**
@@ -40,8 +34,6 @@ public interface DataSynchizeService {
 	 * @param clientId
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/client/d/{clientId}")
 	public String deleteClient(@PathParam("clientId") String clientId);
 	
 	/**
@@ -50,8 +42,6 @@ public interface DataSynchizeService {
 	 * @param password
 	 * @return
 	 */
-	@POST
-	@Path("/send/user/u/{userId}")
 	public String updatePassword(@PathParam("userId") String userId, @FormParam("oldPassword") String oldPassword, @FormParam("password") String password);
 	
 	/**
@@ -59,8 +49,6 @@ public interface DataSynchizeService {
 	 * @param data
 	 * @return
 	 */
-	@POST
-	@Path("/send/user")
 	public String updateUser(@FormParam("data") String data);
 	
 	/**
@@ -68,8 +56,6 @@ public interface DataSynchizeService {
 	 * @param data	         专题数据
 	 * @return
 	 */
-	@POST
-	@Path("/send/subject/a")
 	public String addSubject(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	/**
 	 * 更新专题
@@ -79,8 +65,6 @@ public interface DataSynchizeService {
 	 * @throws IllegalAccessException 
 	 * @throws Exception 
 	 */
-	@POST
-	@Path("/send/subject/u/{timeStamp}")
 	public String updateSubject(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException, Exception;
 	
 	/**
@@ -90,8 +74,6 @@ public interface DataSynchizeService {
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
 	 */
-	@POST
-	@Path("/send/subject")
 	public String addOrUpdateSubject(@FormParam("data") String data, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException;
 	
 	/**
@@ -99,8 +81,6 @@ public interface DataSynchizeService {
 	 * @param id	   专题ID
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/subject/d/{id}")
 	public String deleteSubject(@PathParam("id") String id, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -111,8 +91,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws Exception 
 	 */
-	@POST
-	@Path("/get_data/{clientId}/{userId}/{timeStamp}/{offset}")
 	public String getDeleteLogs(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception;
 	
 	/**
@@ -122,8 +100,6 @@ public interface DataSynchizeService {
 	 * @param timeStamp	上次同步时间戳
 	 * @return
 	 */
-	@GET
-	@Path("/get_count/{clientId}/{userId}/{timeStamp}")
 	public int countSynchData(String clientId, String userId, String timeStamp, @Context HttpServletResponse res);
 	
 	/**
@@ -131,8 +107,6 @@ public interface DataSynchizeService {
 	 * @param data	         目录数据
 	 * @return
 	 */
-	@POST
-	@Path("/send/directory/a")
 	public String addDirectory(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -143,8 +117,6 @@ public interface DataSynchizeService {
 	 * @throws IllegalAccessException 
 	 * @throws Exception 
 	 */
-	@POST
-	@Path("/send/directory/u/{timeStamp}")
 	public String updateDirectory(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException, Exception;
 	
 	/**
@@ -154,8 +126,6 @@ public interface DataSynchizeService {
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
 	 */
-	@POST
-	@Path("/send/directory")
 	public String addOrUpdateDirectory(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException;
 	
 	/**
@@ -164,8 +134,6 @@ public interface DataSynchizeService {
 	 * @param id		目录ID
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/directory/d/{id}")
 	public String deleteDirectory(@PathParam("id") String id, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -175,8 +143,6 @@ public interface DataSynchizeService {
 	 * @param userId		用户ID
 	 * @return
 	 */
-	@POST
-	@Path("/send/directoryblack/a/{directoryId}/{userId}")
 	public String addDirectoryBlack(@PathParam("directoryId") String directoryId, @PathParam("userId") String userId, @Context HttpServletResponse res);
 	/**
 	 * 将用户从目录黑名单移除
@@ -185,8 +151,6 @@ public interface DataSynchizeService {
 	 * @param userId		用户ID
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/directoryblack/d/{directoryId}/{userId}")
 	public String deleteDirectoryBlack(@PathParam("directoryId") String directoryId, @PathParam("userId") String userId, @Context HttpServletResponse res);
 	
 	/**
@@ -194,8 +158,6 @@ public interface DataSynchizeService {
 	 * @param data		条目数据
 	 * @return
 	 */
-	@POST
-	@Path("/send/note/a")
 	public String addNote(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	/**
 	 * 更新条目
@@ -206,8 +168,6 @@ public interface DataSynchizeService {
 	 * @throws IllegalAccessException 
 	 * @throws Exception 
 	 */
-	@POST
-	@Path("/send/note/u/{timeStamp}")
 	public String updateNote(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @DefaultValue("true") @QueryParam("updateContent") boolean updateContent, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException, Exception;
 	
 	/**
@@ -217,8 +177,6 @@ public interface DataSynchizeService {
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
 	 */
-	@POST
-	@Path("/send/note")
 	public String addOrUpdateNote(@FormParam("data") String data, @DefaultValue("true") @FormParam("updateContent") boolean updateContent, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException;
 	
 	/**
@@ -226,8 +184,6 @@ public interface DataSynchizeService {
 	 * @param content	条目内容
 	 * @return 更新结果信息
 	 */
-	@POST
-	@Path("/send/note/u/{id}")
 	public String updateNoteContent(@PathParam("id") String id, @FormParam("content") String content, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -235,8 +191,6 @@ public interface DataSynchizeService {
 	 * @param id		条目ID
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/note/d/{id}")
 	public String deleteNote(@PathParam("id") String id, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -245,8 +199,6 @@ public interface DataSynchizeService {
 	 * @param userId		用户ID
 	 * @return
 	 */
-	@POST
-	@Path("/send/noteblack/a/{noteId}/{userId}")
 	public String addNoteBlack(@PathParam("noteId") String noteId, @PathParam("userId") String userId, @Context HttpServletResponse res);
 	
 	/**
@@ -255,8 +207,6 @@ public interface DataSynchizeService {
 	 * @param userId		用户ID
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/noteblack/d/{noteId}/{userId}")
 	public String deleteNoteBlack(@PathParam("noteId") String noteId, @PathParam("userId") String userId, @Context HttpServletResponse res);
 	
 	/**
@@ -265,8 +215,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws ParserException 
 	 */
-	@POST
-	@Path("/send/attachment/a/{timeStamp}")
 	public String addAttachment(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws ParserException;
 	
 	/**
@@ -274,8 +222,6 @@ public interface DataSynchizeService {
 	 * @param id		附件ID
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/attachment/d/{id}/{timeStamp}")
 	public String deleteAttachment(@PathParam("id") String id, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -286,8 +232,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws IOException 
 	 */
-	@POST
-	@Path("/upload/{attachmentId}")
 	public String uploadAttachment(@PathParam("attachmentId") String attachmentId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException;
 	
 	/**
@@ -298,8 +242,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws IOException 
 	 */
-	@POST
-	@Path("/upload/resume/{attachmentId}/{flag}")
 	public String resumeUploadAttachment(@PathParam("attachmentId") String attachmentId, @DefaultValue("1") @PathParam("flag") int flag, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException;
 	
 	/**
@@ -309,8 +251,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws IOException 
 	 */
-	@POST
-	@Path("/upload_batch")
 	public String uploadAttachmentBatch(@FormParam("attachmentId") String[] attachmentId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException;
 	
 	/**
@@ -319,8 +259,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws Exception 
 	 */
-	@GET
-	@Path("/download/{attachmentId}")
 	public String downloadAttachment(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("attachmentId") String attachmentId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse response) throws Exception;
 	
 	/**
@@ -328,8 +266,6 @@ public interface DataSynchizeService {
 	 * @param attachmentId 文件ID
 	 * @return
 	 */
-	@POST
-	@Path("/download_batch")
 	public String downloadAttachmentBatch(@FormParam("attachmentId") String[] attachmentId, @Context HttpServletResponse res);
 	
 	/**
@@ -337,8 +273,6 @@ public interface DataSynchizeService {
 	 * @param data
 	 * @return
 	 */
-	@POST
-	@Path("/send/tag/a")
 	public String addTag(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -349,8 +283,6 @@ public interface DataSynchizeService {
 	 * @throws IllegalAccessException 
 	 * @throws Exception 
 	 */
-	@POST
-	@Path("/send/tag/u/{timeStamp}")
 	public String updateTag(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException, Exception;
 	
 	/**
@@ -360,8 +292,6 @@ public interface DataSynchizeService {
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
 	 */
-	@POST
-	@Path("/send/tag")
 	public String addOrUpdateTag(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws IllegalAccessException, InvocationTargetException;
 	
 	/**
@@ -369,8 +299,6 @@ public interface DataSynchizeService {
 	 * @param id
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/tag/d/{id}")
 	public String deleteTag(@PathParam("id") String id, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -378,8 +306,6 @@ public interface DataSynchizeService {
 	 * @param data
 	 * @return
 	 */
-	@POST
-	@Path("/send/template")
 	public String addTemplate(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -387,8 +313,6 @@ public interface DataSynchizeService {
 	 * @param data
 	 * @return
 	 */
-	@POST
-	@Path("/send/comment/a")
 	public String addComment(@FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -396,8 +320,6 @@ public interface DataSynchizeService {
 	 * @param id
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/comment/d/{id}")
 	public String deleteComment(@PathParam("id") String id, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
@@ -407,9 +329,7 @@ public interface DataSynchizeService {
 	 * @param roleId
 	 * @return
 	 */
-	@POST
-	@Path("/send/subjectuser/{subjectId}/{userId}/{roleId}")
-	public String addSubjectMember(@PathParam("subjectId") String subjectId, @PathParam("userId") String userId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @PathParam("roleId") String roleId, @Context HttpServletResponse res);
+	public String addSubjectMember(String data, String action, @Context HttpServletResponse res);
 	
 	/**
 	 * 删除专题成员
@@ -417,16 +337,12 @@ public interface DataSynchizeService {
 	 * @param userId
 	 * @return
 	 */
-	@DELETE
-	@Path("/send/subjectuser/d/{subjectId}/{userId}")
-	public String deleteSubjectMember(@PathParam("subjectId") String subjectId, @PathParam("userId") String userId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
+	public String deleteSubjectMember(@PathParam("id") String id, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res);
 	
 	/**
 	 * 获取服务器时间
 	 * @return
 	 */
-	@GET
-	@Path("/datetime")
 	public long getServerTime();
 	
 	/**
@@ -439,9 +355,7 @@ public interface DataSynchizeService {
 	 * @throws IOException
 	 * @throws ParserException
 	 */
-	@POST
-	@Path("/uploadNoteFile/{noteId}")
-	public String uploadNoteFile(@PathParam("noteId") String noteId, @Context HttpServletRequest request, @Context HttpServletResponse res) throws IOException, ParserException;
+	public String uploadNoteFile(String noteId, String action, HttpServletRequest request, HttpServletResponse res) throws IOException, ParserException;
 	
 	/**
 	 * 按照操作和数据类型顺序查询用户需同步日志
@@ -452,8 +366,6 @@ public interface DataSynchizeService {
 	 * @return
 	 * @throws Exception 
 	 */
-	@GET
-	@Path("/getlogs/{timeStamp}")
 	public String getSynchDataByStep(@HeaderParam("clientId") String clientId, @PathParam("timeStamp") long timeStamp, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception;
 
 	/**
@@ -466,8 +378,6 @@ public interface DataSynchizeService {
 	 * @throws Exception 
 	 * @throws NumberFormatException 
 	 */
-	@GET
-	@Path("/get/{logId}")
 	public String getSynchDataByLogId(@PathParam("logId") String logId, @Context HttpServletResponse res) throws NumberFormatException, Exception;
 	
 	/**
@@ -475,8 +385,6 @@ public interface DataSynchizeService {
 	 * @param id
 	 * @return
 	 */
-	@GET
-	@Path("/get_user/{id}")
 	public String getUserInfo(@PathParam("id") String id);
 
 	/**
@@ -487,8 +395,6 @@ public interface DataSynchizeService {
 	 * @param timeStamp
 	 * @return
 	 */
-	@GET
-	@Path("/get/subjectuser/{subjectId}/{clientId}/{userId}/{timeStamp}")
 	public String getSubjectUser(@PathParam("subjectId") String subjectId, @PathParam("clientId") String clientId, @PathParam("userId") String userId, @PathParam("timeStamp") long timeStamp, @Context HttpServletResponse res);
 	
 	/**
@@ -499,8 +405,6 @@ public interface DataSynchizeService {
 	 * @param timeStamp
 	 * @return
 	 */
-	@GET
-	@Path("/get/attachment/{noteId}/{clientId}/{userId}/{timeStamp}")
 	public String getNoteAttachment(@PathParam("noteId") String noteId, @PathParam("clientId") String clientId, @PathParam("userId") String userId, @PathParam("timeStamp") long timeStamp, @Context HttpServletResponse res);
 
 	/**
@@ -511,8 +415,6 @@ public interface DataSynchizeService {
 	 * @param timeStamp
 	 * @return
 	 */
-	@GET
-	@Path("/get/subjectdata/{subjectId}/{clientId}/{userId}/{timeStamp}")
 	public String getSubjectRelatedLogs(@PathParam("subjectId") String subjectId, @PathParam("clientId") String clientId, @PathParam("userId") String userId, @PathParam("timeStamp") long timeStamp, @Context HttpServletResponse res);
 	
 	/**
@@ -522,7 +424,16 @@ public interface DataSynchizeService {
 	 * @return
 	 */
 	public String checkConfig(String clientId, String data, String action, HttpServletResponse res);
-
+	
+	/**
+	 * 批量删除数据(真删除，不可恢复)
+	 * @param data
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String truncateBatchData(String data, String action, HttpServletResponse res);
+	
 	/**
 	 * 批量删除数据
 	 * @param data
@@ -531,7 +442,7 @@ public interface DataSynchizeService {
 	 * @return
 	 */
 	public String deleteBatchData(String data, String action, HttpServletResponse res);
-
+	
 	/**
 	 * 添加条目，生成HTML
 	 * @param data
@@ -597,5 +508,69 @@ public interface DataSynchizeService {
 	 * @return
 	 */
 	public String initRole(String clientId, String action, HttpServletResponse res);
+	
+	/**
+	 * 查询truncate日志
+	 * @param dataStr
+	 * @param clientId
+	 * @param timeStamp
+	 * @param dataClass
+	 * @param action
+	 * @param res
+	 * @return
+	 * @throws Exception
+	 */
+	public String getTruncateLogs(String dataStr, String clientId, long timeStamp,
+			String dataClass, String action, HttpServletResponse res)
+			throws Exception;
+
+	/**
+	 * 更新专题成员角色
+	 * @param subjectId
+	 * @param userId
+	 * @param roleName
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String updateSubjectMember(String data, long timeStamp, String action, HttpServletResponse res);
+
+	/**
+	 * 添加条目标签
+	 * @param data
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String addNoteTag(String data, String action, HttpServletResponse res);
+	
+	/**
+	 * 删除条目标签关系
+	 * @param id
+	 * @param action
+	 * @param res
+	 * @return
+	 */
+	public String deleteNoteTag(String id, String action, HttpServletResponse res);
+
+	/**
+	 * 下载用户头像
+	 * @param clientId
+	 * @param userId
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	public String downloadUserPhoto(String clientId, String userId,
+			HttpServletResponse response) throws Exception;
+
+	/**
+	 * 用户token验证
+	 * @param clientId
+	 * @param userName
+	 * @param token
+	 * @return
+	 */
+	public String checkUser(String clientId, String userName, String token, HttpServletRequest request);
 
 }

@@ -63,7 +63,7 @@ public interface RoleService extends CommonService {
 	 * @param userId
 	 * @return
 	 */
-	public boolean addRoleUser(String subjectId, String userId, String roleId);
+	public String addRoleUser(String subjectId, String userId, String roleId, String creator, long timestamp);
 	
 	/**
 	 * 更新用户角色
@@ -134,4 +134,6 @@ public interface RoleService extends CommonService {
 	 * @return
 	 */
 	public List<Role> findAllRoles();
+	
+	public RoleUser getRoleUser(String id);
 }

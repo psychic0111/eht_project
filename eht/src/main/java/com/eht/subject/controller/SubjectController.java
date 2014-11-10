@@ -262,7 +262,7 @@ public class SubjectController extends BaseController {
 	}
 
 	/**
-	 * 前台删除专题角色
+	 * 前台删除专题成员
 	 * 
 	 * @return
 	 */
@@ -318,7 +318,7 @@ public class SubjectController extends BaseController {
 		subject.setId(UUIDGenerator.uuid());
 		AjaxJson j = new AjaxJson();
 		try {
-			subjectService.addSubject(subject);
+			subjectService.addSubject(subject, user.getId());
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("subjectId", subject.getId());
 			map.put("subjectType", subject.getSubjectType());
@@ -483,12 +483,18 @@ public class SubjectController extends BaseController {
 	@RequestMapping(value = "/front/addInvitemember.dht", produces = { "text/html;charset=UTF-8" })
 	public @ResponseBody
 	String addInvitemember(HttpServletRequest request) {
+		AccountEntity user = accountService.getUser4Session();
+		
 		SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, request.getParameter("id"));
 		String textarea1[] = request.getParameterValues("textarea1");
 		String types[] = request.getParameterValues("type");
 		StringBuffer sb = new StringBuffer("");
 		try {
-			subjectService.inviteMemember(textarea1, types, request, subjectEntity);
+			if(textarea1[0].equals(subjectEntity.getAccountCreateUser().getEmail())){
+				sb.append("不能邀请自己");
+				return sb.toString();
+			}
+			subjectService.inviteMemember(textarea1, types, request, subjectEntity, user.getId());
 		} catch (Exception e) {
 			sb.append("邀请失败");
 		}

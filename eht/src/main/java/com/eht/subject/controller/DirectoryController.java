@@ -107,11 +107,11 @@ public class DirectoryController extends BaseController {
 		String userId =request.getParameter("userId");
 		String directoryId =request.getParameter("directoryId");
 		try {
-			boolean  c=groupService.checkDirectoryUser(userId, directoryId);
+			boolean c = groupService.checkDirectoryUser(userId, directoryId);
 			if(c){
-				directoryService.removeUser4lacklist(userId, directoryId);
+				directoryService.removeUser4lacklist(userId, directoryId, System.currentTimeMillis());
 			}else{
-				directoryService.blackListedAllUser(userId, directoryId);
+				directoryService.blackListedAllUser(userId, directoryId, System.currentTimeMillis());
 			}
 			}catch (Exception e) {
 				e.printStackTrace();
@@ -211,9 +211,9 @@ public class DirectoryController extends BaseController {
 				}
 			}
 			try {
-				int subid = Integer.parseInt(subjectId);
+				//int subid = Integer.parseInt(subjectId);
 				//找到指定专题下已经删除的节点
-				noteList = noteService.findDeletedNotes(user.getId(), subid);
+				noteList = noteService.findDeletedNotesBySubjectId(subjectId);
 				if(noteList != null && !noteList.isEmpty()){
 					for(NoteEntity note : noteList){
 						noteService.deleteNote(note);

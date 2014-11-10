@@ -204,7 +204,7 @@ public interface SynchLogServiceI extends CommonService{
 	public void saveSynchedLog(SynchLogEntity theLog, String clientId, String userId);
 
 	public int countSynchLogsByTarget(String clientId, String userId, long timeStamp,
-			String dataClass);
+			String dataClass, String action);
 
 	public List<SynchLogEntity> findSynchLogsBySQL(String clientId, String userId,
 			long timeStamp, String dataClass) throws Exception;
@@ -225,4 +225,87 @@ public interface SynchLogServiceI extends CommonService{
 	 * @return
 	 */
 	public List<SynchronizedLogEntity> findSynchedLogs(String clientId, String userId);
+
+	/**
+	 * 查询truncate日志
+	 * @param clientId
+	 * @param userId
+	 * @param timeStamp
+	 * @param dataClass
+	 * @return
+	 * @throws Exception
+	 */
+	public List<SynchLogEntity> findTruncSynchLogs(String clientId, String userId,
+			long timeStamp, String dataClass) throws Exception;
+
+	/**
+	 * 生成删除成员角色的日志
+	 * @param subjectId
+	 * @param userId
+	 */
+	public void generateUserSubjectDelLog(String subjectId,
+			String userId);
+
+	/**
+	 * 生成添加成员角色的日志
+	 * @param subjectId
+	 * @param userId
+	 */
+	public void generateUserSubjectAddLog(String subjectId, String userId,
+			String roleId);
+	
+	/**
+	 * 生成改变成员角色的回收站日志
+	 * @param subjectId
+	 * @param userId
+	 */
+	public void generateRecycleLogs(String subjectId, String userId,
+			String roleId, String newRoleId);
+	
+	/**
+	 * 生成添加专题成员日志
+	 * @param subjectId
+	 * @param userId
+	 */
+	public void generateAddSubjectUserLogs(String id, String subjectId, String userId,
+			String roleId, String action, String creator, long createTimestamp);
+
+	/**
+	 * 生成删除专题成员日志
+	 * @param subjectId
+	 * @param userId
+	 */
+	public void generateDelSubjectUserLogs(String id, String subjectId, String userId,
+			String action);
+
+	/**
+	 * 记录同步日志
+	 * @param paramEntity
+	 * @param dataClass
+	 * @param action
+	 * @param targetUser
+	 */
+	public void recordLog(Object paramEntity, String dataClass, String action,
+			String targetUser, long synchTime);
+
+	/**
+	 * 查询需要下载的条目ZIP
+	 * @param userId
+	 * @param clientId
+	 * @return
+	 * @throws Exception
+	 */
+	public List<SynchronizedLogEntity> findNeedDownloadNoteFile(String userId,
+			String clientId) throws Exception;
+
+	/**
+	 * 查询需要下载的文件
+	 * @param userId
+	 * @param clientId
+	 * @return
+	 * @throws Exception
+	 */
+	public List<SynchronizedLogEntity> findNeedDownloadFile(String userId,
+			String clientId) throws Exception;
+
 }

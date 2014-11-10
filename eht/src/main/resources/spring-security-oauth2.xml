@@ -135,6 +135,7 @@
 	<sec:http pattern="*.dht" security="none" />
 	<sec:http pattern="*.jsp" security="none" />
 	<sec:http pattern="/service/v1/send/client/a/*" security="none" />
+	<sec:http pattern="/service/v1/userLogin" security="none" />
 
 	<sec:http entry-point-ref="restAuthenticationEntryPoint">
 		<sec:intercept-url pattern="/service/v1/**" access="ROLE_USER"/>

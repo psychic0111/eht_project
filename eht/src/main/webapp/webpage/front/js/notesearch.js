@@ -225,6 +225,7 @@ function viewNote(id,subjectId){
 			}
 			var node = zTree_Menu.getSelectedNodes()[0];
 			if(node.branchId == 'RECYCLE' || node.dataType == 'RECYCLE' || node.branchId == 'RECYCLEP' || node.dataType == 'RECYCLEP'){ //回收站下
+				$("#note_share").hide();
 				$("#note_new").hide();
 				$('#saveNote_btn').hide();
 				$("#note_edit").hide();
@@ -263,9 +264,12 @@ function viewNote(id,subjectId){
 					} else {
 						$("#deleteNote_btn").hide();
 					}
-					
-					if(act.ADD_NOTE == 'true'){
-						makeBtnAppear('note_new');
+					if(selectInfo.newEnable == true){
+						if(act.ADD_NOTE == 'true'){
+							makeBtnAppear('note_new');
+						}else{
+							makeBtnDisappear('note_new');
+						}
 					}else{
 						makeBtnDisappear('note_new');
 					}
@@ -491,7 +495,7 @@ function viewNotePageAndButton(){
 		noteEditor.hide();
 		$("#htmlViewDiv").show();
 		$("#parentHtmlViewDiv").show();
-		setHtmlDivHeight();
+		window.setTimeout('setHtmlDivHeight();', 400);
 	}catch(e){
 	}
 }
@@ -500,12 +504,17 @@ function setHtmlDivHeight(){
 	var iframe = document.getElementById("htmlViewFrame");
 	var idoc = iframe.contentWindow && iframe.contentWindow.document || iframe.contentDocument; 
 	var height = Math.max(idoc.body.clientHeight, idoc.documentElement.clientHeight);
+	var width = Math.max(idoc.body.clientWidth, idoc.documentElement.clientWidth);
 	if(UE.browser.ie){
 		$("#htmlViewFrame").height(idoc.documentElement.scrollHeight);
+		$("#htmlViewFrame").width(idoc.documentElement.scrollWidth);
 		$("#htmlViewDiv").height(height);
+		$("#htmlViewDiv").width(width);
 	}else{
-	   $("#htmlViewFrame").height(height);
+	   $("#htmlViewFrame").height(idoc.documentElement.scrollHeight);
+	   $("#htmlViewFrame").width(idoc.documentElement.scrollWidth);
 	   $("#htmlViewDiv").height(height);
+	   $("#htmlViewDiv").width(width);
 	}
 }
 

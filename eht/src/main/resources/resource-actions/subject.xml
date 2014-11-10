@@ -18,27 +18,27 @@
 			</supports>
 			
 			<!-- 各角色初始权限 -->
-			<roledefaults roleName="USER">
+			<roledefaults roleName="User">
 				<actionkey>ADD</actionkey>
 			</roledefaults>
 			
-			<roledefaults roleName="READER">
+			<roledefaults roleName="Reader">
 				<actionkey>ACCESS</actionkey>
 			</roledefaults>
 			
-			<roledefaults roleName="AUTHOR">
+			<roledefaults roleName="Writer">
 				<actionkey>ACCESS</actionkey>
 				<actionkey>ADD_NOTE</actionkey>
 			</roledefaults>
 			
-			<roledefaults roleName="EDITOR">
+			<roledefaults roleName="Editor">
 				<actionkey>ACCESS</actionkey>
 				<actionkey>ADD_NOTE</actionkey>
 				<actionkey>UPDATE_NOTE</actionkey>
 				<actionkey>DELETE_NOTE</actionkey>
 			</roledefaults>
 			
-			<roledefaults roleName="ADMIN">
+			<roledefaults roleName="Admin">
 				<actionkey>ACCESS</actionkey>
 				<actionkey>ADD_NOTE</actionkey>
 				<actionkey>UPDATE_NOTE</actionkey>
@@ -49,7 +49,7 @@
 				<actionkey>ASSIGN_MEMBER</actionkey>
 			</roledefaults>
 			
-			<roledefaults roleName="OWNER">
+			<roledefaults roleName="Owner">
 				<actionkey>ACCESS</actionkey>
 				<actionkey>ADD_NOTE</actionkey>
 				<actionkey>UPDATE_NOTE</actionkey>

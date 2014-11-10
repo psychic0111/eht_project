@@ -8,29 +8,29 @@ public class RoleName {
 	/**
 	 * 所有者
 	 */
-	public static final String OWNER = "OWNER";
+	public static final String OWNER = "Owner";
 	/**
 	 * 普通用户
 	 */
-	public static final String USER = "USER";
+	public static final String USER = "User";
 	/**
 	 * 超级管理员
 	 */
-	public static final String ADMIN = "ADMIN";
+	public static final String ADMIN = "Admin";
 	/**
 	 * 编辑
 	 */
-	public static final String EDITOR = "EDITOR";
+	public static final String EDITOR = "Editor";
 	/**
 	 * 作者
 	 */
-	public static final String AUTHOR = "AUTHOR";
+	public static final String AUTHOR = "Writer";
 	/**
 	 * 读者
 	 */
-	public static final String READER = "READER";
+	public static final String READER = "Reader";
 	/**
 	 * 访客
 	 */
-	public static final String GUEST = "GUEST";
+	public static final String GUEST = "Guest";
 }

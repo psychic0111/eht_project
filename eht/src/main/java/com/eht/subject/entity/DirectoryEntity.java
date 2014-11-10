@@ -17,6 +17,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
 import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.enumeration.DataType;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.user.entity.AccountEntity;
@@ -81,7 +82,7 @@ public class DirectoryEntity implements java.io.Serializable {
 	
 	private String operation;
 	
-	private String className;
+	private String className = DataType.DIRECTORY.toString();
 	
 	@Transient
 	public java.lang.String getCreateUserId() {

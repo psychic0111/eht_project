@@ -15,9 +15,14 @@ import java.util.zip.ZipOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
+import org.jeecgframework.core.util.StringUtil;
+import org.springframework.security.crypto.codec.Base64;
+import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
+import org.springframework.util.StringUtils;
 
 import com.eht.common.bean.ResponseStatus;
 import com.eht.common.constant.Constants;
@@ -29,20 +34,29 @@ import com.eht.common.enumeration.ResponseCode;
 import com.eht.common.util.AppContextUtils;
 import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.FileToolkit;
+import com.eht.common.util.HtmlParser;
 import com.eht.common.util.JsonUtil;
+import com.eht.common.util.UUIDGenerator;
 import com.eht.common.util.XmlUtil;
 import com.eht.log.entity.SynchLogEntity;
 import com.eht.log.entity.SynchronizedLogEntity;
 import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
+import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.AttachmentServiceI;
+import com.eht.note.service.NoteServiceI;
 import com.eht.resource.service.ResourcePermissionService;
+import com.eht.role.entity.RoleUser;
+import com.eht.subject.entity.SubjectEntity;
+import com.eht.subject.service.SubjectServiceI;
+import com.eht.user.entity.AccountEntity;
 import com.eht.webservice.bean.Step;
 
 public class DataSynchizeUtil {
 	
 	private static Logger logger = Logger.getLogger(DataSynchizeUtil.class);
 	
+	private static final String DELIMITER = ":";
 	/**
 	 * 服务器附件复制
 	 * @param attaServer
@@ -82,21 +96,49 @@ public class DataSynchizeUtil {
 		Serializable data = null;
 		Map<String, Object> map = new HashMap<String, Object>();
 		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
-		if (!log.getAction().equals(DataSynchAction.DELETE) && !log.getClassName().equals(DataType.DIRECTORYBLACK) && !log.getClassName().equals(DataType.NOTEBLACK)
-				&& !log.getClassName().equals(DataType.SUBJECTUSER)) {
+		if (!log.getAction().equals(DataSynchAction.DELETE) && !log.getClassName().equals(DataType.DIRECTORYBLACK.toString()) && !log.getClassName().equals(DataType.NOTEBLACK.toString())) {
 			Class c = SynchDataCache.getDataClass(log.getClassName());
 			data = synchLogService.getEntity(c, log.getClassPK());
-			String dataJson = JsonUtil.bean2json(data);
-			map = JsonUtil.getMap4Json(dataJson);
+			
+			if(log.getClassName().equals(DataType.SUBJECTUSER.toString())){
+				String dataJson = JsonUtil.bean2json(data);
+				map = JsonUtil.getMap4Json(dataJson);
+				RoleUser ru = (RoleUser) data;
+				map.put("roleId", ru.getRoleName());
+				
+				Object updateUserId = map.get("updateUserId");
+				Object updateTimeStamp = map.get("updateTimeStamp");
+				if(updateUserId == null || "".equals(updateUserId.toString())){
+					map.put("updateUserId", map.get("createUserId"));
+				}
+				if(updateTimeStamp == null || "".equals(updateTimeStamp.toString())){
+					map.put("updateTimeStamp", map.get("createTimeStamp"));
+				}
+			}else if(log.getClassName().equals(DataType.USER.toString())){
+				AccountEntity user = (AccountEntity) data;
+				map.put("id", user.getId());
+				map.put("userName", user.getUserName());
+				map.put("email", user.getEmail());
+				map.put("photo", user.getPhoto());
+				map.put("createTimeStamp", user.getCreateTimeStamp());
+				map.put("updateTimeStamp", user.getUpdateTimeStamp());
+				map.put("createUserId", user.getCreateUserId());
+				map.put("updateUserId", user.getUpdateUserId());
+			}else{
+				String dataJson = JsonUtil.bean2json(data);
+				map = JsonUtil.getMap4Json(dataJson);
+				
+				Object updateUserId = map.get("updateUserId");
+				Object updateTimeStamp = map.get("updateTimeStamp");
+				if(updateUserId == null || "".equals(updateUserId.toString())){
+					map.put("updateUserId", map.get("createUserId"));
+				}
+				if(updateTimeStamp == null || "".equals(updateTimeStamp.toString())){
+					map.put("updateTimeStamp", map.get("createTimeStamp"));
+				}
+			}
 		}
-		Object updateUserId = map.get("updateUserId");
-		Object updateTimeStamp = map.get("updateTimeStamp");
-		if(updateUserId == null || "".equals(updateUserId.toString())){
-			map.put("updateUserId", map.get("createUserId"));
-		}
-		if(updateTimeStamp == null || "".equals(updateTimeStamp.toString())){
-			map.put("updateTimeStamp", map.get("createTimeStamp"));
-		}
+		
 		map.put("operation", log.getAction());
 		map.put("className", log.getClassName());
 		map.put("classPK", log.getClassPK());
@@ -123,9 +165,10 @@ public class DataSynchizeUtil {
 		return map;
 	}
 	
-	public static String queryUploadFile(String userId, AttachmentServiceI attachmentService, HttpServletResponse res){
+	public static String queryUploadFile(String userId, HttpServletResponse res){
+		AttachmentServiceI attachmentService = AppContextUtils.getBean("attachmentService");
 		//查询要上传的文件
-		List<AttachmentEntity> list = attachmentService.findNeedUploadAttachmentByUser(userId, Constants.FILE_TYPE_NORMAL);
+		List<AttachmentEntity> list = attachmentService.findNeedUploadAttachmentByUser(userId, new Integer[]{Constants.FILE_TYPE_NORMAL, Constants.FILE_TYPE_NOTEHTML});
 		if(list != null && !list.isEmpty()){
 			res.setHeader(SynchConstants.HEADER_NEXT_ACTION, DataSynchAction.UPLOAD.toString());
 			res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.FILE.toString());
@@ -146,9 +189,10 @@ public class DataSynchizeUtil {
 		}
 	}
 	
-	public static String queryDownloadFile(String userId, String clientId, String nextAction, SynchLogServiceI synchLogService, HttpServletResponse res) throws Exception{
+	public static String queryDownloadFile(String userId, String clientId, String nextAction, HttpServletResponse res) throws Exception{
+		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
 		//查询要下载的文件
-		List<SynchronizedLogEntity> list = synchLogService.findNeedDownloadAttachment(userId, clientId);
+		List<SynchronizedLogEntity>	list = synchLogService.findNeedDownloadFile(userId, clientId);
 		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
 		if(list != null && !list.isEmpty()){
 			res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.DOWNLOAD.toString());
@@ -159,7 +203,7 @@ public class DataSynchizeUtil {
 			
 			SynchronizedLogEntity attachmentLog = list.remove(0);
 			Map<String, String> map = new HashMap<String, String>();
-			map.put(SynchConstants.HEADER_HOST_DATATYPE, DataType.ATTACHMENT.toString());
+			map.put(SynchConstants.HEADER_HOST_DATATYPE, attachmentLog.getClassName());
 			map.put(SynchConstants.HEADER_HOST_UUID, attachmentLog.getClassPK());
 			attachmentLog.setStatus(SynchConstants.LOG_SYNCHRONIZED);
 			synchLogService.updateEntitie(attachmentLog);
@@ -185,7 +229,7 @@ public class DataSynchizeUtil {
 	 * @param synchLogService
 	 * @return
 	 */
-	public static String queryNextDataType(String clientId, String userId, long timeStamp, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
+	public static String queryNextDataType(String clientId, String userId, long timeStamp, String action, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
 		// 查询下一有同步日志的数据类型
 		int index = -1;
 		String nextDataType = null;
@@ -195,7 +239,7 @@ public class DataSynchizeUtil {
 				index = i;
 			}
 			if(index != -1 && i > index){
-				int count = synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, dataTypes[i]);
+				int count = synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, dataTypes[i], action);
 				// 找到有同步日志的数据类型，类型返给客户端
 				if(count > 0){
 					nextDataType = dataTypes[i];
@@ -290,6 +334,10 @@ public class DataSynchizeUtil {
 			}else{
 				File file = new File(dstFolder + File.separator + name);
 				if(!file.exists()){
+					File parentFile = file.getParentFile();
+					if(!parentFile.exists()){
+						parentFile.mkdirs();
+					}
 					file.createNewFile();
 				}
 				
@@ -330,26 +378,33 @@ public class DataSynchizeUtil {
 				zos.write(buffer, 0, len);
 			}
 			zos.closeEntry();
+			fis.close();
 		}
 		
 		// 压缩files文件夹
 		File folder = new File(htmlFile.getParent(), "files");
-		zipNoteFolder(zos, folder);
+		if(folder.exists() && folder.isDirectory()){
+			zipNoteFolder(zos, folder, folder.getName());
+		}
 		zos.finish();
 		zos.close();
 	}
 	
-	private static void zipNoteFolder(ZipOutputStream zos, File folder) throws IOException{
+	private static void zipNoteFolder(ZipOutputStream zos, File folder, String base) throws IOException{
+		if(!base.equals("")){
+			base = base + File.separator;
+		}
+		ZipEntry dirEntry = new ZipEntry(base);
+		zos.putNextEntry(dirEntry);
+		
 		File[] files = folder.listFiles();
 		if(files.length <= 0){
-			ZipEntry entry = new ZipEntry(folder.getName());
-			zos.putNextEntry(entry);
 			zos.closeEntry();
 		}
 		
 		for(File file : files){
 			if(file.isFile()){
-				ZipEntry entry = new ZipEntry(file.getName());
+				ZipEntry entry = new ZipEntry(base + file.getName());
 				FileInputStream fis = new FileInputStream(file);
 				zos.putNextEntry(entry);
 				int len = 0;
@@ -358,14 +413,109 @@ public class DataSynchizeUtil {
 					zos.write(buffer, 0, len);
 				}
 				zos.closeEntry();
+				fis.close();
 			}else{
-				zipNoteFolder(zos, file);
+				zipNoteFolder(zos, file, base + file.getName());
 			}
 		}
 		
 	}
 	
+	/**
+	 * 将客户端上传的HTML内容同步到数据库中
+	 * @param noteId
+	 * @param zipName
+	 */
+	public static void synchNoteContent(String noteId, File zipFile){
+		NoteServiceI noteService = AppContextUtils.getBean("noteService");
+		NoteEntity note = noteService.getNote(noteId);
+		String htmlPath = FilePathUtil.getNoteHtmlPath(note);
+		try {
+			String content = unZipNoteHtml(zipFile, htmlPath);
+			content = HtmlParser.replaceClientHtmlImg(content, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
+			note.setContent(content);
+			
+			//noteService.updateEntitie(note);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void addNoteHtmlFile(NoteEntity note){
+		AttachmentServiceI attachmentService = AppContextUtils.getBean("attachmentService");
+		List<AttachmentEntity> list = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NOTEHTML);
+		if(list == null || list.isEmpty()){
+			AttachmentEntity atta = new AttachmentEntity();
+			atta.setId(UUIDGenerator.uuid());
+			atta.setCreateTime(note.getCreateTime());
+			atta.setCreateTimeStamp(note.getCreateTimeStamp());
+			atta.setCreateUser(StringUtil.isEmpty(note.getUpdateUser()) ? note.getCreateUser() : note.getUpdateUser());
+			atta.setCreateUserId(note.getCreateUserId());
+			atta.setDeleted(note.getDeleted());
+			atta.setDirectoryId(note.getDirId());
+			atta.setFileName(FilePathUtil.getNoteZipFileName(note.getId(), null));
+			atta.setFilePath(FilePathUtil.getNoteHtmlPath(note));
+			atta.setFileType(Constants.FILE_TYPE_NOTEHTML);
+			atta.setNoteId(note.getId());
+			atta.setStatus(Constants.FILE_TRANS_NOT_COMPLETED);
+			atta.setSuffix(FilenameUtils.getExtension(atta.getFileName()));
+			atta.setTranSfer(0L);
+			atta.setUpdateTime(note.getUpdateTime());
+			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setUpdateUser(note.getUpdateUser());
+			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			attachmentService.save(atta);
+		}
+	}
+	
+	public static void updateNoteHtmlFile(NoteEntity note){
+		AttachmentServiceI attachmentService = AppContextUtils.getBean("attachmentService");
+		
+		List<AttachmentEntity> list = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NOTEHTML);
+		if(list != null && !list.isEmpty()){
+			AttachmentEntity atta = list.get(0);
+			atta.setTranSfer(0L);
+			atta.setStatus(Constants.FILE_TRANS_NOT_COMPLETED);
+			
+			atta.setUpdateTime(note.getUpdateTime());
+			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setUpdateUser(note.getUpdateUser());
+			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setDeleted(note.getDeleted());
+			
+			attachmentService.save(atta);
+		}else{
+			//现在没用
+			AttachmentEntity atta = new AttachmentEntity();
+			atta.setId(UUIDGenerator.uuid());
+			atta.setCreateTime(note.getCreateTime());
+			atta.setCreateTimeStamp(note.getCreateTimeStamp());
+			atta.setCreateUser(StringUtil.isEmpty(note.getUpdateUser()) ? note.getCreateUser() : note.getUpdateUser());
+			atta.setCreateUserId(note.getCreateUserId());
+			atta.setDeleted(note.getDeleted());
+			atta.setDirectoryId(note.getDirId());
+			atta.setFileName(FilePathUtil.getNoteZipFileName(note.getId(), null));
+			atta.setFilePath(FilePathUtil.getNoteHtmlPath(note));
+			atta.setFileType(Constants.FILE_TYPE_NOTEHTML);
+			atta.setNoteId(note.getId());
+			atta.setStatus(Constants.FILE_TRANS_NOT_COMPLETED);
+			atta.setSuffix(FilenameUtils.getExtension(atta.getFileName()));
+			atta.setTranSfer(0L);
+			atta.setUpdateTime(note.getUpdateTime());
+			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setUpdateUser(note.getUpdateUser());
+			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+		}
+		
+	}
+	
 	public static boolean hasPermission(String userId, String subjectId, String actionName){
+		SubjectServiceI subjectService = AppContextUtils.getBean("subjectService");
+		SubjectEntity subject = subjectService.getSubject(subjectId);
+		if(subject.getSubjectType().intValue() == Constants.SUBJECT_TYPE_P){
+			return true;
+		}
+		
 		ResourcePermissionService resourcePermissionService = AppContextUtils.getBean("resourcePermissionService");
 		Map<String, String> map = resourcePermissionService.findSubjectPermissionsByUser(userId, subjectId);
 		if(map.get(actionName).equals("true")){
@@ -374,6 +524,48 @@ public class DataSynchizeUtil {
 			return false;
 		}
 	}
+	
+	public static void saveBanLog(String dataType, String action, String primaryKey, String operateUser, String targetUser, long operateTime, long synchTime){
+		SynchLogEntity log = new SynchLogEntity();
+		log.setId(UUIDGenerator.uuid());
+		log.setClassName(dataType);
+		log.setAction(action);
+		log.setClassPK(primaryKey);
+		log.setClientId(SynchConstants.CLIENT_DEFAULT_ID);
+		log.setClientType(SynchConstants.CLIENT_DEFAULT_TYPE);
+		log.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
+		log.setOperateUser(operateUser);
+		log.setOperateTime(operateTime);
+		log.setTargetUser(targetUser);
+		log.setSynchTime(synchTime);
+		
+		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
+		synchLogService.saveSynchLog(log);
+	}
+	
+	public static String[] decodeCookie(String cookieValue) throws InvalidCookieException {
+        for (int j = 0; j < cookieValue.length() % 4; j++) {
+            cookieValue = cookieValue + "=";
+        }
+
+        if (!Base64.isBase64(cookieValue.getBytes())) {
+            throw new InvalidCookieException( "Cookie token was not Base64 encoded; value was '" + cookieValue + "'");
+        }
+
+        String cookieAsPlainText = new String(Base64.decode(cookieValue.getBytes()));
+
+        String[] tokens = StringUtils.delimitedListToStringArray(cookieAsPlainText, DELIMITER);
+
+        if ((tokens[0].equalsIgnoreCase("http") || tokens[0].equalsIgnoreCase("https")) && tokens[1].startsWith("//")) {
+            // Assume we've accidentally split a URL (OpenID identifier)
+            String[] newTokens = new String[tokens.length - 1];
+            newTokens[0] = tokens[0] + ":" + tokens[1];
+            System.arraycopy(tokens, 2, newTokens, 1, newTokens.length - 1);
+            tokens = newTokens;
+        }
+
+        return tokens;
+    }
 	
 	public static void main(String[] args){
 		File file = new File("E:\\webroot\\wtpwebapps\\eht\\notes\\621c09c19f4c4f45a1b2ffbc12702874\\dbd23cff97e944c894388a6eba71a306\\dbd23cff97e944c894388a6eba71a306.zip");
