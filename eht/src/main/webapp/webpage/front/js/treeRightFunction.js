@@ -40,27 +40,32 @@ function addChildTag(){
 	zTree_Menu.editName(newNode[0]);
 }
 
-function subjectManage(obj) {
+function subjectManage(obj,obj1) {
 	 if(isNoteStats()){//判断是否编辑状态
 		   var submit = function (v, h, f) {
 			if (v == true){ 
-				subjectManageDo(obj); 
+				subjectManageDo(obj,obj1); 
 			} 
 			return true;
 		};
 		// 自定义按钮
 		$.jBox.confirm("您的条目尚未保存，被改动的内容将会丢失.是否确定离开？？", "提示", submit, { buttons: { '是': true, '否': false} });
 	 }else{
-		 subjectManageDo(obj);
+		 subjectManageDo(obj,obj1);
 	 }
 }
 
 //专题管理跳转
-function subjectManageDo(obj){
+function subjectManageDo(obj,obj1){
 	if($("#noteEditor_td").is(":visible")){
 		hideNotePage();
 	}
-	var url = webRoot+"/subjectController/front/viewAddSubject.dht?pageNo=1&pageSize=20";
+	var url='';
+	if(obj1==1){
+		url = webRoot+"/subjectController/front/viewAddSubject.dht?pageNo=1&pageSize=20";
+	}else{
+		 url = webRoot+"/subjectController/front/subjectManage.dht?pageNo=1&pageSize=20";
+	}
 	if(obj.id==-2){
 		url=url+"&subjectType=2";
 	}else{

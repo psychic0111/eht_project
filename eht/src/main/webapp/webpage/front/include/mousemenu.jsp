@@ -24,7 +24,7 @@
 	<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ADD_DIRECTORY %>">
 		<li id="treeRightMenu_add_dir" onclick="addChildDir()">添加目录</li>
 	</xd:hasPermission>
-	<li id="-2" onclick="subjectManage(this)">新建专题</li>
+	<li id="-2" onclick="subjectManage(this,1)">新建专题</li>
 	<%-- <xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.DELETE_SUBJECT %>">
 		<li id="treeRightMenu_manage_subject" onclick="subjectMember()">团队成员</li>
 	</xd:hasPermission> --%>

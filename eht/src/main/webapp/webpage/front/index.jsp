@@ -176,7 +176,7 @@ width:auto;min-width: 1024px;position:relative;top:0;overflow:hidden;
         	<div class="rightMenu" id="treeRightMenu">
         		<ul id="treeRightMenu_ul_subject">
        				<li id="treeRightMenu_add_dir" onclick="addChildDir()">新建目录</li>
-       				<li id="-1" onclick="subjectManage(this)">新建专题</li>
+       				<li id="-1" onclick="subjectManage(this,1)">新建专题</li>
        				<li id="treeRightMenu_delete_subject" onclick="deleteNode()">删除</li>
         		</ul>
         		<ul id="treeRightMenu_ul_directory">
@@ -318,7 +318,7 @@ function buildMainMenu(selectFirstNodeIndex,selectNode2Id,loadRightPage){
 		$("#"+zTree_Menu.getNodes()[2].tId+"_ico").removeClass("button").addClass("newPriSubjectPic");
 
 		$(".gear").click(function(){
-			subjectManage(this);
+			subjectManage(this,2);
 			return false;
 		});
 		
