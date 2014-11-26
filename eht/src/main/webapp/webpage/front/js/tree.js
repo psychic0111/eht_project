@@ -485,7 +485,7 @@ function nodeOnRename(e, treeId, node){
 					node.pId = data.Pid;
 					zTree_Menu.updateNode(node);
 					beforeNodeClick("treeMenu",node);
-					k(null,"treeMenu",node);
+					onNodeClick(null,"treeMenu",node);
 				}
 			}, true);
 		}

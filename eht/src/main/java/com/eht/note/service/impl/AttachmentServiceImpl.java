@@ -22,6 +22,7 @@ import com.eht.common.constant.Constants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.util.UUIDGenerator;
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.AttachmentServiceI;
@@ -33,6 +34,9 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	
 	@Autowired
 	private NoteServiceI noteService;
+	
+	@Autowired
+	private SynchLogServiceI synchLogService;
 	
 	@Override
 	public String uploadAttachment(AttachmentEntity attachment) {
@@ -53,12 +57,13 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 
 	@Override
-	@RecordOperate(dataClass=DataType.ATTACHMENT, action=DataSynchAction.ADD, keyIndex=0, keyMethod="getId", timeStamp="createTime")
+	//@RecordOperate(dataClass=DataType.ATTACHMENT, action=DataSynchAction.ADD, keyIndex=0, keyMethod="getId", timeStamp="createTime")
 	public String addAttachment(AttachmentEntity attachment) {
 		if(StringUtil.isEmpty(attachment.getId())){
 			attachment.setId(UUIDGenerator.uuid());
 		}
 		save(attachment);
+		synchLogService.recordLog(attachment, DataType.ATTACHMENT.toString(), DataSynchAction.ADD.toString(), null, System.currentTimeMillis());
 		return attachment.getId();
 	}
 
@@ -70,12 +75,13 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	@Override
 	@RecordOperate(dataClass=DataType.ATTACHMENT, action=DataSynchAction.DELETE, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
 	public void markDelAttachment(AttachmentEntity attachment) {
-		//attachment.setDeleted(Constants.DATA_DELETED);
-		//updateEntitie(attachment);
-		deleteAttachment(attachment);
+		attachment.setDeleted(Constants.DATA_DELETED);
+		updateEntitie(attachment);
+		//deleteAttachment(attachment);
 	}
 	
 	@Override
+	@RecordOperate(dataClass=DataType.ATTACHMENT, action=DataSynchAction.TRUNCATE, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
 	public void deleteAttachment(AttachmentEntity attachment) {
 		File file = new File(attachment.getFilePath() + File.separator + attachment.getFileName());
 		if(file.exists()){
@@ -96,21 +102,30 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	}
 
 	@Override
-	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType) {
-		NoteEntity note = noteService.getNote(noteId);
-		
-		List<AttachmentEntity> list = findAttachmentByNote(note, fileType);
+	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer status, Integer deleted,Integer[] fileType) {
+		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
+		dc.add(Restrictions.eq("noteId", noteId));
+		if(deleted != null){
+			dc.add(Restrictions.eq("deleted", deleted));
+		}
+		if(status != null){
+			dc.add(Restrictions.eq("status", status));
+		}
+		if(fileType != null && fileType.length > 0){
+			dc.add(Restrictions.in("fileType", fileType));
+		}
+		List<AttachmentEntity> list = findByDetached(dc);
 		return list;
 	}
 	
 	@Override
-	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note, Integer fileType) {
+	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note, Integer status, Integer[] fileType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("noteId", note.getId()));
 		dc.add(Restrictions.eq("deleted", note.getDeleted() == Constants.DATA_NOT_DELETED ? Constants.DATA_NOT_DELETED : Constants.DATA_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_COMPLETED));
-		if(fileType != null && fileType > 0){
-			dc.add(Restrictions.eq("fileType", fileType));
+		if(fileType != null && fileType.length > 0){
+			dc.add(Restrictions.in("fileType", fileType));
 		}
 		List<AttachmentEntity> list = findByDetached(dc);
 		return list;
@@ -261,7 +276,7 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	 * @return
 	 */
 	@Override
-	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId, Integer[] fileType) {
+	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId, String clientId, Integer[] fileType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_NOT_COMPLETED));
@@ -269,7 +284,8 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 			dc.add(Restrictions.in("fileType", fileType));
 		}
 		dc.add(Restrictions.eq("createUser", userId));
-		dc.addOrder(Order.asc("fileType"));
+		dc.add(Restrictions.eq("clientId", clientId));
+		dc.addOrder(Order.desc("fileType"));
 		List<AttachmentEntity> list = findByDetached(dc);
 		return list;
 	}

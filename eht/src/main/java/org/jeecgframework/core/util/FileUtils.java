@@ -50,7 +50,11 @@ public class FileUtils {
 	 */
 	public static String getFilePrefix(String fileName) {
 		int splitIndex = fileName.lastIndexOf(".");
-		return fileName.substring(0, splitIndex).replaceAll("\\s*", "");
+		if(splitIndex != -1){
+			return fileName.substring(0, splitIndex).replaceAll("\\s*", "");
+		}else{
+			return fileName;
+		}
 	}
 	
 	/**

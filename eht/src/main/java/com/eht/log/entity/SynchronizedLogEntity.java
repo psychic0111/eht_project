@@ -44,8 +44,6 @@ public class SynchronizedLogEntity implements java.io.Serializable {
 	/**同步状态*/
 	private int status;
 	
-	
-	
 	/**
 	 *方法: 取得java.lang.String
 	 *@return: java.lang.String  ID

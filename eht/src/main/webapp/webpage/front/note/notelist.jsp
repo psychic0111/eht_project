@@ -88,8 +88,8 @@ function initScrollBar(){
 }
 $(document).ready(function(){
 	var height = $("#noteList_div").height() - 10;//document.documentElement.clientHeight;//document.body.clientHeight;
-	$("#scrollbar1").height(height);
-	var b = $('#scrollbar1').tinyscrollbar({wheelSpeed:300,size:height});
+	//$("#scrollbar1").height(height);
+	var b = $('#scrollbar1').tinyscrollbar({wheelSpeed:200,size:height});
 	
 	if($("#note_deleted").val()==1){
 		$("span.recycle_png").show();

@@ -64,6 +64,14 @@ public interface GroupService extends CommonService {
 	public List<Group> findGroupByParent(long parentGroupId);
 	
 	/**
+	 * 根据父组ID查询所有子组
+	 * @param parentGroupId
+	 * @param className
+	 * @return
+	 */
+	public List<Group> findGroupByParent(long parentGroupId, String className);
+	
+	/**
 	 * 添加组用户
 	 * @param groupId
 	 * @param UserId
@@ -122,5 +130,10 @@ public interface GroupService extends CommonService {
 	 * @return
 	 */
 	public boolean checkGroupUser(String className,String userId, String noteId);
+	
+	public List<GroupUser> findGroupUsers(Long groupId);
+	
+	public Group addGroup(String className, String classPK, String description,
+			String groupName, String subjectId);
 	
 }

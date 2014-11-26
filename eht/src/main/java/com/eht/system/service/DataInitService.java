@@ -28,7 +28,7 @@ public interface DataInitService {
 	 * @param clientType 客户端类型
 	 * @return
 	 */
-	public String registerClient(String clientType);
+	public String registerClient(String clientId, String clientType);
 	
 	/**
 	 * 删除注册客户端

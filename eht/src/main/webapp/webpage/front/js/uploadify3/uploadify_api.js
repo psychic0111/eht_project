@@ -33,7 +33,7 @@
 		//'method'    : 'GET',
 		'uploader'  : basePath+'/uploadify.swf',
 		'script'    : options.uploadPath,
-		'scriptData':{'noteid':$('#noteForm_id').val(),'jsessionid':options.sessionId},
+		'scriptData':{'noteid':$('#noteForm_id').val(),'jsessionid':options.sessionId,'userId':options.userId},
 		'cancelImg' : basePath+'/cancel.png',
 		'wmode'     : 'transparent',
 		'removeCompleted':true,
@@ -46,7 +46,6 @@
 		'buttonText': '测试',
 		//'checkScript':"checkScript.dht",
 		'onSelect': function(event, queueID, fileObj) {
-			alert(1);
 			if(fileObj.size > options.maxSize){
                 alert('当前选择的文件超过了设置的大小，请重新选择文件！');
                 try{
@@ -162,7 +161,7 @@ function uploadBtnClick(btnId){
  * basePath : 基本路径
  * upfileButton: 上传按钮
  */
-function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,sessionId,upfileButton){
+function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,sessionId,userId, upfileButton){
 	var mupload=this;
 	var btnId="btn"+(new Date()).getTime();
 	if(upfileButton==null){
@@ -180,6 +179,7 @@ function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,session
 			uploadPath:uploadPath,
 			multi:true,
 			sessionId:sessionId,
+			userId:userId,
 			maxCount:100,
 			maxSize:300*1024*1024,
 			callback:function(result){
@@ -205,7 +205,6 @@ function MultiUpload(elId,inputFileName,downloadPath,uploadPath,basePath,session
 		fileItem.append(delBtn);
 		fileList.prepend(fileItem);
 	}
-	
 } 
 
 // 上传条目附件
@@ -222,6 +221,7 @@ function nBindUploadBtn(btnId,options,config){
 		uploader      : options.uploadPath,
 		queueSizeLimit: 10,
 		onSelect:function(file){
+			enableEditNoteT();
 			var disableType=new Array();
 			disableType["exe"]=true;
 			disableType["com"]=true;
@@ -242,11 +242,11 @@ function nBindUploadBtn(btnId,options,config){
 				return ;
 			}
 			var sessionId=options.sessionId;
+			var userId = options.userId;
 			var noteid=$('#noteForm_id').val();
 			var dirId=$('#noteForm_dirId').val();
 			//var formData={"noteid":noteid,"jsessionid":sessionId};
-			var url=options.uploadPath+"?noteid="+noteid+"&jsessionid="+sessionId+"&dirId="+dirId;
-			
+			var url=options.uploadPath+"?noteid="+noteid+"&userId=" +userId+ "&jsessionid="+sessionId+"&dirId="+dirId;
 			//显示进度条，值过小会被UEDITOR挡住
 			$("#attTemp").css("z-index", "9999");
 			$("#"+btnId).uploadify("settings","uploader",url,true);

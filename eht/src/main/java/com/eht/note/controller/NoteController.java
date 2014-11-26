@@ -129,15 +129,7 @@ public class NoteController extends BaseController {
 		if (id != null && !id.isEmpty()) {
 			AttachmentEntity attachment = attachmentService.getAttachment(id);
 			if (attachment != null) {
-				String filePath = attachment.getFilePath() + File.separator + attachment.getFileName();
-				File file = new File(filePath);
-				if (file.exists()) {
-					file.delete();
-				}
-				file = null;
-				System.gc();
-				//方法里直接删除附件了
-				attachmentService.markDelAttachment(attachment);
+				attachmentService.deleteAttachment(attachment);
 			}
 		}
 		return json;
@@ -179,14 +171,15 @@ public class NoteController extends BaseController {
 	public void uploadNodeAttach(HttpServletRequest request, String[] noteTagId, HttpServletResponse response) throws Exception {
 		String json = "";
 		// 存放路径
-		String noteid = request.getParameter("noteid"); 
+		String noteid = request.getParameter("noteid");
+		String userId = request.getParameter("userId");
 		//处理session
-		AccountEntity user = accountService.getUser4Session(request.getParameter("jsessionid"));
+		/*AccountEntity user = accountService.getUser4Session(request.getParameter("jsessionid"));
 		request.setAttribute("jsessionid", request.getParameter("jsessionid"));
 		
 		HttpSession session = request.getSession(false);
 		session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, user);
-		ClientManager.getInstance().addSession(session.getId(), session);
+		ClientManager.getInstance().addSession(session.getId(), session);*/
 		
 		// 来自
 		String dirId = request.getParameter("dirId");
@@ -203,6 +196,7 @@ public class NoteController extends BaseController {
 				nodeEntity.setId(noteid);
 				nodeEntity.setContent("");
 				nodeEntity.setSubjectId(subjectId);
+				nodeEntity.setCreateUser(userId);
 				this.saveNote(nodeEntity, noteTagId, request);
 			}
 		} else {
@@ -267,7 +261,7 @@ public class NoteController extends BaseController {
 					newAttach.setTranSfer(mf.getSize());
 					newAttach.setStatus(Constants.FILE_TRANS_COMPLETED);
 					newAttach.setDeleted(Constants.DATA_NOT_DELETED);
-					newAttach.setCreateUser(user.getId());
+					newAttach.setCreateUser(userId);
 					newAttach.setCreateTime(new Date());
 
 					attachmentService.addAttachment(newAttach);
@@ -597,13 +591,25 @@ public class NoteController extends BaseController {
 	@RequestMapping(value = "/front/saveNote.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String saveNote(NoteEntity note, String[] noteTagId, HttpServletRequest request) throws IOException {
 		NoteEntity oldNote = noteService.getNote(note.getId());
-		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		AccountEntity user = null;
+		Object obj = null;
+		HttpSession s = request.getSession(false);
+		if(s != null){
+			obj = s.getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		}
+		if(obj != null){
+			user = (AccountEntity)obj;
+		}
+		
 		noteService.saveNoteHtml(note);
 		if (oldNote == null) {
 			note.setDeleted(Constants.DATA_NOT_DELETED);
 			note.setVersion(1);
-			note.setCreateUser(user.getId());
+			if(user != null){
+				note.setCreateUser(user.getId());
+			}
 			note.setCreateTime(new Date());
+			note.setCreateTimeStamp(System.currentTimeMillis());
 			if (StringUtil.isEmpty(note.getDirId())) {
 				note.setDirectoryEntity(null);
 			}
@@ -632,6 +638,7 @@ public class NoteController extends BaseController {
 			oldNote.setTagId(StringUtil.isEmpty(note.getTagId()) ? null : note.getTagId());
 			oldNote.setUpdateUser(user.getId());
 			oldNote.setUpdateTime(new Date());
+			oldNote.setUpdateTimeStamp(System.currentTimeMillis());
 			noteService.updateNote(oldNote, true);
 			
 			//保存条目标签关系
@@ -700,12 +707,15 @@ public class NoteController extends BaseController {
 	public @ResponseBody String deleteNote(String id, int deleted, HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		NoteEntity note = noteService.getNote(id);
-		if (deleted == 1) {
-			noteService.deleteNote(note);
-		} else {
-			note.setUpdateUser(user.getId());
-			note.setUpdateTime(new Date());
-			noteService.markDelNote(note);
+		if(note != null){
+			if (deleted == 1) {
+				noteService.deleteNote(note);
+			} else {
+				note.setUpdateUser(user.getId());
+				note.setUpdateTime(new Date());
+				note.setUpdateTimeStamp(System.currentTimeMillis());
+				noteService.markDelNote(note);
+			}
 		}
 		return null;
 	}

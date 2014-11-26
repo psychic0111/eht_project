@@ -441,7 +441,9 @@ function isShareSubject(node){
 	
 	if(subjectNode != null){
 		var rNode = subjectNode.getParentNode();
-		
+		if(rNode == null){
+			return -1;          //多人专题都删光了
+		}
 		if(rNode.id == '<%=Constants.SUBJECT_PID_P%>'){
 			return null;  //个人专题
 		}else{
@@ -512,7 +514,7 @@ $(document).ready(function(){
 	buildMainMenu(0,null,true);
 	periodId = setInterval(getNoteMessage, msgPeriod);
 });
-
+	
 //专题导出进度任务句柄
 var actionSchedule=null;
 

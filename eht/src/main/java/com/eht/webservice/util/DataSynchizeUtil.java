@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import com.eht.common.bean.ResponseStatus;
 import com.eht.common.constant.Constants;
+import com.eht.common.constant.RoleName;
 import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
@@ -46,7 +47,10 @@ import com.eht.note.entity.NoteEntity;
 import com.eht.note.service.AttachmentServiceI;
 import com.eht.note.service.NoteServiceI;
 import com.eht.resource.service.ResourcePermissionService;
+import com.eht.role.entity.Role;
 import com.eht.role.entity.RoleUser;
+import com.eht.role.service.RoleService;
+import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.user.entity.AccountEntity;
@@ -93,18 +97,28 @@ public class DataSynchizeUtil {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Map<String, Object> parseLog(SynchLogEntity log){
+		if(log == null){
+			return null;
+		}
 		Serializable data = null;
 		Map<String, Object> map = new HashMap<String, Object>();
 		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
-		if (!log.getAction().equals(DataSynchAction.DELETE) && !log.getClassName().equals(DataType.DIRECTORYBLACK.toString()) && !log.getClassName().equals(DataType.NOTEBLACK.toString())) {
+		if (!log.getAction().equals(DataSynchAction.DELETE.toString()) && !log.getAction().equals(DataSynchAction.TRUNCATE.toString()) && !log.getClassName().equals(DataType.DIRECTORYBLACK.toString()) && !log.getClassName().equals(DataType.NOTEBLACK.toString())) {
+			logger.info("返回客户端数据类型：" + log.getClassName() + "; 数据主键：" + log.getClassPK());
 			Class c = SynchDataCache.getDataClass(log.getClassName());
 			data = synchLogService.getEntity(c, log.getClassPK());
+			
+			if(data == null){
+				logger.warn("返回客户端数据已不存在！");
+				return null;
+			}
 			
 			if(log.getClassName().equals(DataType.SUBJECTUSER.toString())){
 				String dataJson = JsonUtil.bean2json(data);
 				map = JsonUtil.getMap4Json(dataJson);
 				RoleUser ru = (RoleUser) data;
-				map.put("roleId", ru.getRoleName());
+				Role role = synchLogService.get(Role.class, ru.getRoleId());
+				map.put("roleId", role.getRoleName());
 				
 				Object updateUserId = map.get("updateUserId");
 				Object updateTimeStamp = map.get("updateTimeStamp");
@@ -137,6 +151,7 @@ public class DataSynchizeUtil {
 					map.put("updateTimeStamp", map.get("createTimeStamp"));
 				}
 			}
+			
 		}
 		
 		map.put("operation", log.getAction());
@@ -165,10 +180,10 @@ public class DataSynchizeUtil {
 		return map;
 	}
 	
-	public static String queryUploadFile(String userId, HttpServletResponse res){
+	public static String queryUploadFile(AccountEntity user, HttpServletResponse res){
 		AttachmentServiceI attachmentService = AppContextUtils.getBean("attachmentService");
 		//查询要上传的文件
-		List<AttachmentEntity> list = attachmentService.findNeedUploadAttachmentByUser(userId, new Integer[]{Constants.FILE_TYPE_NORMAL, Constants.FILE_TYPE_NOTEHTML});
+		List<AttachmentEntity> list = attachmentService.findNeedUploadAttachmentByUser(user.getId(), user.getClientId(), new Integer[]{Constants.FILE_TYPE_NORMAL, Constants.FILE_TYPE_NOTEHTML});
 		if(list != null && !list.isEmpty()){
 			res.setHeader(SynchConstants.HEADER_NEXT_ACTION, DataSynchAction.UPLOAD.toString());
 			res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.FILE.toString());
@@ -191,9 +206,10 @@ public class DataSynchizeUtil {
 	
 	public static String queryDownloadFile(String userId, String clientId, String nextAction, HttpServletResponse res) throws Exception{
 		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
+		NoteServiceI noteService = AppContextUtils.getBean("noteService");
 		//查询要下载的文件
 		List<SynchronizedLogEntity>	list = synchLogService.findNeedDownloadFile(userId, clientId);
-		res.setHeader(HeaderName.SERVER_TIMESTAMP.toString(), System.currentTimeMillis() + "");
+		
 		if(list != null && !list.isEmpty()){
 			res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.DOWNLOAD.toString());
 			res.setHeader(SynchConstants.HEADER_DATATYPE, DataType.FILE.toString());
@@ -201,13 +217,57 @@ public class DataSynchizeUtil {
 			res.setHeader(SynchConstants.HEADER_NEXT_ACTION, nextAction);
 			res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.FILE.toString());
 			
-			SynchronizedLogEntity attachmentLog = list.remove(0);
-			Map<String, String> map = new HashMap<String, String>();
-			map.put(SynchConstants.HEADER_HOST_DATATYPE, attachmentLog.getClassName());
-			map.put(SynchConstants.HEADER_HOST_UUID, attachmentLog.getClassPK());
-			attachmentLog.setStatus(SynchConstants.LOG_SYNCHRONIZED);
-			synchLogService.updateEntitie(attachmentLog);
-			return JsonUtil.map2json(map);
+			SynchronizedLogEntity attachmentLog = null;
+			for(int i = 0; i < list.size(); i++){
+				boolean find = false;
+				attachmentLog = list.get(i);
+				if(attachmentLog.getAction().equals(DataSynchAction.TRUNCATE.toString())){
+					attachmentLog = null;
+					continue;
+				}
+				if(attachmentLog.getClassName().equals(DataType.NOTE.toString())){
+					NoteEntity note = noteService.getNote(attachmentLog.getClassPK());
+					if(note != null){
+						if(note.getDeleted().intValue() != Constants.DATA_NOT_DELETED){
+							boolean isReturn = DataSynchizeUtil.recyclePermission(userId, note);
+							if(isReturn){
+								find = true;
+							}else{
+								find = false;
+							}
+						}else{
+							find = true;
+						}
+					}else{
+						find = false;
+					}
+				}else{
+					find = true;
+				}
+				attachmentLog.setStatus(SynchConstants.LOG_SYNCHRONIZED);
+				synchLogService.updateSynchedLogStatus(userId, clientId, attachmentLog.getClassName(), attachmentLog.getClassPK());
+				if(find){
+					break;
+				}else{
+					attachmentLog = null;
+				}
+			}
+			
+			if(attachmentLog != null){
+				Map<String, String> map = new HashMap<String, String>();
+				map.put(SynchConstants.HEADER_HOST_DATATYPE, attachmentLog.getClassName());
+				map.put(SynchConstants.HEADER_HOST_UUID, attachmentLog.getClassPK());
+				return JsonUtil.map2json(map);
+			}else{
+				res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.FINISH.toString());
+				res.setHeader(SynchConstants.HEADER_DATATYPE, DataType.FILE.toString());
+				
+				res.setHeader(SynchConstants.HEADER_NEXT_ACTION, DataSynchAction.FINISH.toString());
+				res.setHeader(SynchConstants.HEADER_NEXT_DATATYPE, DataType.FILE.toString());
+				
+				return "";
+			}
+			
 		}else{
 			res.setHeader(SynchConstants.HEADER_ACTION, DataSynchAction.FINISH.toString());
 			res.setHeader(SynchConstants.HEADER_DATATYPE, DataType.FILE.toString());
@@ -229,7 +289,7 @@ public class DataSynchizeUtil {
 	 * @param synchLogService
 	 * @return
 	 */
-	public static String queryNextDataType(String clientId, String userId, long timeStamp, String action, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
+	public static String queryNextDataType(String clientId, String userId, long timeStamp, long endTime, String action, String currentDataType, String[] dataTypes, SynchLogServiceI synchLogService){
 		// 查询下一有同步日志的数据类型
 		int index = -1;
 		String nextDataType = null;
@@ -239,7 +299,7 @@ public class DataSynchizeUtil {
 				index = i;
 			}
 			if(index != -1 && i > index){
-				int count = synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, dataTypes[i], action);
+				int count = 1;//synchLogService.countSynchLogsByTarget(clientId, userId, timeStamp, endTime, dataTypes[i], action);
 				// 找到有同步日志的数据类型，类型返给客户端
 				if(count > 0){
 					nextDataType = dataTypes[i];
@@ -319,10 +379,10 @@ public class DataSynchizeUtil {
 	 * @param dstFolder
 	 * @throws IOException
 	 */
-	public static String unZipNoteHtml(File zipFile, String dstFolder) throws IOException{
+	public static File unZipNoteHtml(File zipFile, String dstFolder) throws IOException{
 		ZipInputStream zins = new ZipInputStream(new FileInputStream(zipFile));
 		ZipEntry entry = null;
-		StringBuilder sb = new StringBuilder();
+		File htmlFile = null;
 		while((entry = zins.getNextEntry()) != null){
 			String name = entry.getName();
 			if(entry.isDirectory()){
@@ -346,8 +406,8 @@ public class DataSynchizeUtil {
 				byte[] buffer = new byte[1024];
 				while((len = zins.read(buffer)) != -1){
 					fos.write(buffer, 0, len);
-					if(name.endsWith(".html")){
-						sb.append(new String(buffer, "UTF-8"));
+					if(name.endsWith(".html") && htmlFile == null){
+						htmlFile = file;
 					}
 					fos.flush();
 				}
@@ -356,7 +416,7 @@ public class DataSynchizeUtil {
 			
 		}
 		zins.close();
-		return sb.toString();
+		return htmlFile;
 	}
 	
 	/**
@@ -431,25 +491,25 @@ public class DataSynchizeUtil {
 		NoteEntity note = noteService.getNote(noteId);
 		String htmlPath = FilePathUtil.getNoteHtmlPath(note);
 		try {
-			String content = unZipNoteHtml(zipFile, htmlPath);
-			content = HtmlParser.replaceClientHtmlImg(content, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
+			File htmlFile = unZipNoteHtml(zipFile, htmlPath);
+			String content = HtmlParser.replaceClientHtmlImg(htmlFile, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
 			note.setContent(content);
 			
-			//noteService.updateEntitie(note);
+			noteService.updateEntitie(note);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public static void addNoteHtmlFile(NoteEntity note){
+	public static void addNoteHtmlFile(NoteEntity note, AccountEntity user){
 		AttachmentServiceI attachmentService = AppContextUtils.getBean("attachmentService");
-		List<AttachmentEntity> list = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NOTEHTML);
+		List<AttachmentEntity> list = attachmentService.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NOTEHTML});
 		if(list == null || list.isEmpty()){
 			AttachmentEntity atta = new AttachmentEntity();
 			atta.setId(UUIDGenerator.uuid());
 			atta.setCreateTime(note.getCreateTime());
 			atta.setCreateTimeStamp(note.getCreateTimeStamp());
-			atta.setCreateUser(StringUtil.isEmpty(note.getUpdateUser()) ? note.getCreateUser() : note.getUpdateUser());
+			atta.setCreateUser(user.getId());
 			atta.setCreateUserId(note.getCreateUserId());
 			atta.setDeleted(note.getDeleted());
 			atta.setDirectoryId(note.getDirId());
@@ -464,34 +524,41 @@ public class DataSynchizeUtil {
 			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
 			atta.setUpdateUser(note.getUpdateUser());
 			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setClientId(user.getClientId());
 			attachmentService.save(atta);
 		}
 	}
 	
-	public static void updateNoteHtmlFile(NoteEntity note){
+	public static void updateNoteHtmlFile(NoteEntity note, AccountEntity user){
 		AttachmentServiceI attachmentService = AppContextUtils.getBean("attachmentService");
 		
-		List<AttachmentEntity> list = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NOTEHTML);
+		List<AttachmentEntity> list = attachmentService.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NOTEHTML});
 		if(list != null && !list.isEmpty()){
 			AttachmentEntity atta = list.get(0);
 			atta.setTranSfer(0L);
 			atta.setStatus(Constants.FILE_TRANS_NOT_COMPLETED);
 			
+			atta.setCreateTime(note.getUpdateTime());
+			atta.setCreateTimeStamp(note.getUpdateTimeStamp());
+			atta.setCreateUser(user.getId());
+			atta.setCreateUserId(user.getId());
+			atta.setClientId(user.getClientId());
+			
 			atta.setUpdateTime(note.getUpdateTime());
 			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
 			atta.setUpdateUser(note.getUpdateUser());
-			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setUpdateUserId(note.getUpdateUserId());
 			atta.setDeleted(note.getDeleted());
 			
-			attachmentService.save(atta);
+			attachmentService.updateEntitie(atta);
 		}else{
 			//现在没用
 			AttachmentEntity atta = new AttachmentEntity();
 			atta.setId(UUIDGenerator.uuid());
 			atta.setCreateTime(note.getCreateTime());
 			atta.setCreateTimeStamp(note.getCreateTimeStamp());
-			atta.setCreateUser(StringUtil.isEmpty(note.getUpdateUser()) ? note.getCreateUser() : note.getUpdateUser());
-			atta.setCreateUserId(note.getCreateUserId());
+			atta.setCreateUser(user.getId());
+			atta.setCreateUserId(user.getId());
 			atta.setDeleted(note.getDeleted());
 			atta.setDirectoryId(note.getDirId());
 			atta.setFileName(FilePathUtil.getNoteZipFileName(note.getId(), null));
@@ -505,13 +572,26 @@ public class DataSynchizeUtil {
 			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
 			atta.setUpdateUser(note.getUpdateUser());
 			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
+			atta.setClientId(user.getClientId());
 		}
 		
 	}
 	
+	/**
+	 * 判断权限
+	 * @param userId
+	 * @param subjectId
+	 * @param actionName
+	 * @return
+	 */
 	public static boolean hasPermission(String userId, String subjectId, String actionName){
 		SubjectServiceI subjectService = AppContextUtils.getBean("subjectService");
 		SubjectEntity subject = subjectService.getSubject(subjectId);
+		
+		if(subject == null){
+			return false;
+		}
+		
 		if(subject.getSubjectType().intValue() == Constants.SUBJECT_TYPE_P){
 			return true;
 		}
@@ -523,6 +603,137 @@ public class DataSynchizeUtil {
 		}else{
 			return false;
 		}
+	}
+	
+	/**
+	 * 判断是否返回该回收站数据
+	 * @param userId
+	 * @param subjectId
+	 * @param actionName
+	 * @return true:返回客户端, false:不返回
+	 */
+	public static boolean recyclePermission(String userId, NoteEntity note){
+		if(StringUtil.isEmpty(note.getCreateUser())){
+			return true;
+		}
+		
+		String subjectId = note.getSubjectId();
+		SubjectServiceI subjectService = AppContextUtils.getBean("subjectService");
+		SubjectEntity subject = subjectService.getSubject(subjectId);
+		
+		if(subject == null){
+			return false;
+		}
+		
+		if(subject.getSubjectType().intValue() == Constants.SUBJECT_TYPE_P){
+			return true;
+		}
+		
+		RoleService roleService = AppContextUtils.getBean("roleService");
+		RoleUser ru = roleService.findUserRole(userId, subjectId);
+		Role role = roleService.getRole(ru.getRoleId());
+		
+		if(role.getRoleName().equals(RoleName.OWNER) || role.getRoleName().equals(RoleName.ADMIN)){
+			return true;
+		}
+		
+		if(role.getRoleName().equals(RoleName.READER)){
+			return false;
+		}
+		
+		if(role.getRoleName().equals(RoleName.AUTHOR)){
+			if(note.getCreateUser().equals(userId)){
+				String updateUser = note.getUpdateUserId();
+				RoleUser roleUser = roleService.findUserRole(updateUser, subjectId);
+				if(roleUser == null){
+					return true;
+				}else{
+					Role r = roleService.getRole(roleUser.getRoleId());
+					if(!r.getRoleName().equals(RoleName.ADMIN) && !r.getRoleName().equals(RoleName.OWNER) && !r.getRoleName().equals(RoleName.EDITOR)){
+						return true;
+					}else{
+						return false;
+					}
+				}
+			}else{
+				return false;
+			}
+		}
+		
+		if(role.getRoleName().equals(RoleName.EDITOR)){
+			String updateUser = note.getUpdateUserId();
+			RoleUser roleUser = roleService.findUserRole(updateUser, subjectId);
+			if(roleUser == null){
+				return true;
+			}else{
+				Role r = roleService.getRole(roleUser.getRoleId());
+				if(!r.getRoleName().equals(RoleName.ADMIN) && !r.getRoleName().equals(RoleName.OWNER)){
+					return true;
+				}else{
+					return false;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * 判断是否返回该回收站数据
+	 * @param userId
+	 * @param subjectId
+	 * @param actionName
+	 * @return true:返回客户端, false:不返回
+	 */
+	public static boolean recyclePermission(String userId, DirectoryEntity dir){
+		if(StringUtil.isEmpty(dir.getCreateUser())){
+			return true;
+		}
+		
+		String subjectId = dir.getSubjectId();
+		SubjectServiceI subjectService = AppContextUtils.getBean("subjectService");
+		SubjectEntity subject = subjectService.getSubject(subjectId);
+		
+		if(subject == null){
+			return false;
+		}
+		
+		if(subject.getSubjectType().intValue() == Constants.SUBJECT_TYPE_P){
+			return false;
+		}
+		
+		RoleService roleService = AppContextUtils.getBean("roleService");
+		RoleUser ru = roleService.findUserRole(userId, subjectId);
+		Role role = roleService.getRole(ru.getRoleId());
+		
+		if(role.getRoleName().equals(RoleName.OWNER) || role.getRoleName().equals(RoleName.ADMIN)){
+			return true;
+		}
+		
+		if(role.getRoleName().equals(RoleName.READER)){
+			return false;
+		}
+		
+		if(role.getRoleName().equals(RoleName.AUTHOR)){
+			return false;
+		}
+		
+		if(role.getRoleName().equals(RoleName.EDITOR)){
+			String updateUser = dir.getUpdateUserId();
+			RoleUser roleUser = roleService.findUserRole(updateUser, subjectId);
+			if(roleUser == null){
+				return true;
+			}else{
+				Role r = roleService.getRole(roleUser.getRoleId());
+				if(!r.getRoleName().equals(RoleName.ADMIN) && !r.getRoleName().equals(RoleName.OWNER)){
+					return true;
+				}else{
+					return false;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 	public static void saveBanLog(String dataType, String action, String primaryKey, String operateUser, String targetUser, long operateTime, long synchTime){
@@ -566,6 +777,18 @@ public class DataSynchizeUtil {
 
         return tokens;
     }
+	
+	public static Map<String, String> toBeanMap(NoteEntity note){
+		Map<String, String> beanMap = new HashMap<String, String>();
+		beanMap.put("id", note.getId());
+		beanMap.put("className", note.getClassName());
+		beanMap.put("updateUserId", note.getUpdateUserId());
+		beanMap.put("updateTimeStamp", String.valueOf(note.getUpdateTimeStamp()));
+		beanMap.put("createUserId", note.getCreateUserId());
+		beanMap.put("createTimeStamp", String.valueOf(note.getCreateTimeStamp()));
+		
+		return beanMap;
+	}
 	
 	public static void main(String[] args){
 		File file = new File("E:\\webroot\\wtpwebapps\\eht\\notes\\621c09c19f4c4f45a1b2ffbc12702874\\dbd23cff97e944c894388a6eba71a306\\dbd23cff97e944c894388a6eba71a306.zip");

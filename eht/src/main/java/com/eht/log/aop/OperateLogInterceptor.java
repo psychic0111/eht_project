@@ -44,6 +44,7 @@ import com.eht.system.service.DataInitService;
 import com.eht.tag.entity.TagEntity;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
+import com.eht.webservice.util.DataSynchizeUtil;
 import com.eht.webservice.util.SynchDataCache;
 
 @Aspect
@@ -67,10 +68,10 @@ public class OperateLogInterceptor {
 
 	@Autowired
 	private NoteServiceI noteService;
-	
+
 	@Autowired
 	private MessageServiceI messageService;
-	
+
 	@Autowired
 	private DataInitService dataInitService;
 
@@ -78,79 +79,76 @@ public class OperateLogInterceptor {
 	public void pointCut() {
 	}
 
-	/*@Before("@annotation(sc)")
-	public void addResponseHeader(JoinPoint jp, SynchControl sc) {
-		Object[] args = jp.getArgs();
-		HttpServletResponse response = null;
-		for(Object obj : args){
-			if(obj != null && obj instanceof HttpServletResponse){
-				response = (HttpServletResponse) obj;
-				break;
-			}
-		}
-		if(response != null){
-			response.addHeader(SynchConstants.HEADER_DATATYPE, sc.dataType());
-			response.addHeader(SynchConstants.HEADER_ACTION, sc.action());
-			response.addHeader(SynchConstants.HEADER_NEXT_ACTION, sc.nextAction());
-			response.addHeader(SynchConstants.HEADER_NEXT_DATATYPE, sc.nextDataType());
-		}
-	}*/
-	
+	/*
+	 * @Before("@annotation(sc)") public void addResponseHeader(JoinPoint jp,
+	 * SynchControl sc) { Object[] args = jp.getArgs(); HttpServletResponse
+	 * response = null; for(Object obj : args){ if(obj != null && obj instanceof
+	 * HttpServletResponse){ response = (HttpServletResponse) obj; break; } }
+	 * if(response != null){ response.addHeader(SynchConstants.HEADER_DATATYPE,
+	 * sc.dataType()); response.addHeader(SynchConstants.HEADER_ACTION,
+	 * sc.action()); response.addHeader(SynchConstants.HEADER_NEXT_ACTION,
+	 * sc.nextAction()); response.addHeader(SynchConstants.HEADER_NEXT_DATATYPE,
+	 * sc.nextDataType()); } }
+	 */
+
 	@AfterReturning("@annotation(rp)")
 	public void recordLog(JoinPoint jp, RecordOperate rp) {
 		// 获取方法参数
 		Object[] args = jp.getArgs();
 		Object paramEntity = args[0]; // 增删改实体参数都放在第一个
 		AccountEntity user = accountService.getUser4Session();
-		if(user == null){
-			String sessionId = String.valueOf(ContextHolderUtils.getRequest().getAttribute("jsessionid"));
+		if (user == null) {
+			String sessionId = String.valueOf(ContextHolderUtils.getRequest()
+					.getAttribute("jsessionid"));
 			user = accountService.getUser4Session(sessionId);
 		}
 		String userId = user == null ? null : user.getId();
-		
+
 		ClientEntity client = null;
 		String clientId = user == null ? null : user.getClientId();
-		if(!StringUtil.isEmpty(clientId)){
+		if (!StringUtil.isEmpty(clientId)) {
 			client = dataInitService.getClient(clientId);
 		}
-		if(client == null){
+		if (client == null) {
 			client = new ClientEntity();
 			client.setClientId(SynchConstants.CLIENT_DEFAULT_ID);
 			client.setClientType(SynchConstants.CLIENT_DEFAULT_TYPE);
 		}
-		
+
 		int length = rp.dataClass().length;
 		for (int i = 0; i < length; i++) {
 			SynchLogEntity log = new SynchLogEntity();
 			log.setId(UUIDGenerator.uuid());
 			log.setClassName(rp.dataClass()[i].toString());
 			log.setAction(rp.action()[i].toString());
-			if(log.getClassName().equals(DataType.SUBJECTUSER.toString())){
-				if(args[0].getClass().getName().equals(RoleUser.class.getName())){
+			if (log.getClassName().equals(DataType.SUBJECTUSER.toString())) {
+				if (args[0].getClass().getName()
+						.equals(RoleUser.class.getName())) {
 					RoleUser ru = (RoleUser) args[0];
 					userId = ru.getUserId();
 					log.setOperateUser(userId);
-				}else{
+				} else {
 					userId = args[1].toString();
 					log.setOperateUser(userId);
 				}
-				
-			}else{
+
+			} else {
 				log.setOperateUser(userId);
 			}
 			log.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
 			log.setClientType(client.getClientType());
 			log.setClientId(client.getClientId());
-			
+
 			// 数据操作发生的时间
 			if (StringUtil.isEmpty(rp.timeStamp()[i])) {
 				log.setOperateTime(System.currentTimeMillis());
 			} else {
-				Object dateObj = ReflectionUtils.invokeGetterMethod(paramEntity, rp.timeStamp()[i]);
+				Object dateObj = ReflectionUtils.invokeGetterMethod(
+						paramEntity, rp.timeStamp()[i]);
 				if (dateObj != null) {
 					Date date = (Date) dateObj;
 					log.setOperateTime(date.getTime());
-				}else{
+				} else {
 					log.setOperateTime(System.currentTimeMillis());
 				}
 			}
@@ -163,49 +161,70 @@ public class OperateLogInterceptor {
 			if (StringUtil.isEmpty(methodName)) {
 				primaryKey = args[index].toString();
 			} else {
-				 Object pk= ReflectionUtils.invokeMethod(paramEntity, methodName, null, null);
-				 //yuhao 修改  
-				 if(pk instanceof java.lang.String){
-					 primaryKey = (String) pk;
-				 }else{
-					 primaryKey =  pk+"";
-				 }
-				
+				Object pk = ReflectionUtils.invokeMethod(paramEntity,
+						methodName, null, null);
+				// yuhao 修改
+				if (pk instanceof java.lang.String) {
+					primaryKey = (String) pk;
+				} else {
+					primaryKey = pk + "";
+				}
+
 			}
 			log.setClassPK(primaryKey);
-			
+
 			// 根据注解设置影响用户
-			if(rp.targetUser()[i] != -1){
+			if (rp.targetUser()[i] != -1) {
 				log.setTargetUser(args[rp.targetUser()[i]].toString());
 				synchLogService.saveSynchLog(log);
-			}else{ 
+			} else {
 				List<String> userIdList = null;
-				//用户信息改变日志
-				if(paramEntity instanceof AccountEntity){
+				// 用户信息改变日志
+				if (paramEntity instanceof AccountEntity) {
 					List<AccountEntity> accList = noteService.getShareEmail();
-					if(accList != null && !accList.isEmpty()){
+					if (accList != null && !accList.isEmpty()) {
 						userIdList = new ArrayList<String>(accList.size() + 1);
-						for(AccountEntity us : accList){
+						for (AccountEntity us : accList) {
 							userIdList.add(us.getId());
 						}
 						userIdList.add(userId);
 					}
 				}
-				if(userIdList == null){
-					//是否需要查询操作影响用户，多人专题下的数据变更
-					Map<String, String> map = isOwnShareSubject(paramEntity);
-					if(map != null){
-						//查询多人专题下所有成员
-						userIdList = getTargetUsers(map.get("subjectId"), map.get("directoryId"), map.get("noteId"));
-						
-						if(log.getClassName().equals(DataType.SUBJECTUSER.toString()) && log.getAction().equals(DataSynchAction.ADD.toString())){
+
+				Map<String, String> map = null;
+				if (userIdList == null) {
+					// 是否需要查询操作影响用户，多人专题下的数据变更
+					map = isOwnShareSubject(paramEntity);
+					if (map != null) {
+						// 查询多人专题下所有成员
+						userIdList = getTargetUsers(map.get("subjectId"),
+								map.get("directoryId"), map.get("noteId"));
+
+						if (log.getClassName().equals(
+								DataType.SUBJECTUSER.toString())
+								&& log.getAction().equals(
+										DataSynchAction.ADD.toString())) {
 							String newMemberId = args[1].toString();
-							userIdList.add(newMemberId);  // 包括刚刚加入的成员
+							userIdList.add(newMemberId); // 包括刚刚加入的成员
 						}
 					}
 				}
-				if(userIdList != null && !userIdList.isEmpty()){
-					for(String uid : userIdList){
+				if (userIdList != null && !userIdList.isEmpty()) {
+					for (String uid : userIdList) {
+						if(log.getClassName().equals(DataType.DIRECTORY) && log.getAction().equals(DataSynchAction.DELETE.toString())){
+							boolean flag = DataSynchizeUtil.recyclePermission(uid, (DirectoryEntity)paramEntity);
+							if(!flag){
+								continue;
+							}
+						}
+						
+						if(log.getClassName().equals(DataType.NOTE) && log.getAction().equals(DataSynchAction.DELETE.toString())){
+							boolean flag = DataSynchizeUtil.recyclePermission(uid, (NoteEntity)paramEntity);
+							if(!flag){
+								continue;
+							}
+						}
+						
 						SynchLogEntity newLog = new SynchLogEntity();
 						try {
 							BeanUtils.copyProperties(newLog, log);
@@ -215,20 +234,23 @@ public class OperateLogInterceptor {
 							e.printStackTrace();
 						}
 						synchLogService.saveSynchLog(newLog);
-						
+
 						// 条目操作发送系统消息给其他成员
-						if(!uid.equals(log.getOperateUser())){
-							if(log.getClassName().equals(DataType.NOTE.toString())){
+						if (!uid.equals(log.getOperateUser())) {
+							if (log.getClassName().equals(
+									DataType.NOTE.toString())) {
 								MessageEntity msg = new MessageEntity();
 								msg.setId(UUIDGenerator.uuid());
-								
+
 								NoteEntity note = (NoteEntity) paramEntity;
-								String content = msgContent(log.getAction(), user.getUserName(), note);
+								String content = msgContent(log.getAction(),
+										user.getUserName(), note);
 								msg.setContent(content);
-								msg.setClassName(SynchDataCache.getDataClass(log.getClassName()).getName());
+								msg.setClassName(SynchDataCache.getDataClass(
+										log.getClassName()).getName());
 								msg.setClassPk(log.getClassPK());
 								msg.setOperate(log.getAction());
-								
+
 								Date date = new Date();
 								msg.setCreateTime(date);
 								msg.setCreateTimeStamp(date.getTime());
@@ -239,22 +261,51 @@ public class OperateLogInterceptor {
 							}
 						}
 					}
-				}else{
+				} else {
 					// 只影响操作者本身
+					if (StringUtil.isEmpty(userId)) {
+						String metName = "getCreateUser";
+						if (log.getAction().equals(DataSynchAction.UPDATE)) {
+							metName = "getUpdateUser";
+						}
+						try {
+							Object uid = ReflectionUtils.invokeMethod(
+									paramEntity, metName, null, null);
+							userId = uid == null ? null : uid.toString();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
+					if (StringUtil.isEmpty(userId)) {
+						String metName = "getCreateUserId";
+						if (log.getAction().equals(DataSynchAction.UPDATE)) {
+							metName = "getUpdateUserId";
+						}
+						try {
+							Object uid = ReflectionUtils.invokeMethod(
+									paramEntity, metName, null, null);
+							userId = uid == null ? null : uid.toString();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
 					log.setTargetUser(userId);
 					synchLogService.saveSynchLog(log);
 				}
 			}
-			
+
 		}
 	}
-	
+
 	/**
 	 * 是否为多人专题下数据
+	 * 
 	 * @param paramEntity
-	 * @return map：subjectId  directoryId noteId
+	 * @return map：subjectId directoryId noteId
 	 */
-	private Map<String, String> isOwnShareSubject(Object paramEntity){
+	private Map<String, String> isOwnShareSubject(Object paramEntity) {
 		String subjectId = null;
 		String directoryId = null;
 		String noteId = null;
@@ -262,7 +313,8 @@ public class OperateLogInterceptor {
 			subjectId = paramEntity.toString();
 		}
 		// 专题数据
-		if (paramEntity.getClass().getName().equals(SubjectEntity.class.getName())) {
+		if (paramEntity.getClass().getName()
+				.equals(SubjectEntity.class.getName())) {
 			SubjectEntity sub = (SubjectEntity) paramEntity;
 			subjectId = sub.getId();
 		}
@@ -271,31 +323,33 @@ public class OperateLogInterceptor {
 			TagEntity tag = (TagEntity) paramEntity;
 			subjectId = tag.getSubjectId();
 		}
-		//目录
-		if (paramEntity.getClass().getName().equals(DirectoryEntity.class.getName())) {
+		// 目录
+		if (paramEntity.getClass().getName()
+				.equals(DirectoryEntity.class.getName())) {
 			DirectoryEntity dir = (DirectoryEntity) paramEntity;
 			directoryId = dir.getId();
 			subjectId = dir.getSubjectId();
 		}
-		//条目
+		// 条目
 		if (paramEntity.getClass().getName().equals(NoteEntity.class.getName())) {
 			NoteEntity note = (NoteEntity) paramEntity;
 			noteId = note.getId();
 			subjectId = note.getSubjectId();
 		}
-		//条目标签关系
+		// 条目标签关系
 		if (paramEntity.getClass().getName().equals(NoteTag.class.getName())) {
 			NoteTag noteTag = (NoteTag) paramEntity;
 			NoteEntity note = noteService.getNote(noteTag.getNoteId());
 			subjectId = note.getSubjectId();
 		}
-		//专题成员关系
+		// 专题成员关系
 		if (paramEntity.getClass().getName().equals(RoleUser.class.getName())) {
 			RoleUser ru = (RoleUser) paramEntity;
 			subjectId = ru.getSubjectId();
 		}
-		//附件
-		if (paramEntity.getClass().getName().equals(AttachmentEntity.class.getName())) {
+		// 附件
+		if (paramEntity.getClass().getName()
+				.equals(AttachmentEntity.class.getName())) {
 			AttachmentEntity atta = (AttachmentEntity) paramEntity;
 			String nid = atta.getNoteId();
 			if (!StringUtil.isEmpty(nid)) {
@@ -310,8 +364,8 @@ public class OperateLogInterceptor {
 				}
 			}
 		}
-		
-		if(!StringUtil.isEmpty(subjectId)){
+
+		if (!StringUtil.isEmpty(subjectId)) {
 			SubjectEntity subject = subjectService.getSubject(subjectId);
 			if (subject.getSubjectType() == Constants.SUBJECT_TYPE_M) {
 				Map<String, String> map = new HashMap<String, String>();
@@ -323,14 +377,16 @@ public class OperateLogInterceptor {
 		}
 		return null;
 	}
-	
-	public List<String> getTargetUsers(String subjectId, String directoryId, String noteId) {
+
+	public List<String> getTargetUsers(String subjectId, String directoryId,
+			String noteId) {
 		List<String> userIdList = new ArrayList<String>();
 
 		List<RoleUser> userList = roleService.findSubjectUsers(subjectId);
 		for (RoleUser ru : userList) {
 			if (directoryId != null) {
-				if (!directoryService.inDirBlackList(ru.getUserId(), directoryId)) {
+				if (!directoryService.inDirBlackList(ru.getUserId(),
+						directoryId)) {
 					userIdList.add(ru.getUserId());
 				}
 			}
@@ -340,40 +396,41 @@ public class OperateLogInterceptor {
 					userIdList.add(ru.getUserId());
 				}
 			}
-			if(!userIdList.contains(ru.getUserId())){
+			if (!userIdList.contains(ru.getUserId())) {
 				userIdList.add(ru.getUserId());
 			}
 		}
 		return userIdList;
 	}
-	
-	private String msgContent(String action, String userName, NoteEntity note){
+
+	private String msgContent(String action, String userName, NoteEntity note) {
 		String operate = "新增";
-		if(action.equals(DataSynchAction.UPDATE.toString())){
+		if (action.equals(DataSynchAction.UPDATE.toString())) {
 			operate = "修改";
 		}
-		if(action.equals(DataSynchAction.DELETE.toString())){
+		if (action.equals(DataSynchAction.DELETE.toString())) {
 			operate = "删除";
 		}
-		
+
 		StringBuilder sb = new StringBuilder(userName);
 		sb.append(operate).append("条目【");
-		
+
 		SubjectEntity sub = subjectService.getSubject(note.getSubjectId());
 		sb.append(sub.getSubjectName()).append("/");
-		
-		if(!StringUtil.isEmptyOrBlank(note.getDirId())){
-			DirectoryEntity dir = directoryService.getDirectory(note.getDirId());
+
+		if (!StringUtil.isEmptyOrBlank(note.getDirId())) {
+			DirectoryEntity dir = directoryService
+					.getDirectory(note.getDirId());
 			String dirPath = dir.getDirName();
-			while(!StringUtil.isEmpty(dir.getParentId())){
+			while (!StringUtil.isEmpty(dir.getParentId())) {
 				dir = directoryService.getDirectory(dir.getParentId());
-				dirPath = dir.getDirName() + "/" + dirPath; 
+				dirPath = dir.getDirName() + "/" + dirPath;
 			}
 			sb.append(dirPath);
 		}
 		sb.append("】：");
 		sb.append(note.getTitle());
-		
+
 		return sb.toString();
 	}
 }

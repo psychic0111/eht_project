@@ -7,7 +7,6 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -17,9 +16,9 @@ import javax.persistence.Transient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
 
 import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.enumeration.DataType;
 import com.eht.note.entity.NoteEntity;
 import com.eht.user.entity.AccountEntity;
 
@@ -61,6 +60,10 @@ public class CommentEntity implements java.io.Serializable {
 	
 	/**创建人,接口使用*/
 	private java.lang.String createUserId;
+	
+	private String operation;
+	
+	private String className = DataType.COMMENT.toString();
 	
 	@Transient
 	public java.lang.String getCreateUserId() {
@@ -214,6 +217,24 @@ public class CommentEntity implements java.io.Serializable {
 		if(this.createTimeStamp != null && this.createTime == null){
 			this.createTime = new Date(this.createTimeStamp);
 		}
+	}
+
+	@Transient
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+
+	@Transient
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 
 }

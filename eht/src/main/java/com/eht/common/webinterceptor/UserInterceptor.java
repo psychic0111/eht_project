@@ -82,11 +82,15 @@ public class UserInterceptor implements HandlerInterceptor {
 				}
 			}
 		}
+		//上传的时候不拦截
+		if(requestPath.startsWith("noteController/front/uploadNodeAttach.dht")){
+			return true;
+		}
 		if (isInexcludeUrlList(requestPath)) {
 			return true;
 		} else {
 			if(hasMenuAuth(request)){
-				HttpSession session = request.getSession();  
+				HttpSession session = request.getSession();
 				String projectName = request.getContextPath();
 			    
 			    if(request.getParameter("jsessionid")!=null){

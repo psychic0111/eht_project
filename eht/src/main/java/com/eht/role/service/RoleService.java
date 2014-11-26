@@ -63,7 +63,7 @@ public interface RoleService extends CommonService {
 	 * @param userId
 	 * @return
 	 */
-	public String addRoleUser(String subjectId, String userId, String roleId, String creator, long timestamp);
+	public RoleUser addRoleUser(String subjectId, String userId, String roleId, String creator, long timestamp);
 	
 	/**
 	 * 更新用户角色

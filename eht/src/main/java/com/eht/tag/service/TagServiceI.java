@@ -165,4 +165,6 @@ public interface TagServiceI extends CommonService{
 	 * @return
 	 */
 	public List<NoteTag> findNoteTagsByNote(String noteId);
+
+	public NoteTag getNoteTag(String id);
 }

@@ -73,7 +73,7 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 	 */
 	@Override
 	//@RecordOperate(dataClass=DataType.SUBJECTUSER, action=DataSynchAction.ADD, keyIndex=0, targetUser=-1)
-	public String addRoleUser(String subjectId, String userId, String roleId, String creator, long timestamp) {
+	public RoleUser addRoleUser(String subjectId, String userId, String roleId, String creator, long timestamp) {
 		RoleUser ru = new RoleUser();
 		ru.setId(UUIDGenerator.uuid());
 		ru.setSubjectId(subjectId);
@@ -82,7 +82,7 @@ public class RoleServiceImpl extends CommonServiceImpl implements RoleService {
 		ru.setCreateUserId(creator);
 		ru.setCreateTimeStamp(timestamp);
 		addRoleUser(ru);
-		return ru.getId();
+		return ru;
 	}
 	
 	@Override

@@ -59,7 +59,7 @@ public interface SynchLogServiceI extends CommonService{
 	 * @param timeStamp
 	 * @return
 	 */
-	public int countSynchLogsByTarget(String clientId, String userId, long timeStamp);
+	public int countSynchLogsByTarget(String clientId, String userId, String action, long timeStamp, long endTimestamp);
 
 	/**
 	 * 客户端某用户对某条数据需更新的日志记录
@@ -193,7 +193,7 @@ public interface SynchLogServiceI extends CommonService{
 	 * @return
 	 * @throws Exception 
 	 */
-	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, String dataClass, boolean isDeleteFilter) throws Exception;
+	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, long endTime, String dataClass, boolean isDeleteFilter) throws Exception;
 	
 	/**
 	 * 日志保存到已同步表中
@@ -203,7 +203,7 @@ public interface SynchLogServiceI extends CommonService{
 	 */
 	public void saveSynchedLog(SynchLogEntity theLog, String clientId, String userId);
 
-	public int countSynchLogsByTarget(String clientId, String userId, long timeStamp,
+	public int countSynchLogsByTarget(String clientId, String userId, long timeStamp, long endTime,
 			String dataClass, String action);
 
 	public List<SynchLogEntity> findSynchLogsBySQL(String clientId, String userId,
@@ -236,7 +236,7 @@ public interface SynchLogServiceI extends CommonService{
 	 * @throws Exception
 	 */
 	public List<SynchLogEntity> findTruncSynchLogs(String clientId, String userId,
-			long timeStamp, String dataClass) throws Exception;
+			long timeStamp, long endTime, String dataClass) throws Exception;
 
 	/**
 	 * 生成删除成员角色的日志
@@ -307,5 +307,31 @@ public interface SynchLogServiceI extends CommonService{
 	 */
 	public List<SynchronizedLogEntity> findNeedDownloadFile(String userId,
 			String clientId) throws Exception;
+
+	/**
+	 * 更新日志状态
+	 * @param userId
+	 * @param clientId
+	 * @param dataType
+	 * @param classPk
+	 * @return
+	 */
+	public void updateSynchedLogStatus(String userId,
+			String clientId, String dataType, String classPk);
+
+	/**
+	 * 根据logid查询已处理的日志记录
+	 * @param logId
+	 * @return
+	 */
+	public SynchronizedLogEntity findSynchedLogByLogId(String logId);
+
+	/**
+	 * 查询已处理的日志记录
+	 * @param logId
+	 * @return
+	 */
+	public SynchronizedLogEntity findSynchedLog(String clientId, String userId,
+			String className, String classPK, String action);
 
 }

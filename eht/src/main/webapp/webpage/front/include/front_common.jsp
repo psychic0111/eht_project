@@ -26,7 +26,7 @@
 <LINK href="${cssPath}/common.css" type=text/css rel=stylesheet>
 <link rel="stylesheet" href="${cssPath}/zTreeStyle/zTreeStyle.css" type="text/css">
 <LINK href="${cssPath}/easydialog.css" type=text/css rel=stylesheet>
-<link id="skin" rel="stylesheet" href="${frontPath}/js/jBox/Skins2/Blue/jbox.css">
+<link id="skin" rel="stylesheet" href="${frontPath}/js/jBox/Skins/Blue/jbox.css">
 <script type="text/javascript" src="${webRoot}/plug-in/jquery/jquery-1.8.3.min.js"></script>
 <script type="text/javascript" src="${frontPath}/js/plugins/jquery.form.js"></script>
 <script type="text/javascript" src="${frontPath}/js/plugins/jquery.metadata.js"></script>

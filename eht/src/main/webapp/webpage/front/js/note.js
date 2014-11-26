@@ -1,5 +1,5 @@
 var followNodeId='';
-var msgPeriod = 10000;
+var msgPeriod = 30000;
 var periodId = null;
 
 //标记已读
@@ -14,8 +14,8 @@ function markNoteMessage(msgId){
 			if(nodes[i].level == 0){
 				continue;
 			}
-			nodes[i].name = nodes[i].name.substring(0,4); 
-			zTree_Menu.updateNode(nodes[i]);
+			//nodes[i].name = nodes[i].name.substring(0,4); 
+			//zTree_Menu.updateNode(nodes[i]);
 		}
 		var num = parseInt($("#noReadMsgNum").text()) - 1;
 		if(num <= 0 || isNaN(num)){
@@ -38,35 +38,42 @@ function findTreeMsgNode(node){
 function getNoteMessage(){
 	if(!$("#jbox").attr("id")){
 		var url = webRoot + "/messageController/front/noteMessage.dht";
-		AT.get(url, function(data){
-			if(data != null && data != ''){
-				msgData = data;
+		AT.get(url, function(msgData){
+			if(msgData != null && msgData != '' && typeof(msgData) != 'undefined'){
 				var index = 0;
 				var btns = {};
 				
 				if(msgData.length > 0){
 					var options = {
 						icon: "info",
-						timeout: 0,
+						//timeout: 0,
 						buttons: btns,
 						showType: "show",
 						submit: function(v, h, f){
 							
 							var i = parseInt($("#msgIndex").val()) + 1;
-							if(i >= msgData.length){
+							if(i >= msgData.length || isNaN(index)){
 								i = 0;
 							}
-							$.jBox.messager(msgData[i].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[i].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+i+'"/>', "系统通知", 2000, options
-							);
+							if(typeof(msgData[i].content) != 'undefined'){
+								$.jBox.messager(msgData[i].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[i].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+i+'"/>', "系统通知", 5000, options
+								);
+							}
 							return true;
 						},
 						closed: function(){
-							markNoteMessage(data[index].id);
+							markNoteMessage(msgData[index].id);
 						}
 					};
 					
-					$.jBox.messager(data[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+data[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>', "新消息", 2000, options
-					);
+					index = parseInt($("#msgIndex").val()) + 1;
+					if(index >= msgData.length || isNaN(index)){
+						index = 0;
+					}
+					if(typeof(msgData[index].content) != 'undefined'){
+						$.jBox.messager(msgData[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>', "新消息", 5000, options
+						);
+					}
 					
 				}
 			}
@@ -156,6 +163,17 @@ function saveNote(){
 		viewNotePageAndButton();
 		searchNotes(selectInfo.isDeleted,true);
 		$("#note_new").val("+ 新建条目");
+		
+		var parentNode = zTree_Menu.getNodeByParam("id","remenber_subject_"+$("#noteForm_subjectId").val());
+		if(parentNode!=null&&parentNode.open){
+				var nodes = parentNode.children;
+				for(var i=0;i<nodes.length;i++){
+					var params = {'userId':nodes[i].id,'subjectId':nodes[i].subjectId,'tid':nodes[i].tId};
+					AT.post(webRoot+"/noteController/front/showcount.dht",params,function(data){
+						$("#diyBtn_"+data.userId+"_"+data.subjectId).text("("+data.total+")");
+					},true);
+				}
+		}
 		if($("#addCommentForm").length==0){
 			 var params = {'noteId':data.id};
 			 //显示评论

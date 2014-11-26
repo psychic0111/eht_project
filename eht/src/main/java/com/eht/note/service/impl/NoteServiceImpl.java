@@ -145,6 +145,17 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			parentGroupId = group.getGroupId();
 		}
 		Group group = groupService.addGroup(c.getClassNameId(), note.getId(), note.getTitle(), note.getId(), parentGroupId);
+		
+		if(!StringUtil.isEmpty(note.getDirId())){
+			Group parentGroup = groupService.findGroup(DirectoryEntity.class.getName(), note.getDirId());
+			List<GroupUser> list = groupService.findGroupUsers(parentGroup.getGroupId());
+			if(list != null && !list.isEmpty()){
+				for(GroupUser gu : list){
+					groupService.addGroupUser(group.getGroupId(), gu.getUserId());
+				}
+			}
+		}
+		
 		return group.getGroupId();
 	}
 
@@ -161,6 +172,10 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	@Override
 	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.DELETE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
 	public void markDelNote(NoteEntity note) {
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), null, Constants.DATA_NOT_DELETED, new Integer[]{Constants.FILE_TYPE_NORMAL, Constants.FILE_TYPE_NOTEHTML});
+		for(AttachmentEntity attachment : attaList){
+			attachmentService.markDelAttachment(attachment);
+		}
 		note.setDeleted(Constants.DATA_DELETED);
 		updateEntitie(note);
 	}
@@ -169,7 +184,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.TRUNCATE, keyIndex = 0, keyMethod = "getId")
 	public void deleteNote(NoteEntity note) {
 		// 删除条目附件
-		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), null);
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NORMAL, Constants.FILE_TYPE_NOTEHTML});
 		for(AttachmentEntity attachment : attaList){
 			attachmentService.deleteAttachment(attachment);
 		}
@@ -188,7 +203,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		
 		//删除已读未读关系
 		deleteNoteUser(note.getId());
-		
+		getSession().clear();
 		delete(note);
 	}
 	

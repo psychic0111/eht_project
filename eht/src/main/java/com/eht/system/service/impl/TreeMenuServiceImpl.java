@@ -193,7 +193,9 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 		dirMap.put("dataType", "DIRECTORY");
 		dirMap.put("icon", AppContextUtils.getContextPath() + "/webpage/front/images/tree/folder.png");
 		
-		List<DirectoryEntity> dirList = directoryService.findDirsBySubjectOderByTime(subject.getId(),false,false);
+		//List<DirectoryEntity> dirList = directoryService.findDirsBySubjectOderByTime(subject.getId(),false,false);
+		List<DirectoryEntity> dirList = directoryService.findDirsDelBlackSubject(subject.getId(), userId, "desc");
+		
 		List<TreeData> dirDataList = new ArrayList<TreeData>();
 		dirMap.put("branchId", subject.getId());
 		// 转换为TreeData格式

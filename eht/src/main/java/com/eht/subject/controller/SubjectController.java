@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -210,21 +211,54 @@ public class SubjectController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/front/memberManage.dht")
-	public ModelAndView memberManage(HttpServletRequest request) {
+	public ModelAndView memberManage(HttpServletRequest request, @ModelAttribute PageResult pageResult) {
 		ModelAndView mv = new ModelAndView("front/subject/membermanage");
 		SubjectEntity subjectEntity = subjectService.get(SubjectEntity.class, request.getParameter("id"));
 		AccountEntity user = (AccountEntity) request.getSession().getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		List<RoleUser> list = roleService.findSubjectUsers(subjectEntity.getId());
+		
+		List<RoleUser> roleUserList = roleService.findSubjectUsers(subjectEntity.getId());
 		mv.addObject("isAdmin", false);
-		for (RoleUser roleUser : list) {
+		for (RoleUser roleUser : roleUserList) {
 			if (user.getId().equals(roleUser.getUserId())) {
 				mv.addObject("user", roleUser);
 			}
 		}
 		List<InviteMememberEntity>  inviteMememberList =inviteMememberService.findInviteMemember(subjectEntity.getId());
+		for(InviteMememberEntity mem : inviteMememberList){
+			AccountEntity account = accountService.findUserByEmail(mem.getEmail());
+			RoleUser ru = new RoleUser();
+			ru.setId("");
+			ru.setAccountEntity(account);
+			ru.setUserId(account == null ? null : account.getId());
+			ru.setRole(mem.getRole());
+			ru.setRoleId(mem.getId());
+			roleUserList.add(ru);
+		}
+		
+		if (pageResult == null) {
+			pageResult = new PageResult();
+		}
+		pageResult.setPageSize(5);
+		// pageResult.setPageSize(Constants.PER_PAGE_COUNT);
+		/*if (pageResult != null && pageResult.getPageSize() != 10) {
+			pageResult.setPageSize(10);
+		}*/
+		pageResult.setTotal((long) roleUserList.size());
+		if(roleUserList.size() < pageResult.getPageSize()){
+			pageResult.setRows(roleUserList);
+		}else{
+			List<RoleUser> list = new ArrayList<RoleUser>();
+			int start = (pageResult.getPageNo() - 1) * pageResult.getPageSize();
+			int end = (start + pageResult.getPageSize()) < roleUserList.size() ? start + pageResult.getPageSize() : roleUserList.size();
+			for(int i = start; i < end; i++){
+				list.add(roleUserList.get(i));
+			}
+			pageResult.setRows(list);
+		}
+		
 		mv.addObject("subjectEntity", subjectEntity);
-		mv.addObject("list", list);
-		mv.addObject("inviteMememberList", inviteMememberList);
+		mv.addObject("list", pageResult);
+		//mv.addObject("inviteMememberList", inviteMememberList);
 		return mv;
 	}
 

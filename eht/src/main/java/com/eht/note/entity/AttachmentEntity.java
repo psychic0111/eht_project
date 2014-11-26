@@ -17,6 +17,8 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.eht.common.annotation.ClientJsonIgnore;
+import com.eht.common.constant.Constants;
+import com.eht.common.constant.SynchConstants;
 import com.eht.common.enumeration.DataType;
 import com.eht.subject.entity.DirectoryEntity;
 import com.eht.user.entity.AccountEntity;
@@ -99,6 +101,8 @@ public class AttachmentEntity implements java.io.Serializable {
 	private String operation;
 	
 	private String className = DataType.ATTACHMENT.toString();
+	
+	private String clientId = SynchConstants.CLIENT_DEFAULT_ID;
 	
 	@Transient
 	public java.lang.String getCreateUserId() {
@@ -263,7 +267,6 @@ public class AttachmentEntity implements java.io.Serializable {
 	 *@return: java.lang.Integer  创建者
 	 */
 	@ClientJsonIgnore
-	@Column(updatable=false)
 	public java.lang.String getCreateUser() {
 		return createUser;
 	}
@@ -280,7 +283,6 @@ public class AttachmentEntity implements java.io.Serializable {
 	 *@return: java.util.Date  创建时间
 	 */
 	@ClientJsonIgnore
-	@Column(updatable=false)
 	public java.util.Date getCreateTime() {
 		return createTime;
 	}
@@ -447,6 +449,14 @@ public class AttachmentEntity implements java.io.Serializable {
 
 	public void setClassName(String className) {
 		this.className = className;
+	}
+
+	public String getClientId() {
+		return clientId;
+	}
+
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
 	}
 		
 }

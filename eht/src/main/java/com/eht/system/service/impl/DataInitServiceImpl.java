@@ -172,10 +172,10 @@ public class DataInitServiceImpl extends CommonServiceImpl implements DataInitSe
 	}
 
 	@Override
-	public String registerClient(String clientType) {
+	public String registerClient(String clientId, String clientType) {
 		ClientEntity client = new ClientEntity();
 		client.setClientType(clientType);
-		client.setClientId(UUIDGenerator.uuid());
+		client.setClientId(clientId);
 		save(client);
 		return client.getClientId();
 	}

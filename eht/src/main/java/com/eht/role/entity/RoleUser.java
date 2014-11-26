@@ -36,12 +36,6 @@ public class RoleUser implements Serializable {
 	private String roleId;
 	
 	/**
-	 * 角色英文名
-	 * 返回客户端
-	 */
-	private String roleName;
-	
-	/**
 	 * 专题ID
 	 */
 	private String subjectId;
@@ -173,15 +167,6 @@ public class RoleUser implements Serializable {
 
 	public void setClassName(String className) {
 		this.className = className;
-	}
-
-	@Transient
-	public String getRoleName() {
-		return getRole().getRoleName();
-	}
-
-	public void setRoleName(String roleName) {
-		this.roleName = roleName;
 	}
 
 	public Long getCreateTimeStamp() {

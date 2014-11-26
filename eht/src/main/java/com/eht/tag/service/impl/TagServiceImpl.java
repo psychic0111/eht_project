@@ -170,7 +170,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 			dc.add(Restrictions.or(Restrictions.isNull("subjectId"), Restrictions.eq("subjectId", "")));   
 			dc.add(Restrictions.eq("createUser", userid));     
 		}
-		dc.addOrder(Order.desc("updateTime"));
+		dc.addOrder(Order.desc("createTime"));
 		/*if(parentid==null||parentid.equals("")){
 			//dc.add(Restrictions.or(Restrictions.isNull("parentId"), Restrictions.eq("parentId", "")));     
 		}else{
@@ -185,6 +185,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.or(Restrictions.isNull("subjectId"), Restrictions.eq("subjectId", "")));       //用户个人标签与专题无关
 		dc.add(Restrictions.eq("createUser", userId));
+		dc.addOrder(Order.asc("createTime"));
 		List<TagEntity> list = findByDetached(dc);
 		return list;
 	}
@@ -194,6 +195,11 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 		return get(TagEntity.class, tagId);
 	}
 
+	@Override
+	public NoteTag getNoteTag(String id) {
+		return get(NoteTag.class, id);
+	}
+	
 	@Override
 	public long findCoutNoteforTags(String tagId) {
 		String hql="select count(*) from  NoteTag n where  n.note.deleted="+Constants.DATA_NOT_DELETED+" and n.tagId=?  ";

@@ -78,6 +78,17 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		}
 		Group group = groupService.addGroup(c.getClassNameId(), dir.getId(), dir.getDirName(), dir.getId(), parentGroupId);
 		grantDirectoryPermissions(dir);
+		
+		if(!StringUtil.isEmpty(dir.getParentId())){
+			Group parentGroup = groupService.findGroup(DirectoryEntity.class.getName(), dir.getParentId());
+			List<GroupUser> list = groupService.findGroupUsers(parentGroup.getGroupId());
+			if(list != null && !list.isEmpty()){
+				for(GroupUser gu : list){
+					groupService.addGroupUser(group.getGroupId(), gu.getUserId());
+				}
+			}
+		}
+		
 		return group.getGroupId();
 	}
 	
@@ -338,6 +349,15 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	@Override
 	public boolean inDirBlackList(String userId, String dirId) {
 		Group group = groupService.findGroup(DirectoryEntity.class.getName(), dirId);
+		if(group == null){
+			DirectoryEntity dir = getDirectory(dirId);
+			if(dir != null){
+				groupService.addGroup(DirectoryEntity.class.getName(), dirId, dir.getDirName(), dirId, dir.getSubjectId());
+			}else{
+				return false;
+			}
+		}
+		
 		GroupUser gu = groupService.findGroupUser(group.getGroupId(), userId);
 		if(gu != null){
 			return true;
@@ -452,8 +472,8 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	}
 
 	@Override
-	public List<DirectoryEntity> findDirsDelBlackSubject(String subjectId,String userId) {
-		String query="select d.* from eht_directory d where  d.subjectId='"+subjectId+"' and d.deleted="+Constants.DATA_NOT_DELETED+"  and d.id not in(select p.classpk from eht_group p , eht_group_user u where u.userid='"+userId +"' and  u.groupid=p.groupid )  order by d.createTime asc ";
+	public List<DirectoryEntity> findDirsDelBlackSubject(String subjectId,String userId,String orderType) {
+		String query="select d.* from eht_directory d where  d.subjectId='"+subjectId+"' and d.deleted="+Constants.DATA_NOT_DELETED+"  and d.id not in(select p.classpk from eht_group p , eht_group_user u where u.userid='"+userId +"' and  u.groupid=p.groupid )  order by d.createTime " + orderType;
 		List<DirectoryEntity> list=this.commonDao.findListbySql(query, DirectoryEntity.class);
 		Map <String, DirectoryEntity>map=new HashMap<String, DirectoryEntity>();
 		for (DirectoryEntity directoryEntity : list) {

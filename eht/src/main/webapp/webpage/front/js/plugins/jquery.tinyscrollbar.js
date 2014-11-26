@@ -80,7 +80,7 @@
             var list = $("#contentListUl > li");
             $(list).each(function(i, item){
             	var h = item.offsetHeight;
-            	totalHeight += (h + 48);   //li样式margin-bottom:15px
+            	totalHeight += (h + 40);   //li样式margin-bottom:15px
             });
             this.contentSize = totalHeight;
             this.contentRatio = this.viewportSize / this.contentSize;

@@ -22,6 +22,11 @@ public enum DataSynchAction {
 	CREATEORUPDATE,
 	
 	/**
+	 * 同步添加到回收站
+	 */
+	ADDTODELETE,
+	
+	/**
 	 * 同步还原数据
 	 */
 	RESTORE,

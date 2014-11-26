@@ -85,7 +85,7 @@ public interface AttachmentServiceI extends CommonService{
 	 * @param noteId
 	 * @return
 	 */
-	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer fileType);
+	public List<AttachmentEntity> findAttachmentByNote(String noteId, Integer status, Integer deleted,Integer[] fileType);
 	
 	/**
 	 * 查询条目附件
@@ -136,7 +136,7 @@ public interface AttachmentServiceI extends CommonService{
 	 * @param fileType
 	 * @return
 	 */
-	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId,	Integer[] fileType);
+	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId,	String clientId, Integer[] fileType);
 	
 	/**
 	 * 根据条目ID，文件类型查询要上传的附件
@@ -146,6 +146,6 @@ public interface AttachmentServiceI extends CommonService{
 	 */
 	public List<AttachmentEntity> findNeedUploadAttachmentByNote(String noteId, Integer fileType);
 	
-	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note,
-			Integer fileType);
+	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note, Integer status, 
+			Integer[] fileType);
 }

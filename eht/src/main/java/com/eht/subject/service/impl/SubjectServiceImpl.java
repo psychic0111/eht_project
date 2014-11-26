@@ -84,12 +84,16 @@ import com.eht.tag.service.TagServiceI;
 import com.eht.template.entity.TemplateEntity;
 import com.eht.template.service.TemplateServiceI;
 import com.eht.user.entity.AccountEntity;
+import com.eht.user.service.AccountServiceI;
 
 @Service("subjectService")
 @Transactional
 public class SubjectServiceImpl extends CommonServiceImpl implements
 		SubjectServiceI {
 
+	@Autowired
+	private AccountServiceI accountService;
+	
 	@Autowired
 	private ResourceActionService resourceActionService;
 
@@ -133,8 +137,14 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		subject.setDeleted(Constants.DATA_NOT_DELETED);
 		save(subject);
 		Role ownerRole = roleService.findRoleByName(RoleName.OWNER);
-		roleService.addRoleUser(subject.getId(), subject.getCreateUser(),
+		RoleUser ru = roleService.addRoleUser(subject.getId(), subject.getCreateUser(),
 				ownerRole.getId(), creator, System.currentTimeMillis());
+		
+		if(subject.getSubjectType().intValue() == Constants.SUBJECT_TYPE_M){
+			synchLogService.recordLog(ru, DataType.SUBJECTUSER.toString(), DataSynchAction.ADD.toString(), creator, System.currentTimeMillis());
+			synchLogService.recordLog(accountService.getUser(creator), DataType.USER.toString(), DataSynchAction.ADD.toString(), creator, System.currentTimeMillis());
+		}
+		
 		ClassName c = resourceActionService
 				.findResourceByName(SubjectEntity.class.getName());
 		if (c == null) {
@@ -372,9 +382,9 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		Group group = groupService.findGroup(SubjectEntity.class.getName(),
 				subjectId);
 		groupService.addGroupUser(group.getGroupId(), userId);
-		String id = roleService.addRoleUser(subjectId, userId, roleId, creator, timestamp);
+		RoleUser ru = roleService.addRoleUser(subjectId, userId, roleId, creator, timestamp);
 		
-		synchLogService.generateAddSubjectUserLogs(id, subjectId, userId, roleId, DataSynchAction.ADD.toString(), creator, timestamp);
+		synchLogService.generateAddSubjectUserLogs(ru.getId(), subjectId, userId, roleId, DataSynchAction.ADD.toString(), creator, timestamp);
 		synchLogService.generateUserSubjectAddLog(subjectId, userId, roleId);
 	}
 
@@ -656,7 +666,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			List<NoteEntity> noteEntityList = new ArrayList<NoteEntity>();
 			for (NoteEntity noteEntity : noteEntitylist) {
 				if (directoryEntity.getId().equals(noteEntity.getDirId())) {
-					List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL);
+					List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 					noteEntity.setAttachmentEntitylist(lists);
 					noteEntityList.add(noteEntity);
 				}
@@ -680,7 +690,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		List<NoteEntity> list=new ArrayList<NoteEntity>();
 		for (NoteEntity noteEntity : noteEntitylist) {
 			if (noteEntity.getDirId() == null|| noteEntity.getDirId().equals("")){
-				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL);
+				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 				noteEntity.setAttachmentEntitylist(lists);
 				list.add(noteEntity);
 			}
@@ -756,7 +766,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 				sb.append("</tr>");
 				List<AttachmentEntity> lists = attachmentServiceI
 						.findAttachmentByNote(noteEntity.getId(),
-								Constants.FILE_TYPE_NORMAL);
+								null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 				if (lists.size() > 0) {
 					String pathContent = AppContextUtils.getContextPath();
 					sb.append("<tr><td>");
@@ -821,7 +831,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 				sb.append(noteEntity.getContent());
 				sb.append("</td>");
 				sb.append("</tr>");
-				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),Constants.FILE_TYPE_NORMAL);
+				List<AttachmentEntity> lists = attachmentServiceI.findAttachmentByNote(noteEntity.getId(),null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 				if (lists.size() > 0) {
 					String pathContent = AppContextUtils.getContextPath();
 					sb.append("<tr><td>");
@@ -1071,7 +1081,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			zos.flush();
 			List<AttachmentEntity> list = attachmentServiceI
 					.findAttachmentByNote(noteEntity.getId(),
-							Constants.FILE_TYPE_NORMAL);
+							null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			createAttachmentXml(root, list, zos, cotextpath);
 		}
 	}

@@ -7,12 +7,81 @@ function showSearchDiv(){
 			+"&tagId=" + selectInfo.tagId +"&deleted="+selectInfo.isDeleted+"&topNodeId="+topNode.id+"&newEnable="+selectInfo.newEnable+"&userId="+selectInfo.userId,function(){
 		//showLoading_edit();
 		//按钮权限判断
-		//buttonStatus(selectInfo.curMenu);
+		buttonStatus(selectInfo.curMenu);
 		//检索条目
 		searchNotes(selectInfo.isDeleted);
 	});
 
 }
+
+//判断权限， 按钮是否可用
+function buttonStatus(node,noteId){
+	if(selectInfo.newEnable ==false){
+		makeBtnDisappear('note_new');
+	return;
+   }else{
+	   if($("#restoreNote_btn").is(":hidden")){
+		}else{
+			makeBtnDisappear('note_new');
+			 return;
+		}
+	  
+   }
+	
+	var subjectNode = isShareSubject(node);
+	if(subjectNode != null && subjectNode != -1){
+		var url = webRoot+"/indexController/front/subjectPermission.dht?subjectId=" + subjectNode.id+"&noteId="+noteId;
+		AT.get(url, function(data){
+			data = data[subjectNode.id];
+				if(data.ADD_NOTE == 'true'){
+					makeBtnAppear('note_new');
+				}else{
+					makeBtnDisappear('note_new');
+				}
+		}, false);
+	}else if(subjectNode == -1){
+		var n = zTree_Menu.getNodeByParam("name", "默认专题", null);
+		zTree_Menu.selectNode(n);
+		beforeNodeClick("treeMenu",n);
+		onNodeClick(null,"treeMenu",n);
+		
+		//editNotePageAndButton();
+		$("#note_edit").hide();
+		$("#note_blacklist").hide();
+		$("#noteTitleField").val("");
+		
+		$("input[name='noteTagId']").remove();
+		$("#tagSelectNode").empty();
+		
+		$("#noteForm_createuser").val("");
+		$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));
+		UE.getEditor("note_editor").setContent("");
+		UE.getEditor("note_editor").sync("noteForm");
+		//新建条目
+		$("#currAttachment1").html("");
+		$('#tagSelectNode').html("");
+		$("#note_edit").val("编辑条目");
+		$("#note_share").hide();
+		
+		clearAttaMore();
+		$("#attaMore").hide();
+		
+		$('#attachment').show();
+		$("#selectTag").show();
+		
+		$("#divhiden").text('');
+		$("#htmlViewFrame").height(0);
+		$("#htmlViewFrame").contents().find('body').html('');
+		setHtmlDivHeight();
+		$("#note_new").show();
+	}else{
+		$("#note_new").show();
+	}
+}
+
+
+
+
 function showSearchDivDo(){}
 
 
@@ -71,7 +140,6 @@ function searchNotes(deleted,unloadfirst,undir){
 					viewNote($("#firstNodeId").val(),subjectId);
 				}
 			}
-			
 		setTimeout('hideLoading_search()',100);
 	});
 }
@@ -264,15 +332,7 @@ function viewNote(id,subjectId){
 					} else {
 						$("#deleteNote_btn").hide();
 					}
-					if(selectInfo.newEnable == true){
-						if(act.ADD_NOTE == 'true'){
-							makeBtnAppear('note_new');
-						}else{
-							makeBtnDisappear('note_new');
-						}
-					}else{
-						makeBtnDisappear('note_new');
-					}
+					
 				}
 				//加载评论
 				var id=$("#noteForm_id").val();
@@ -584,10 +644,10 @@ function makeBtnAppear(btnId){
 }
 
 function addNewNote() {
-	 if(isNoteStats()){//判断是否编辑状态
+	 if(isNoteStats() && $("#note_new").val() != "- 撤消条目"){//判断是否编辑状态
 		   var submit = function (v, h, f) {
 			if (v == true){ 
-				addNewNotedo(); 
+				addNewNotedo();
 			} 
 			return true;
 		};

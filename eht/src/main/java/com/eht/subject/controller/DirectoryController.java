@@ -109,7 +109,7 @@ public class DirectoryController extends BaseController {
 		try {
 			boolean c = groupService.checkDirectoryUser(userId, directoryId);
 			if(c){
-				directoryService.removeUser4lacklist(userId, directoryId, System.currentTimeMillis());
+				directoryService.removeUserALL4lacklist(userId, directoryId, System.currentTimeMillis());
 			}else{
 				directoryService.blackListedAllUser(userId, directoryId, System.currentTimeMillis());
 			}
@@ -133,12 +133,14 @@ public class DirectoryController extends BaseController {
 		if(dir.getId() == null || "".equals(dir.getId())){
 			dir.setId(UUIDGenerator.uuid());
 			dir.setCreateTime(new Date());
+			dir.setCreateTimeStamp(System.currentTimeMillis());
 			dir.setCreateUser(user.getId());
 			dir.setDeleted(0);
 			directoryService.addDirectory(dir);
 		}else{
 			DirectoryEntity updir = systemService.getEntity(DirectoryEntity.class, dir.getId());
 			updir.setUpdateTime(new Date());
+			dir.setUpdateTimeStamp(System.currentTimeMillis());
 			updir.setUpdateUser(user.getId());
 			updir.setDirName(dir.getDirName());
 			directoryService.saveOrUpdate(updir);
@@ -155,6 +157,7 @@ public class DirectoryController extends BaseController {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
 		DirectoryEntity dir = directoryService.getDirectory(id);
 		dir.setUpdateTime(new Date());
+		dir.setUpdateTimeStamp(System.currentTimeMillis());
 		dir.setUpdateUser(user.getId());
 		directoryService.markDelDirectory(dir);
 		return "true";

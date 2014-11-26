@@ -39,6 +39,7 @@ public class JsonUtil {
 		exculdesList.add("accountCreateUser");
 		exculdesList.add("accountUpdateUser");
 		exculdesList.add("hibernateLazyInitializer");
+		exculdesList.add("blackList");
 	}
 	/**
 	 * 从一个JSON 对象字符格式中得到一个java对象
@@ -482,7 +483,6 @@ public class JsonUtil {
 	 */
 	private static boolean IsIgnore(PropertyDescriptor prop){
 		if(exculdesList.contains(prop.getName())){
-			System.out.println(prop.getName());
 			return true;
 		}
 		Method method = prop.getReadMethod();

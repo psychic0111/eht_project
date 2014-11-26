@@ -51,6 +51,7 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 					formData	  :{
 										'jsessionid':'<%=sessionId%>',
 										'dirId':'${dirId}',
+										'userId':'${SESSION_USER_ATTRIBUTE.id}',
 										'noteid':''
 									},
 					onSelect:function(file){

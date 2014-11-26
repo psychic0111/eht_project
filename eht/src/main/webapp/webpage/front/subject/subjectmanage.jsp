@@ -38,37 +38,40 @@
     height: 350,
    buttons: { '导出': 1, '关闭': 0 },
    submit: function (v, h, f) {
-            if (v == 1) {
+         if (v == 1) {
             var zTree = $.fn.zTree.getZTreeObj("treeSubject");
-           var nodes= zTree.getCheckedNodes(true);
+            var nodes= zTree.getCheckedNodes(true);
             var checkCount = nodes.length;
             if(checkCount==0){
             	 MSG.alert("请选择导出的目录");
           		 return false; 
             }else{
-            var subjectId="";
-            var dirsId="";
-              for(var i=0;i<nodes.length;i++){
-             	 if(i==0){
-              		subjectId=nodes[i].id;
-             	 }else{
-             	   dirsId=dirsId+nodes[i].id;
-             	   if(i!=nodes.length-1){
-             	   	   dirsId=dirsId+",";
-             	   }
-             	 }
-              }
-               var params = {"subjectId":subjectId,"dirsId":dirsId};
-				 AT.post("${webRoot}/subjectController/front/exportSuject.dht",params,function(data){
-				               if(data.success){
-				                MSG.alert("等待专题导出完毕后才能继续导出");
-				               }
-						},false);
-                 }
+				var subjectId="";
+				var dirsId="";
+				for(var i=0;i<nodes.length;i++){
+					 if(i==0){
+					 	subjectId=nodes[i].id;
+					 }else{
+					   dirsId=dirsId+nodes[i].id;
+					   if(i!=nodes.length-1){
+					   	   dirsId=dirsId+",";
+					   }
+				 	 }
+				}
+				var params = {"subjectId":subjectId,"dirsId":dirsId};
+				AT.post("${webRoot}/subjectController/front/exportSuject.dht",params,function(data){
+					if(data.success){
+		           		//MSG.alert("等待专题导出完毕后才能继续导出");
+						jBox.tip("专题导出完毕后才能继续导出，请稍候！", "专题导出提示");
+		            }else{
+		        	    jBox.tip("等待专题导出中,请稍后在用户消息中心下载！", "专题导出提示");
+		            }
+				},false);
+            }
             return true; 
-            } 
-            return true;
-        }
+         } 
+         return true;
+       }
 	});
 	}
 

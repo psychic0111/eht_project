@@ -259,7 +259,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 			}
 
 			List<AttachmentEntity> attaList = attachmentService
-					.findAttachmentByNote(note.getId(), null);
+					.findAttachmentByNote(note.getId(), Constants.FILE_TRANS_COMPLETED, Constants.DATA_NOT_DELETED, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			for (int j = 0; j < attaList.size(); j++) {
 				AttachmentEntity atta = attaList.get(j);
 				timestamp++;
@@ -390,7 +390,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 			// 附件日志
 			List<AttachmentEntity> attaList = attachmentService
-					.findAttachmentByNote(note.getId(), null);
+					.findAttachmentByNote(note.getId(), Constants.FILE_TRANS_COMPLETED, Constants.DATA_NOT_DELETED, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			for (int j = 0; j < attaList.size(); j++) {
 				AttachmentEntity atta = attaList.get(j);
 				timestamp--;
@@ -521,7 +521,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 			// 附件日志
 			List<AttachmentEntity> attaList = attachmentService
-					.findAttachmentByNote(note.getId(), null);
+					.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			for (int j = 0; j < attaList.size(); j++) {
 				AttachmentEntity atta = attaList.get(j);
 				timestamp++;
@@ -633,7 +633,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 			// 附件日志
 			List<AttachmentEntity> attaList = attachmentService
-					.findAttachmentByNote(note.getId(), null);
+					.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			for (int j = 0; j < attaList.size(); j++) {
 				AttachmentEntity atta = attaList.get(j);
 				timestamp++;
@@ -735,7 +735,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 			// 附件日志
 			List<AttachmentEntity> attaList = attachmentService
-					.findAttachmentByNote(note.getId(), null);
+					.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			for (int j = 0; j < attaList.size(); j++) {
 				AttachmentEntity atta = attaList.get(j);
 				timestamp++;
@@ -837,7 +837,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 			// 附件日志
 			List<AttachmentEntity> attaList = attachmentService
-					.findAttachmentByNote(note.getId(), null);
+					.findAttachmentByNote(note.getId(), null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			for (int j = 0; j < attaList.size(); j++) {
 				AttachmentEntity atta = attaList.get(j);
 				timestamp++;
@@ -883,6 +883,21 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 					synchLog.setSynchTime(timestamp);
 					synchLog.setTargetUser(ru.getUserId());
 					saveSynchLog(synchLog);
+					
+					// 为专题中其他成员生成添加此成员详细信息的日志
+					SynchLogEntity userLog = new SynchLogEntity();
+					userLog.setId(UUIDGenerator.uuid());
+					userLog.setAction(action);
+					userLog.setClassName(DataType.USER.toString());
+					userLog.setClassPK(userId);
+					userLog.setClientId(SynchConstants.CLIENT_DEFAULT_ID);
+					userLog.setClientType(SynchConstants.CLIENT_DEFAULT_TYPE);
+					userLog.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
+					userLog.setOperateTime(createTimestamp);
+					userLog.setOperateUser(creator);
+					userLog.setSynchTime(timestamp);
+					userLog.setTargetUser(ru.getUserId());
+					saveSynchLog(synchLog);
 
 					// 为新增的成员生成添加其他成员的日志
 					SynchLogEntity log = new SynchLogEntity();
@@ -897,6 +912,21 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 					log.setOperateUser(ru.getCreateUserId());
 					log.setSynchTime(createTimestamp);
 					log.setTargetUser(userId);
+					saveSynchLog(log);
+					
+					// 为新增的成员生成添加其他成员的日志
+					SynchLogEntity memLog = new SynchLogEntity();
+					memLog.setId(UUIDGenerator.uuid());
+					memLog.setAction(action);
+					memLog.setClassName(DataType.USER.toString());
+					memLog.setClassPK(ru.getUserId());
+					memLog.setClientId(SynchConstants.CLIENT_DEFAULT_ID);
+					memLog.setClientType(SynchConstants.CLIENT_DEFAULT_TYPE);
+					memLog.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
+					memLog.setOperateTime(ru.getCreateTimeStamp());
+					memLog.setOperateUser(ru.getCreateUserId());
+					memLog.setSynchTime(createTimestamp);
+					memLog.setTargetUser(userId);
 					saveSynchLog(log);
 
 				}
@@ -1031,6 +1061,15 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 				}
 			} else {
 				// 只影响操作者本身
+				if(userId == null){
+					String meth = "getUpdateUser";
+					if(action.equals(DataSynchAction.ADD.toString())){
+						meth = "getCreateUser";
+					}
+					Object uid = ReflectionUtils.invokeMethod(paramEntity, meth, null,
+							null);
+					userId = uid == null ? null : uid.toString();
+				}
 				log.setTargetUser(userId);
 				saveSynchLog(log);
 			}
@@ -1301,27 +1340,41 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 		}
 
 		if (orgi.getAction().equals(DataSynchAction.ADD.toString())) {
-			// A + D = null
-			if (nextLog.getAction().equals(DataSynchAction.DELETE.toString())) {
+			// A + T = null
+			if (nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
 				orgi = null;
 			}
 			// A + U = A
-			if (nextLog.getAction().equals(DataSynchAction.UPDATE.toString())) {
+			if (nextLog.getAction().equals(DataSynchAction.UPDATE.toString()) || nextLog.getAction().equals(DataSynchAction.DELETE.toString())) {
+				orgi.setClientId(nextLog.getClientId());
+				orgi.setClientType(nextLog.getClientType());
+				orgi.setOperateUser(nextLog.getOperateUser());
+				orgi.setOperateTime(nextLog.getOperateTime());
+				orgi.setSynchTime(nextLog.getSynchTime());
+			}
+			
+			// A + U = A
+			if (nextLog.getAction().equals(DataSynchAction.CREATEORUPDATE.toString())) {
 				orgi = nextLog;
-				orgi.setAction(DataSynchAction.ADD.toString());
 			}
 		} else if (orgi.getAction().equals(DataSynchAction.UPDATE.toString())) {
 			// U + D = D
-			if (nextLog.getAction().equals(DataSynchAction.DELETE.toString())) {
+			if (nextLog.getAction().equals(DataSynchAction.DELETE.toString()) || nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
+				orgi = nextLog;
+			}
+			if (nextLog.getAction().equals(DataSynchAction.CREATEORUPDATE.toString()) || nextLog.getAction().equals(DataSynchAction.RESTORE.toString())) {
 				orgi = nextLog;
 			}
 		} else if (orgi.getAction().equals(DataSynchAction.DELETE.toString())) {
-			// D + T = T
-			if (nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
+			 // D + T = T
+			 if(nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString()) || nextLog.getAction().equals(DataSynchAction.RESTORE.toString()) || nextLog.getAction().equals(DataSynchAction.UPDATE.toString())){
+				 orgi = nextLog;
+			 }
+			
+		} else if (orgi.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
+			if(nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString())){
 				orgi = nextLog;
 			}
-		} else if (orgi.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
-			// 没什么合并的
 		}
 		// saveSynchedLog(orgi, clientId, userId); //保存到同步完成日志表中
 		// saveSynchedLog(nextLog, clientId, userId); //保存到同步完成日志表中
@@ -1655,16 +1708,19 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 	}
 
 	@Override
-	public int countSynchLogsByTarget(String clientId, String userId,
-			long timeStamp) {
+	public int countSynchLogsByTarget(String clientId, String userId, String action,
+			long beiginTimeStamp, long endTimestamp) {
 		DetachedCriteria dc = DetachedCriteria.forClass(SynchLogEntity.class);
-		dc.add(Restrictions.gt("synchTime", timeStamp));
-
+		
 		dc.add(Restrictions.or(Restrictions.and(
 				Restrictions.eq("targetUser", userId),
 				Restrictions.neProperty("operateUser", "targetUser")),
 				Restrictions.and(Restrictions.eq("operateUser", userId),
 						Restrictions.ne("clientId", clientId))));
+		dc.add(Restrictions.gt("synchTime", beiginTimeStamp));
+		dc.add(Restrictions.le("synchTime", endTimestamp));
+		dc.add(Restrictions.eq("action", action));
+		
 		int count = oConvertUtils.getInt((dc
 				.getExecutableCriteria(getSession()).setProjection(Projections
 				.rowCount())).uniqueResult(), 0);
@@ -1703,13 +1759,13 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 	@Override
 	public int countSynchLogsByTarget(String clientId, String userId,
-			long timeStamp, String dataClass, String action) {
+			long timeStamp, long endTime, String dataClass, String action) {
 		DetachedCriteria dc = DetachedCriteria.forClass(SynchLogEntity.class);
-		dc.add(Restrictions.or(Restrictions.and(
+		/*dc.add(Restrictions.or(Restrictions.and(
 				Restrictions.eq("targetUser", userId),
 				Restrictions.neProperty("operateUser", "targetUser")),
 				Restrictions.and(Restrictions.eq("operateUser", userId),
-						Restrictions.ne("clientId", clientId))));
+						Restrictions.ne("clientId", clientId))));*/
 		List<String> idList = findSynchedLogIds(clientId, userId);
 		if (idList != null && !idList.isEmpty()) {
 			dc.add(Restrictions.not(Restrictions.in("id", idList))); // 不包括已经同步过的日志
@@ -1720,6 +1776,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 				Restrictions.and(Restrictions.eq("operateUser", userId),
 						Restrictions.ne("clientId", clientId))));
 		dc.add(Restrictions.gt("synchTime", timeStamp));
+		dc.add(Restrictions.le("synchTime", endTime));
 		dc.add(Restrictions.eq("className", dataClass));
 		if (!StringUtil.isEmpty(action)) {
 			dc.add(Restrictions.eq("action", action));
@@ -1737,7 +1794,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 	 */
 	@Override
 	public List<SynchLogEntity> findTruncSynchLogs(String clientId,
-			String userId, long timeStamp, String dataClass) throws Exception {
+			String userId, long timeStamp, long endTime, String dataClass) throws Exception {
 		String[] dataTypes = { DataType.NOTE.toString(),
 				DataType.DIRECTORY.toString() };
 		// dc.add(Restrictions.eq("clientId",
@@ -1761,19 +1818,18 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 					dc.add(Restrictions.not(Restrictions.in("id", idList))); // 不包括已经同步过的日志
 				}
 				dc.add(Restrictions.gt("synchTime", timeStamp));
+				dc.add(Restrictions.le("synchTime", endTime));
+				
 				dc.addOrder(Order.asc("classPK"));
 				dc.addOrder(Order.asc("operateTime"));
+				dc.addOrder(Order.desc("operateType"));
 				List<SynchLogEntity> subLogList = findByDetached(dc);
 
 				if (subLogList != null && !subLogList.isEmpty()) {
 					subLogList = filterTruncSynchLogs(subLogList); // 过滤日志，找出truncate操作日志
 					if (subLogList != null && !subLogList.isEmpty()) {
-						if (true) {
-							// 删除操作的日志，一次合并一个数据类型下的数据，一起返回
-							logList = mergeAllLogs(subLogList, clientId, userId);
-						} else {
-							logList = mergeLog(subLogList, clientId, userId);
-						}
+						// 删除操作的日志，一次合并一个数据类型下的数据，一起返回
+						logList = mergeAllLogs(subLogList, clientId, userId);
 						// 有日志数据返回
 						if (logList != null && !logList.isEmpty()) {
 							break;
@@ -1796,6 +1852,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 			dc.add(Restrictions.eq("className", dataClass));
 			dc.addOrder(Order.asc("classPK"));
 			dc.addOrder(Order.asc("operateTime"));
+			dc.addOrder(Order.desc("operateType"));
 			List<SynchLogEntity> subLogList = findByDetached(dc);
 			if (subLogList != null && !subLogList.isEmpty()) {
 				subLogList = filterTruncSynchLogs(subLogList); // 过滤日志，找出所有truncate操作日志
@@ -1819,7 +1876,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 	 */
 	@Override
 	public List<SynchLogEntity> findSynchLogsByTarget(String clientId,
-			String userId, long timeStamp, String dataClass,
+			String userId, long timeStamp, long endTime, String dataClass,
 			boolean filterDelete) throws Exception {
 		String[] dataTypes = SynchDataCache.getDatasSort();
 		if (!filterDelete) {
@@ -1846,8 +1903,10 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 					dc.add(Restrictions.not(Restrictions.in("id", idList))); // 不包括已经同步过的日志
 				}
 				dc.add(Restrictions.gt("synchTime", timeStamp));
+				dc.add(Restrictions.le("synchTime", endTime));
 				dc.addOrder(Order.asc("classPK"));
 				dc.addOrder(Order.asc("operateTime"));
+				dc.addOrder(Order.desc("operateType"));
 				List<SynchLogEntity> subLogList = findByDetached(dc);
 
 				if (subLogList != null && !subLogList.isEmpty()) {
@@ -1878,9 +1937,11 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 				dc.add(Restrictions.not(Restrictions.in("id", idList))); // 不包括已经同步过的日志
 			}
 			dc.add(Restrictions.gt("synchTime", timeStamp));
+			dc.add(Restrictions.le("synchTime", endTime));
 			dc.add(Restrictions.eq("className", dataClass));
 			dc.addOrder(Order.asc("classPK"));
 			dc.addOrder(Order.asc("operateTime"));
+			dc.addOrder(Order.desc("operateType"));
 			List<SynchLogEntity> subLogList = findByDetached(dc);
 			if (subLogList != null && !subLogList.isEmpty()) {
 				subLogList = filterSynchLogs(subLogList, filterDelete); // 过滤日志，例如先不处理删除操作的日志就先过滤掉
@@ -1974,7 +2035,7 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 		// 所有删除操作日志集合
 		List<SynchLogEntity> filterList = new ArrayList<SynchLogEntity>();
 		for (SynchLogEntity log : logList) {
-			if (log.getAction().equals(DataSynchAction.DELETE.toString())) {
+			if (log.getAction().equals(DataSynchAction.DELETE.toString()) || log.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
 				filterList.add(log);
 			}
 		}
@@ -2187,7 +2248,37 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 
 		return list;
 	}
-
+	
+	@Override
+	public SynchronizedLogEntity findSynchedLog(String clientId,
+			String userId, String className, String classPK, String action) {
+		DetachedCriteria dc = DetachedCriteria
+				.forClass(SynchronizedLogEntity.class);
+		dc.add(Restrictions.eq("clientId", clientId));
+		dc.add(Restrictions.eq("targetUser", userId));
+		dc.add(Restrictions.eq("className", className));
+		dc.add(Restrictions.eq("classPK", classPK));
+		dc.add(Restrictions.eq("action", action));
+		
+		List<SynchronizedLogEntity> list = findByDetached(dc);
+		if(list != null && !list.isEmpty()){
+			return list.get(0);
+		}
+		return null;
+	}
+	
+	@Override
+	public SynchronizedLogEntity findSynchedLogByLogId(String logId) {
+		DetachedCriteria dc = DetachedCriteria
+				.forClass(SynchronizedLogEntity.class);
+		dc.add(Restrictions.eq("logId", logId));
+		List<SynchronizedLogEntity> list = findByDetached(dc);
+		if(list != null && !list.isEmpty()){
+			return list.get(0);
+		}
+		return null;
+	}
+	
 	/**
 	 * 从集合中移除日志或从集合中挑选日志
 	 * 
@@ -2233,12 +2324,22 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 		dc.add(Restrictions.eq("className", DataType.ATTACHMENT.toString()));
 		dc.add(Restrictions.eq("action", DataSynchAction.ADD.toString()));
 		dc.add(Restrictions.eq("status", SynchConstants.LOG_NOT_SYNCHRONIZED));
+		dc.addOrder(Order.asc("className"));
+		dc.addOrder(Order.asc("classPK"));
+		dc.addOrder(Order.asc("operateTime"));
 		List<SynchronizedLogEntity> list = findByDetached(dc);
 
 		List<SynchronizedLogEntity> logList = mergeAttaLogs(list, clientId,
 				userId);
 		return logList;
 	}
+	
+	@Override
+	public void updateSynchedLogStatus(String userId, String clientId, String dataType, String classPk){
+		Object[] params = new Object[]{SynchConstants.LOG_SYNCHRONIZED, userId, clientId, dataType, classPk};
+		executeHql("update SynchronizedLogEntity set status=? where targetUser=? and clientId=? and className=? and classPK=?", params);
+	}
+			
 	
 	/**
 	 * 查询需要直载的文件--条目ZIP
@@ -2277,20 +2378,19 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 		DetachedCriteria dc = DetachedCriteria
 				.forClass(SynchronizedLogEntity.class);
 		
-		dc.add(Restrictions.or(Restrictions.and(
+		dc.add(Restrictions.or(
 				Restrictions.eq("className", DataType.ATTACHMENT.toString()),
-				Restrictions.eq("action", DataSynchAction.ADD.toString())),
-				Restrictions.and(Restrictions.eq("className",
-						DataType.NOTE.toString()), Restrictions.or(
-						Restrictions.eq("action",
-								DataSynchAction.ADD.toString()),
-						Restrictions.eq("action",
-								DataSynchAction.UPDATE.toString())))));
+				
+				Restrictions.eq("className",
+						DataType.NOTE.toString())));
 		
 		dc.add(Restrictions.eq("clientId", clientId));
 		dc.add(Restrictions.eq("targetUser", userId));
 		dc.add(Restrictions.eq("status", SynchConstants.LOG_NOT_SYNCHRONIZED));
 		dc.addOrder(Order.asc("className"));
+		dc.addOrder(Order.asc("classPK"));
+		dc.addOrder(Order.asc("operateTime"));
+		
 		List<SynchronizedLogEntity> list = findByDetached(dc);
 
 		List<SynchronizedLogEntity> logList = mergeAttaLogs(list, clientId,
@@ -2304,7 +2404,9 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 		List<SynchronizedLogEntity> result = new ArrayList<SynchronizedLogEntity>();
 		// 只有一条日志，不需要合并
 		if (logList.size() == 1) {
-			result.add(logList.get(0));
+			if(!logList.get(0).getAction().equals(DataSynchAction.TRUNCATE.toString())){
+				result.add(logList.get(0));
+			}
 			return result;
 		}
 		for (int i = 0; i < logList.size(); i++) {
@@ -2322,14 +2424,20 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 					if (!nextLog.getClassPK().equals(classPK)
 							|| k == logList.size() - 1) {
 						if (orgi != null) {
-							result.add(orgi);
+							// 因为是查询需下载的文件日志，所以不要已经删除的
+							if(!orgi.getAction().equals(DataSynchAction.TRUNCATE.toString())){
+								result.add(orgi);
+							}
 							break;
 						}
 					}
 				}
 
 			} else { // i == 最后一条记录索引
-				result.add(orgi);
+				// 因为是查询需下载的文件日志，所以不要已经删除的
+				if(!orgi.getAction().equals(DataSynchAction.TRUNCATE.toString())){
+					result.add(orgi);
+				}
 			}
 		}
 		return result;
@@ -2352,22 +2460,31 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 		}
 
 		if (orgi.getAction().equals(DataSynchAction.ADD.toString())) {
-			// A + D = null
-			if (nextLog.getAction().equals(DataSynchAction.DELETE.toString())) {
+			// A + T = null
+			if (nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
 				orgi = null;
 			}
 			// A + U = A
-			if (nextLog.getAction().equals(DataSynchAction.UPDATE.toString())) {
+			if (nextLog.getAction().equals(DataSynchAction.UPDATE.toString()) || nextLog.getAction().equals(DataSynchAction.DELETE.toString())) {
+				orgi.setClientId(nextLog.getClientId());
+				orgi.setTargetUser(nextLog.getTargetUser());
+				orgi.setOperateTime(nextLog.getOperateTime());
+			}
+			if (nextLog.getAction().equals(DataSynchAction.CREATEORUPDATE.toString())) {
 				orgi = nextLog;
-				orgi.setAction(DataSynchAction.ADD.toString());
 			}
 		} else if (orgi.getAction().equals(DataSynchAction.UPDATE.toString())) {
 			// U + D = D
-			if (nextLog.getAction().equals(DataSynchAction.DELETE.toString())) {
+			if (nextLog.getAction().equals(DataSynchAction.DELETE.toString()) || nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString())) {
+				orgi = nextLog;
+			}
+			if (nextLog.getAction().equals(DataSynchAction.CREATEORUPDATE.toString()) || nextLog.getAction().equals(DataSynchAction.RESTORE.toString())) {
 				orgi = nextLog;
 			}
 		} else if (orgi.getAction().equals(DataSynchAction.DELETE.toString())) {
-			// 数据已删除
+			 if(nextLog.getAction().equals(DataSynchAction.TRUNCATE.toString()) || nextLog.getAction().equals(DataSynchAction.RESTORE.toString()) || nextLog.getAction().equals(DataSynchAction.UPDATE.toString())){
+				 orgi = nextLog;
+			 }
 		}
 		return orgi;
 	}

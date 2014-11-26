@@ -18,6 +18,7 @@ import com.eht.resource.entity.ClassName;
 import com.eht.resource.service.ResourceActionService;
 import com.eht.role.entity.RoleUser;
 import com.eht.subject.entity.DirectoryEntity;
+import com.eht.subject.entity.SubjectEntity;
 
 @Service("groupService")
 @Transactional
@@ -66,9 +67,20 @@ public class GroupServiceImpl extends CommonServiceImpl implements GroupService 
 	}
 	
 	@Override
+	public List<GroupUser> findGroupUsers(Long groupId) {
+		GroupUser gu = new GroupUser();
+		gu.setGroupId(groupId);
+		List<GroupUser> list = findByExample(GroupUser.class.getName(), gu);
+		
+		return list;
+	}
+	
+	@Override
 	public boolean removeGroupUser(Long groupId, String userId) {
 		GroupUser gu = findGroupUser(groupId, userId);
-		delete(gu);
+		if(gu != null){
+			delete(gu);
+		}
 		return true;
 	}
 
@@ -118,6 +130,15 @@ public class GroupServiceImpl extends CommonServiceImpl implements GroupService 
 	}
 	
 	@Override
+	public List<Group> findGroupByParent(long parentGroupId, String className) {
+		DetachedCriteria dc = DetachedCriteria.forClass(Group.class);
+		dc.add(Restrictions.eq("classNameId", resourceActionService.findResourceByName(className).getClassNameId()));
+		dc.add(Restrictions.eq("parentGroupId", parentGroupId));
+		List<Group> list = findByDetached(dc);
+		return list;
+	}
+	
+	@Override
 	public Group addGroup(Long classNameId, String classPK, String description, String groupName, long parentGroupId) {
 		Group group = new Group();
 		group.setClassNameId(classNameId);
@@ -126,6 +147,21 @@ public class GroupServiceImpl extends CommonServiceImpl implements GroupService 
 		group.setDescription(description);
 		group.setGroupName(groupName);
 		group.setParentGroupId(parentGroupId);
+		addGroup(group);
+		return group;
+	}
+	
+	@Override
+	public Group addGroup(String className, String classPK, String description, String groupName, String subjectId) {
+		ClassName c = resourceActionService.findResourceByName(className);
+		Group parentGroup = findGroup(SubjectEntity.class.getName(), subjectId);
+		Group group = new Group();
+		group.setClassNameId(c.getClassNameId());
+		group.setClassPk(classPK);
+		group.setCreateTime(new Date());
+		group.setDescription(description);
+		group.setGroupName(groupName);
+		group.setParentGroupId(parentGroup.getGroupId());
 		addGroup(group);
 		return group;
 	}

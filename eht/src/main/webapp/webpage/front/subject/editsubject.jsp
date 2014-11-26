@@ -38,7 +38,7 @@ if($('#subjectName').val()=='个人专题'||$('#subjectName').val()=='多人专�
 
 function toShowSubject(obj){
 	url = "${webRoot}/subjectController/front/showSubject.dht?id="+obj;
-	AT.load("iframepage",url,function() {});	
+	AT.load("iframepage",url,function() {});
 }
 </script>
 <body >

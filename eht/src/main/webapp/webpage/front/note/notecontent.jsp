@@ -252,7 +252,7 @@ $(document).ready(function() {
 	var upLoadPath =webRoot+"/noteController/front/uploadNodeAttach.dht";
 	var basePath = uploadifyPath;
 	var upfileButton = " <a href='javascript:void(0);;' style='border:1px solid #fff;z-index:0'>添加附件 </a>";
-	var multiUpload=new MultiUpload("attachmentListDiv","filename",downloadPath,upLoadPath,'<%=frontPath%>',$('#sessionId').val(),upfileButton);//附件上传
+	var multiUpload=new MultiUpload("attachmentListDiv","filename",downloadPath,upLoadPath,'<%=frontPath%>',$('#sessionId').val(), '${SESSION_USER_ATTRIBUTE.id}',upfileButton);//附件上传
 	if($('#noteForm_id').val()==null||$('#noteForm_id').val()==''){
       	$('#attachment').hide();
       	$("#selectTag").hide();

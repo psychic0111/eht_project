@@ -161,6 +161,22 @@ public class SynchConstants {
 	 */
 	public static final int LOG_SYNCHRONIZED = 1;
 	
+	/**
+	 * 同步流程阶段--已开始
+	 */
+	public static final int SYNCHRONIZE_STATUS_BEGIN = 0;
+	
+	/**
+	 * 同步流程阶段--结束
+	 */
+	public static final int SYNCHRONIZE_STATUS_END = 1;
+	
+	/**
+	 * 同步流程阶段--循环检查阶段
+	 */
+	public static final int SYNCHRONIZE_STATUS_CHECK = 2;
+	
+	
 	public static final String HEADER_CLIENT_ID = "clientid";
 	
 	public static final String HEADER_HOST_DATATYPE = "HostDataType";

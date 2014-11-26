@@ -1,10 +1,12 @@
 package com.eht.common.util;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Stack;
+
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
 import org.htmlparser.PrototypicalNodeFactory;
@@ -266,6 +268,25 @@ public class HtmlParser {
 	}
 	
 	/**
+	 * 把html文件中的img路径替换成编辑器中可显示路径
+	 * @param content
+	 * @param replace
+	 * @param replaceTo
+	 * @return
+	 * @throws IOException 
+	 */
+	static public String replaceHtmlImg(File htmlFile, String concat) throws IOException {
+		Document doc = Jsoup.parse(htmlFile, "UTF-8");
+		Elements imgs = doc.select("img");
+		for (int i = 0; i < imgs.size(); i++) {
+			String url = imgs.get(i).attr("src");
+			url = concat + url;
+			imgs.get(i).attr("src", url);
+		}
+		return doc.html();
+	}
+	
+	/**
 	 * 把客户端上传的html文件中的img路径替换成编辑器中可显示路径
 	 * @param content
 	 * @param replace
@@ -273,7 +294,26 @@ public class HtmlParser {
 	 * @return
 	 */
 	static public String replaceClientHtmlImg(String content, String concat) {
-		Document doc = Jsoup.parseBodyFragment(content);
+		Document doc = Jsoup.parseBodyFragment(content, "UTF-8");
+		Elements imgs = doc.select("img");
+		for (int i = 0; i < imgs.size(); i++) {
+			String url = imgs.get(i).attr("r_src");
+			url = concat + url;
+			imgs.get(i).attr("src", url);
+		}
+		return doc.html();
+	}
+	
+	/**
+	 * 把客户端上传的html文件中的img路径替换成编辑器中可显示路径
+	 * @param htmlFile
+	 * @param replace
+	 * @param replaceTo
+	 * @return
+	 * @throws IOException 
+	 */
+	static public String replaceClientHtmlImg(File htmlFile, String concat) throws IOException {
+		Document doc = Jsoup.parse(htmlFile, "UTF-8");
 		Elements imgs = doc.select("img");
 		for (int i = 0; i < imgs.size(); i++) {
 			String url = imgs.get(i).attr("r_src");

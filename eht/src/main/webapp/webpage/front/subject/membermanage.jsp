@@ -68,9 +68,9 @@ $().ready(function() {
 	//-------------------鼠标离开关闭角色选择窗口--------------start---------
 	//在弹出区域不需要隐藏树
 	$("#invitememberMenu").mouseover(function() {
-		$("body").unbind("mousedown", onBodyTagDown);
+		$("body").unbind("mouseup", onBodyTagDown);
 	}).mouseout(function() {
-		$("body").bind("mousedown", onBodyTagDown);
+		$("body").bind("mouseup", onBodyTagDown);
 	});
 	//鼠标页面点击事件
 	function onBodyTagDown(event) { 
@@ -141,15 +141,20 @@ function sendInvitemember(obj){
             return true; 
 	}
 function delInvitemember(obj){
-	 AT.post("${webRoot}/subjectController/front/delInvitemember.dht","id="+obj,function(data){
+	AT.post("${webRoot}/subjectController/front/delInvitemember.dht","id="+obj,function(data){
 						if(data==''){
 								 MSG.alert('操作成功');
 							}
 							AT.load("iframepage","${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}",function() {});
 					},true);
             return true; 
-	}
-	
+}
+
+function doMemPage(ths,pageNo,pageSize){
+	url = "${webRoot}/subjectController/front/memberManage.dht?id=${subjectEntity.id}&pageNo="+pageNo+"&pageSize="+7;
+	AT.load("iframepage",url,function() {});
+}
+
 </script>
 		
  		<div class="right_top mainer_right">
@@ -181,7 +186,7 @@ function delInvitemember(obj){
               <div class="rightMenu" id="invitememberMenu">
         		<ul id="treeRightMenu_ul_tag">
         			<xd:hasPermission subjectId="${subjectEntity.id }" action="<%=ActionName.DELETE_SUBJECT %>" resource="<%=Constants.SUBJECT_MODULE_NAME %>">
-       					<li  onclick="updateInvitememberRole('1')">超级管理员</li>
+       					<li  onclick="updateInvitememberRole('1')">管理员</li>
        				</xd:hasPermission>
        				<li  onclick="updateInvitememberRole('2')">编辑</li>
        				<li  onclick="updateInvitememberRole('3')">作者</li>
@@ -206,47 +211,49 @@ function delInvitemember(obj){
                   	<input type="checkbox"  id="checkbox2" />
                   </td>
                 </tr>
-                <c:forEach items="${list}" var="roleUser">
-                <tr class="TD3">
-                  <td align="center">${roleUser.accountEntity.username}</td>
-                  <td align="center">${roleUser.role.description}</td>
-                   <td align="center">已激活</td>
-                    <td align="center">
-                  <c:choose>
-                  <c:when test="${roleUser.accountEntity.id eq user.userId}">
-                  </c:when>
-                   <c:when test="${user.role.roleName eq 'Admin' && (roleUser.role.roleName eq 'Admin' || roleUser.role.roleName eq 'Owner')}">
-                  </c:when>
-                  <c:when test="${user.role.roleName ne 'Admin' && user.role.roleName ne 'Owner'}">
-                  </c:when>
-                  <c:otherwise><input type="checkbox" name="ids" class="checkusrs" value="${roleUser.id}" /></c:otherwise>
-                  </c:choose>
-                  </td>
-                </tr>
-                </c:forEach>
-                 <c:forEach items="${inviteMememberList}" var="inviteMemember">
-                <tr class="TD3">
-                  <td align="center">
-                   <c:choose>
-                  <c:when test="${empty  inviteMemember.username}">
-                  		${inviteMemember.email}
-                  </c:when>
-                  <c:otherwise>
-                        ${inviteMemember.username}
-                  </c:otherwise>
-                  </c:choose>
-                  </td>
-                  <td align="center">${inviteMemember.role.description}</td>
-                  <td align="center">未激活</td>
-                  <td align="left">
-                  	<span style="width:100%;">
-                  		<input class="Button2" type="button" onclick="sendInvitemember('${inviteMemember.id}');" value="再次发送" />
-                    	<input class="Button3" type="button" onclick="delInvitemember('${inviteMemember.id}');" value="取消邀请" />
-                    </span>
-                  </td>
-                </tr>
+                <c:forEach items="${list.rows}" var="roleUser">
+                	<c:choose>
+	                  <c:when test="${roleUser.id eq ''}">
+	                  	<tr class="TD3">
+		                  <td align="center">
+		                   	${roleUser.accountEntity.email}
+		                  </td>
+		                  <td align="center">${roleUser.role.description}</td>
+		                  <td align="center">未激活</td>
+		                  <td align="left">
+		                  	<span style="width:100%;">
+		                  		<input class="Button2" type="button" onclick="sendInvitemember('${roleUser.roleId}');" value="再次发送" />
+		                    	<input class="Button3" type="button" onclick="delInvitemember('${roleUser.roleId}');" value="取消邀请" />
+		                    </span>
+		                  </td>
+		                </tr>
+	                  </c:when>
+	                  <c:otherwise>
+	                  	<tr class="TD3">
+		                  <td align="center">${roleUser.accountEntity.username}</td>
+		                  <td align="center">${roleUser.role.description}</td>
+		                  <td align="center">已激活</td>
+		                  <td align="center">
+			                  <c:choose>
+				                  <c:when test="${roleUser.accountEntity.id eq user.userId}">
+				                  </c:when>
+				                   <c:when test="${user.role.roleName eq 'Admin' && (roleUser.role.roleName eq 'Admin' || roleUser.role.roleName eq 'Owner')}">
+				                  </c:when>
+				                  <c:when test="${user.role.roleName ne 'Admin' && user.role.roleName ne 'Owner'}">
+				                  </c:when>
+				                  <c:otherwise>
+				                  	<input type="checkbox" name="ids" class="checkusrs" value="${roleUser.id}" />
+				                  </c:otherwise>
+			                  </c:choose>
+		                  </td>
+		                </tr>
+	                  </c:otherwise>
+			        </c:choose>
                 </c:forEach>
               </table>
+              <div class="pages">
+          		<xd:pager  pagerFunction="doMemPage" pagerStyle="cursor:pointer"  curPagerTheme="pages_cur" showTextPager="true"></xd:pager>
+          	  </div>
             </div>
           </div>
           <!-- End Data--> 

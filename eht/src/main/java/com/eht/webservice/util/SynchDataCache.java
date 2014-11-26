@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.eht.comment.entity.CommentEntity;
+import com.eht.common.enumeration.DataSynchAction;
+import com.eht.common.enumeration.DataType;
 import com.eht.group.entity.GroupUser;
 import com.eht.message.entity.MessageEntity;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
+import com.eht.note.entity.NoteTag;
 import com.eht.resource.entity.ClassName;
 import com.eht.role.entity.Role;
 import com.eht.role.entity.RoleUser;
@@ -19,6 +22,7 @@ import com.eht.tag.entity.TagEntity;
 import com.eht.template.entity.TemplateEntity;
 import com.eht.user.entity.AccountEntity;
 import com.eht.webservice.bean.Step;
+import com.eht.webservice.bean.SynchResult;
 
 public class SynchDataCache {
 	
@@ -47,7 +51,7 @@ public class SynchDataCache {
 	/**
 	 * 客户端获取同步数据操作的顺序
 	 */
-	private static String[] actionSort = new String[]{"A", "U", "D"};
+	private static String[] actionSort = new String[]{DataSynchAction.TRUNCATE.toString(), DataSynchAction.DELETE.toString(), DataSynchAction.REQUEST.toString()};
 	
 	static{
 		dataClassMap.put("TEMPLATE", TemplateEntity.class);
@@ -66,6 +70,7 @@ public class SynchDataCache {
 		dataClassMap.put("NOTEBLACK", GroupUser.class);
 		dataClassMap.put("DIRECTORYBLACK", GroupUser.class);
 		dataClassMap.put("SUBJECTUSER", RoleUser.class);
+		dataClassMap.put("NOTETAG", NoteTag.class);
 	}
 	
 	public static String[] getDatasSort() {
@@ -78,6 +83,14 @@ public class SynchDataCache {
 	 */
 	public static String[] getReverseDatasSort() {
 		return datasDeleteSort;
+	}
+	
+	/**
+	 * truncate数据类型同步顺序
+	 * @return
+	 */
+	public static String[] getTruncateDatasSort() {
+		return new String[]{DataType.NOTE.toString(), DataType.DIRECTORY.toString(), DataType.SUBJECT.toString()};
 	}
 	
 	public static String[] getActionSort() {

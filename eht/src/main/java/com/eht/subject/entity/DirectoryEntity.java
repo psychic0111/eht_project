@@ -197,7 +197,6 @@ public class DirectoryEntity implements java.io.Serializable {
 	 *@return: java.lang.Integer  删除标识
 	 */
 	@Column(columnDefinition="int default 0")
-	@ClientJsonIgnore
 	public java.lang.Integer getDeleted(){
 		return this.deleted;
 	}
