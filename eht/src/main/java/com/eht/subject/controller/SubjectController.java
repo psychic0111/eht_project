@@ -225,9 +225,13 @@ public class SubjectController extends BaseController {
 		}
 		List<InviteMememberEntity>  inviteMememberList =inviteMememberService.findInviteMemember(subjectEntity.getId());
 		for(InviteMememberEntity mem : inviteMememberList){
-			AccountEntity account = accountService.findUserByEmail(mem.getEmail());
+			 AccountEntity account = accountService.findUserByEmail(mem.getEmail());
 			RoleUser ru = new RoleUser();
 			ru.setId("");
+			if(account==null){
+				account=new AccountEntity();
+				account.setEmail(mem.getEmail());
+			}
 			ru.setAccountEntity(account);
 			ru.setUserId(account == null ? null : account.getId());
 			ru.setRole(mem.getRole());

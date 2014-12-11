@@ -29,6 +29,7 @@ import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.tag.core.easyui.TagUtil;
 import org.jeecgframework.web.system.manager.ClientManager;
 import org.jeecgframework.web.system.service.SystemService;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -108,6 +109,10 @@ public class NoteController extends BaseController {
 	private GroupService groupService;
 
 	private String message;
+	
+	private int noteNum = 20;
+	
+	private int pageSize = 5;
 
 	public String getMessage() {
 		return message;
@@ -399,6 +404,38 @@ public class NoteController extends BaseController {
 	}
 
 	/**
+	 * 获取专题下所有共享用户
+	 * 
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/front/getGroupsEmailSuject.dht")
+	public void getGroupsEmailSuject(HttpServletResponse response,String subjectid) {
+		List<AccountEntity> accountList = noteService.getShareEmailsubjectId(subjectid);
+		StringBuffer str = new StringBuffer("{\"data\":[");
+		if (accountList != null && accountList.size() > 0) {
+			for (int i = 0; i < accountList.size(); i++) {
+				AccountEntity o = accountList.get(i);
+				str.append("{\"name\":\"" + o.getUsername() + "\",\"email\":\"" + o.getEmail() + "\"}");
+				if ((i + 1 < accountList.size()))
+					str.append(",");
+			}
+		}
+		str.append("]}");
+		try {
+			response.setContentType("application/json;charset=UTF-8");
+			response.setCharacterEncoding("UTF-8");
+			response.getWriter().write(str.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	
+	
+	
+	/**
 	 * 获取专题所有共享用户
 	 * 
 	 * @param request
@@ -552,7 +589,7 @@ public class NoteController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping("/front/noteList.dht")
-	public ModelAndView noteList(String searchInput, String subjectId, String dirId, String tagId, String orderField, int deleted, String topNodeId, HttpServletRequest request) {
+	public ModelAndView noteList(String searchInput, String subjectId, String dirId, String tagId, String orderField, int deleted, String topNodeId, int pageNo, int pageSize, HttpServletRequest request) {
 		AccountEntity user = accountService.getUser4Session();
 		if (StringUtil.isEmpty(orderField)) {
 			orderField = "createTime";
@@ -573,7 +610,11 @@ public class NoteController extends BaseController {
 				noteList = noteService.findNotesByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField);
 			}
 		}
-
+		
+		if(noteList.size() > noteNum){
+			noteList = noteList.subList(0, noteNum - 1);
+		}
+		
 		ModelAndView mv = new ModelAndView("front/note/notelist");
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("subjectId", subjectId);
@@ -588,6 +629,59 @@ public class NoteController extends BaseController {
 		return mv;
 	}
 
+	/**
+	 * 前台首页条目查询
+	 * 
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/front/noteListMore.dht")
+	public ModelAndView noteListMore(String searchInput, String subjectId, String dirId, String tagId, String orderField, int deleted, int pageNo, HttpServletRequest request) {
+		AccountEntity user = accountService.getUser4Session();
+		if (StringUtil.isEmpty(orderField)) {
+			orderField = "createTime";
+		}
+		SubjectEntity sub = subjectService.getSubject(subjectId);
+		List<NoteEntity> noteList = null;
+		if (sub.getSubjectType().intValue() == Constants.SUBJECT_TYPE_M) {
+			// 多人专题
+			if (deleted == Constants.DATA_DELETED) {
+				noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_M);
+			} else {
+				noteList = noteService.findMNotesByParams(subjectId, dirId, searchInput, tagId, orderField, user.getId(),request.getParameter("userId"));
+			}
+		} else {
+			// 个人专题
+			if (deleted == Constants.DATA_DELETED) {
+				noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_P);
+			} else {
+				noteList = noteService.findNotesByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField);
+			}
+		}
+		
+		ModelAndView mv = new ModelAndView("front/note/noteeach");
+		
+		int start = noteNum + ((pageNo - 1) * pageSize);
+		int end = noteNum + (pageNo * pageSize);
+		
+		pageNo ++;
+		if(start > noteList.size() - 1){
+			noteList.clear();
+			pageNo -- ;
+		}else{
+			if(noteList.size() - 1 > end){
+				noteList = noteList.subList(start, end);
+			}else{
+				noteList = noteList.subList(start, noteList.size() - 1);
+			}
+		}
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("noteList", noteList);
+		map.put("pageNo", pageNo);
+		mv.addAllObjects(map);
+		return mv;
+	}
+	
 	@RequestMapping(value = "/front/saveNote.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String saveNote(NoteEntity note, String[] noteTagId, HttpServletRequest request) throws IOException {
 		NoteEntity oldNote = noteService.getNote(note.getId());
@@ -608,6 +702,7 @@ public class NoteController extends BaseController {
 			if(user != null){
 				note.setCreateUser(user.getId());
 			}
+		    note.setPlaintext(Jsoup.parse(note.getContent()).text());
 			note.setCreateTime(new Date());
 			note.setCreateTimeStamp(System.currentTimeMillis());
 			if (StringUtil.isEmpty(note.getDirId())) {
@@ -639,6 +734,7 @@ public class NoteController extends BaseController {
 			oldNote.setUpdateUser(user.getId());
 			oldNote.setUpdateTime(new Date());
 			oldNote.setUpdateTimeStamp(System.currentTimeMillis());
+			oldNote.setPlaintext(Jsoup.parse(note.getContent()).text());
 			noteService.updateNote(oldNote, true);
 			
 			//保存条目标签关系

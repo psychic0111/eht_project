@@ -64,6 +64,8 @@ public class NoteEntity implements java.io.Serializable {
 	/** 修改时间 */
 	private java.util.Date updateTime;
 	
+	private String plaintext;
+	
 	/**创建时间毫秒*/
 	private Long createTimeStamp;
 	/**修改时间毫秒*/
@@ -169,6 +171,14 @@ public class NoteEntity implements java.io.Serializable {
 	 */
 	public void setId(java.lang.String id) {
 		this.id = id;
+	}
+
+	public String getPlaintext() {
+		return plaintext;
+	}
+
+	public void setPlaintext(String plaintext) {
+		this.plaintext = plaintext;
 	}
 
 	/**

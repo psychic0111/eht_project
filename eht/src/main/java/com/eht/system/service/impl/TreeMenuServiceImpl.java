@@ -213,6 +213,7 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 			
 			// 每个多人专题一组标签
 			TreeData remenber = new TreeData();
+			remenber.setIsParent("true");
 			remenber.setDataType("REMENBER");
 			remenber.setId("remenber_subject_" + subject.getId());
 			remenber.setName("团队成员");
@@ -222,18 +223,18 @@ public class TreeMenuServiceImpl implements TreeMenuService {
 			remenber.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/remenber.png");
 			dataList.add(remenber);
 			
-			List<RoleUser> roleUserList=roleService.findSubjectUsers(subject.getId());
-			for (RoleUser roleUser : roleUserList) {
-				TreeData remenberchild = new TreeData();
-				remenberchild.setDataType("REMENBERCHILD");
-				remenberchild.setId(roleUser.getUserId());
-				remenberchild.setName(roleUser.getAccountEntity().getUserName());
-				remenberchild.setBranchId(subject.getId());
-				remenberchild.setpId(remenber.getId());
-				remenberchild.setSubjectId(subject.getId());
-				remenberchild.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/remenberchild.png");
-				dataList.add(remenberchild);
-			}
+			//List<RoleUser> roleUserList=roleService.findSubjectUsers(subject.getId());
+//			for (RoleUser roleUser : roleUserList) {
+//				TreeData remenberchild = new TreeData();
+//				remenberchild.setDataType("REMENBERCHILD");
+//				remenberchild.setId(roleUser.getUserId());
+//				remenberchild.setName(roleUser.getAccountEntity().getUserName());
+//				remenberchild.setBranchId(subject.getId());
+//				remenberchild.setpId(remenber.getId());
+//				remenberchild.setSubjectId(subject.getId());
+//				remenberchild.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/remenberchild.png");
+//				dataList.add(remenberchild);
+//			}
 			
 			// 每个多人专题一组标签
 			TreeData tag = new TreeData();

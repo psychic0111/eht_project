@@ -64,7 +64,9 @@ var treeSetting = {
 		beforeRename:this.zTreeBeforeRename,//改名字前验证触发事件
 		onRename: this.nodeOnRename,//改名字后触发事件
 		onAsyncSuccess: this.zTreeOnAsyncSuccess,//异步加载后触发事件
-		onExpand: this.onExpand//展开事件
+		onExpand: this.onExpand,//展开事件
+		beforeExpand: this.beforeExpand,
+		onAsyncSuccess: this.onAsyncSuccess
 	},
 	async : {
 	    autoParam : ["id", "dataType", "branchId"],
@@ -220,6 +222,7 @@ function onNodeClickDo(e, treeId, node) {
 	}else{
 		selectInfo = new SelectInfo();
 		selectInfo.newEnable = false;
+		$("#note_new").hide();
 	}
 	
 }
@@ -400,7 +403,7 @@ function getSonIds(nodes){
 
 //条目附件管理跳转
 function dirAttachmentManage(subjectId){ 
-	url = currentdirAttachmentURL+"?dirId=" +currentDirId  + "&subjectId=" + subjectId;
+	url = currentdirAttachmentURL+"?dirId=" +currentDirId  + "&subjectId=" + subjectId + "&rd="+new Date().getTime();
 	AT.load("iframepage",url,function() {});
 } 
 
@@ -457,6 +460,7 @@ function nodeOnRename(e, treeId, node){
 					node.id = data.id;
 					node.dataType = "TAG";
 					node.branchId = data.subjectId;
+					node.subjectId=data.subjectId;
 					node.pId = data.pId;
 					zTree_Menu.updateNode(node);
 					beforeNodeClick("treeMenu",node);
@@ -504,26 +508,31 @@ function toAddSubject(subjectType){
 	hideRightMenu();
 }
 
-function onExpand(event, treeId, treeNode)  {
+
+function beforeExpand(treeId, treeNode) {
+	if(treeNode.dataType=='REMENBER'){
+	 zTree_Menu.reAsyncChildNodes(treeNode, "refresh", true);
+    }
+	return true;
+}
+function onAsyncSuccess(event, treeId, treeNode, msg) {
 	if(treeNode.dataType=='REMENBER'&&treeNode.open){
 		var nodes = treeNode.children;
 		for(var i=0;i<nodes.length;i++){
 			var params = {'userId':nodes[i].id,'subjectId':nodes[i].subjectId,'tid':nodes[i].tId};
 			AT.post(webRoot+"/noteController/front/showcount.dht",params,function(data){
 				$("#diyBtn_"+data.userId+"_"+data.subjectId).remove();
-				var aObj = $("#" + data.tId + '_a');
+			var aObj = $("#" + data.tId + '_a');
 			    var editStr = "<span id='diyBtn_" +data.userId+"_"+data.subjectId+ "' >"+"("+data.total+")"+"</span>";
 				aObj.append(editStr);
 			},true);
 		}
 	}
+}
+
+function onExpand(event, treeId, treeNode)  {
+	
 	if(treeNode.dataType=='TAG'&&treeNode.open){
-		//if(treeNode.id=='tag_personal'){
-		//	return;
-		//}
-		//if(treeNode.id.indexOf('tag_subject')!=-1&&treeNode.level==2){
-		//	return;
-		//}
 		var nodes = treeNode.children;
 		for(var i=0;i<nodes.length;i++){
 			var params = {'id':nodes[i].id,'tid':nodes[i].tId};

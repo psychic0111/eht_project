@@ -55,7 +55,6 @@ import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.enumeration.DataType;
 import com.eht.common.enumeration.HeaderName;
 import com.eht.common.enumeration.ResponseCode;
-import com.eht.common.util.BeanMapUtils;
 import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.FileToolkit;
 import com.eht.common.util.HtmlParser;

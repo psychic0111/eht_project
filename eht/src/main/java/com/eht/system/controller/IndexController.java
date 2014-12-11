@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import com.eht.common.constant.Constants;
+import com.eht.common.util.AppContextUtils;
 import com.eht.common.util.JsonUtil;
 import com.eht.common.util.TreeUtils;
 import com.eht.message.service.MessageServiceI;
 import com.eht.resource.service.ResourcePermissionService;
+import com.eht.role.entity.RoleUser;
+import com.eht.role.service.RoleService;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.system.bean.TreeData;
@@ -57,6 +60,9 @@ public class IndexController extends BaseController {
 	private ResourcePermissionService resourcePermissionService;
 	
 	private String message;
+	
+	@Autowired
+	private RoleService roleService;
 	
 	public String getMessage() {
 		return message;
@@ -129,10 +135,25 @@ public class IndexController extends BaseController {
 	 */
 	@RequestMapping(value = "/front/reloadNode.dht", produces = {"application/json;charset=UTF-8"})
 	public @ResponseBody String reloadNode(String id, String dataType, HttpServletRequest request) {
+		//RECYCLEP RECYCLE
 		Object obj = request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		List<TreeData> dataList = new ArrayList<TreeData>();
+		AccountEntity user = (AccountEntity) obj;
 		if(obj != null){
-			AccountEntity user = (AccountEntity) obj;
-			List<TreeData> dataList = new ArrayList<TreeData>();
+			if(dataType.equals("REMENBER")){
+			List<RoleUser> roleUserList=roleService.findSubjectUsers(id.split("_")[2]);
+			for (RoleUser roleUser : roleUserList) {
+				TreeData remenberchild = new TreeData();
+				remenberchild.setDataType("REMENBERCHILD");
+				remenberchild.setId(roleUser.getUserId());
+				remenberchild.setName(roleUser.getAccountEntity().getUserName());
+				remenberchild.setBranchId(id.split("_")[2]);
+				remenberchild.setpId(id);
+				remenberchild.setSubjectId(id.split("_")[2]);
+				remenberchild.setIcon(AppContextUtils.getContextPath() + "/webpage/front/images/tree/remenberchild.png");
+				dataList.add(remenberchild);
+			}
+			}else{
 			if(!StringUtil.isEmpty(id) && !id.equals(Constants.SUBJECT_PID_P) && !id.equals(Constants.SUBJECT_PID_M)){
 				// 刷新个人回收站
 				if(dataType.equals("RECYCLEP")){
@@ -147,7 +168,7 @@ public class IndexController extends BaseController {
 				//刷新整个个人专题部分
 				treeMenuService.buildPersonalSubject(user.getId());
 			}
-			
+			}
 			return JSONHelper.collection2json(TreeUtils.buildTreeData(dataList));
 		}
 		

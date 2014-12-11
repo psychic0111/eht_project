@@ -423,6 +423,7 @@ function hideRightMenu(){
 	$("body").unbind("mousedown", onBodyClick);
 }
 
+
 function isShareSubject(node){
 	var subjectNode = null;
 	if(node.dataType == 'SUBJECT'){
@@ -433,8 +434,8 @@ function isShareSubject(node){
 		subjectNode = zTree_Menu.getNodeByParam("id", subjectId, null);
 	}else if(node.dataType == 'RECYCLE'){
 		subjectNode = node.getParentNode();
-	}else if(node.dataType == 'REMENBER'){
-		subjectNode = node.getParentNode();
+	}else if(node.dataType == 'REMENBERCHILD'){
+		subjectNode = node.getParentNode().getParentNode();
 	}else{
 		return null;
 	}
@@ -448,6 +449,41 @@ function isShareSubject(node){
 			return null;  //个人专题
 		}else{
 			return subjectNode; // 多人专题返回专题节点
+		}
+	}
+}
+
+
+function retrunSubjectId(node){
+	var subjectNode = null;
+	if(node.dataType == 'SUBJECT'){
+		subjectNode = node;
+	}else if(node.dataType == 'DIRECTORY'){
+		//查找专题节点
+		var subjectId = node.subjectId;
+		subjectNode = zTree_Menu.getNodeByParam("id", subjectId, null);
+	}else if(node.branchId == 'RECYCLE' || node.dataType == 'RECYCLE' || node.branchId == 'RECYCLEP' || node.dataType == 'RECYCLEP'){
+		return 3;
+	}else if(node.dataType == 'REMENBERCHILD'){
+		subjectNode = node.getParentNode().getParentNode();
+	}else if(node.dataType == "TAG"){
+		 if(node.branchId== 'tag_personal'||node.branchId==''){//个人专题
+	      return 1; 
+	  }else{
+	       return node.branchId; 
+	  }
+	}else{
+		return 1;
+	}
+	if(subjectNode != null){
+		var rNode = subjectNode.getParentNode();
+		//if(rNode == null){
+		//	return -1;          //多人专题都删光了
+		//}
+		if(rNode.id == '<%=Constants.SUBJECT_PID_P%>'){
+			return 1;  //个人专题
+		}else{
+			return subjectNode.id; // 多人专题返回专题节点
 		}
 	}
 }

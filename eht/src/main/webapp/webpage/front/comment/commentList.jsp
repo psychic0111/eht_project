@@ -72,8 +72,8 @@
 <script type="text/javascript">
 $.ajax({
     type:"POST", 
-    url:'${webRoot}/noteController/front/getGroupsEmailAll.dht',
-    data:{},
+    url:'${webRoot}/noteController/front/getGroupsEmailSuject.dht',
+    data:{'subjectid':$("#noteForm_subjectId").val()},
     dataType:"json",
     success:function(result){
        

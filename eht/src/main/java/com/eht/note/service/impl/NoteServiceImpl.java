@@ -92,6 +92,16 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		List<NoteEntity> list = findByQueryString(query);
 		return list;
 	}
+	@Override
+	public List<AccountEntity> getShareEmailsubjectId(String sujcetId) {
+		List<AccountEntity> accounts = new ArrayList<AccountEntity>();
+		AccountEntity account = accountService.getUser4Session();
+
+		String query = "select u.* from  eht_user u ,(select r1.userid  from eht_user_role r1 " + " where r1.groupId='" + sujcetId + "' and " + " r1.userid!='" + account.getId()
+				+ "') og where og.userid=u.id ";
+		accounts = this.commonDao.findListbySql(query, AccountEntity.class);
+		return accounts;
+	}
 	
 	@Override
 	public List<AccountEntity> getShareEmail() {
@@ -380,7 +390,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 				if(ids[0].equals("recycle_personal")){  // 点击个人回收站节点
 					criterionDir =  Restrictions.and(Restrictions.eq("note.createUser", userId), Restrictions.eq("note.deleted", Constants.DATA_DELETED));
 					dc.createCriteria("subjectEntity", "s", JoinType.INNER_JOIN);
-					dc.add(Restrictions.eq("s.subjectType", 1));
+					dc.add(Restrictions.eq("s.subjectType", Constants.SUBJECT_TYPE_P));
 				}else{
 					criterionDir = Restrictions.and(Restrictions.in("note.dirId", ids), Restrictions.eq("note.deleted", Constants.DATA_DELETED));
 				}

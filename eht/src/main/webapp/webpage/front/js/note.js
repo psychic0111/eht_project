@@ -163,6 +163,19 @@ function saveNote(){
 		viewNotePageAndButton();
 		searchNotes(selectInfo.isDeleted,true);
 		$("#note_new").val("+ 新建条目");
+		$("input[name='noteTagId']").each(function(){
+			var node = zTree_Menu.getNodeByParam("id",$(this).val());
+				if(node!=null){
+					var params = {'id':node.id,'tid':node.tId};
+					AT.post(webRoot+"/tagController/front/showcount.dht",params,function(data){
+						$("#diyBtn_"+data.id).remove();
+						var aObj = $("#" + data.tId + '_a');
+						var editStr = "<span id='diyBtn_" +data.id+ "' >"+"("+data.total+")"+"</span>";
+						aObj.append(editStr);
+					},true);
+				}
+		  });
+		
 		
 		var parentNode = zTree_Menu.getNodeByParam("id","remenber_subject_"+$("#noteForm_subjectId").val());
 		if(parentNode!=null&&parentNode.open){
@@ -174,14 +187,13 @@ function saveNote(){
 					},true);
 				}
 		}
-		if($("#addCommentForm").length==0){
 			 var params = {'noteId':data.id};
 			 //显示评论
 			 AT.post(webRoot+"/commentController/front/findCommentByNote.dht",params,function(data){
 				 $("#comments_list").empty();
 				 $("#comments_list").append(data);
 			});
-		}
+		
 		setTimeout('hideLoading_edit()',100);
 	});
 } 
@@ -251,6 +263,16 @@ function deleteNote(){
 	    	}
 	    	var url = webRoot+"/noteController/front/deleteNote.dht?id=" + $("#noteForm_id").val() + "&deleted=" + deleted;
 	    	AT.post(url,null, function(data){
+	    		var parentNode = zTree_Menu.getNodeByParam("id","remenber_subject_"+$("#noteForm_subjectId").val());
+	    		if(parentNode!=null&&parentNode.open){
+	    				var nodes = parentNode.children;
+	    				for(var i=0;i<nodes.length;i++){
+	    					var params = {'userId':nodes[i].id,'subjectId':nodes[i].subjectId,'tid':nodes[i].tId};
+	    					AT.post(webRoot+"/noteController/front/showcount.dht",params,function(data){
+	    						$("#diyBtn_"+data.userId+"_"+data.subjectId).text("("+data.total+")");
+	    					},true);
+	    				}
+	    		}
 	    		searchNotes(selectInfo.isDeleted);
 	    	});
 	    }

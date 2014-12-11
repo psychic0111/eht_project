@@ -646,9 +646,9 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		int title = 1;
 		for (DirectoryEntity directoryEntity : rootDirectoryList) {
 			if (directoryEntity.getDirName().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)){ 
-				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+"",true,sortList);
+				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+". ",true,sortList);
 			}else{
-				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+"",false,sortList);
+				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+". ",false,sortList);
 			}
 			title++;
 		}
@@ -678,7 +678,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		for (DirectoryEntity directory : directoryList) {
 			if (directoryEntity.getId().equals(directory.getPId())) {
 				setDirectorySort(directory, directoryList, noteEntitylist,
-						title + "." + (cout++), iswendang,sortList);
+						title  + (cout++) + ". ", iswendang,sortList);
 			}
 		}
 	}
@@ -717,10 +717,10 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			if (directoryEntity.getDirName().equals(
 					Constants.SUBJECT_DOCUMENT_DIRNAME)) {
 				showDirectoryNote(directoryEntity, directoryList,
-						noteEntitylist, sb, title + "", true);
+						noteEntitylist, sb, title + ". ", true);
 			} else {
 				showDirectoryNote(directoryEntity, directoryList,
-						noteEntitylist, sb, title + "", false);
+						noteEntitylist, sb, title + ". ", false);
 			}
 			title++;
 		}
@@ -739,7 +739,7 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		for (DirectoryEntity directory : directoryList) {
 			if (directoryEntity.getId().equals(directory.getPId())) {
 				showDirectoryNote(directory, directoryList, noteEntitylist, sb,
-						title + "." + (cout++), iswendang);
+						title  + (cout++)+ ". ", iswendang);
 			}
 		}
 	}

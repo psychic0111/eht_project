@@ -18,102 +18,116 @@
 <c:set var="imgPath" value="<%=imgPath%>" />
 
 <link rel="stylesheet" href="${cssPath}/jquery.sinaEmotion.css" type="text/css">
-<link rel="stylesheet" href="${cssPath}/tinyscrollbar.css" type="text/css" media="screen"/>
-<script type="text/javascript" src="${frontPath}/js/plugins/jquery.tinyscrollbar.js"></script>
 
-<div id="scrollbar1" style="height:100%;">
+<div id="scrollbar1" style="height:100%;overflow:auto;width:320px">
    <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
-   	<div class="viewport">
-   	<div class="overview" style="width:99%;">
-   		
+   	<div id="content_viewport" class="viewport">
+   	<div id="content_overview" class="overview" style="width:99%;">
    		<!-- 记录noteList第一个目录id（用来初始化第一个目录详细内容区） -->
    		<c:set var="first" value="true"></c:set>
    		<c:set var="firstNoteId" value=""/>
 		<ul id="contentListUl" style="width:100%;">
-			<c:forEach items="${noteList }" var="note">
-			
-				<c:if test="${first==true }">
-					<c:set var="firstNoteId" value="${note.id}"/>
-					<c:set var="first" value="false"></c:set>
-				</c:if>
-				<li style="width:100%;">
-				<div class="title" id="title_${note.id}" style="font-size:15px;">
-					<a href="#" onclick="viewNoteclick('${note.id}','${note.subjectId}')">
-						<img src="${imgPath}/note2.png" style="max-height:16px;"/>
-						<c:choose>
-    						<c:when test="${fn:length(note.title) > 15}">
-    							<c:out value="${fn:substring(note.title, 0, 15)}......" />
-     						</c:when>
-   						  	<c:otherwise>
-    					 		${note.title }
-    					 	</c:otherwise>
-    					</c:choose>
-					</a>
-					<span onclick="restoreNote('${note.id}')" class="recycle_png" style="float:right;cursor:pointer;display:none;">
-						<img src="${imgPath}/arrow_redo.png" title="恢复条目"/>
-					</span>
-					<input type="hidden" name="id" value="${note.id }"/>
-				</div>
-				<div class="contents" id="content_${note.id}" style="word-wrap:break-word;">
-					<a href="#" onclick="viewNoteclick('${note.id}','${note.subjectId}')">
-						<div class="txts">
-							${note.summary}
-							<br/>
-							<div class="Font1">
-								<span class="createUser" style="font-weight:normal;color:cadetblue;font-size:12px;">${note.accountCreateUser.username }</span>
-								&nbsp;&nbsp;
-								- &nbsp;&nbsp;<c:if test="${note.updateTime != null}">
-									<fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss" value="${note.updateTime }" type="both"/>
-								</c:if>
-								<c:if test="${note.updateTime == null}">
-									<fmt:formatDate pattern="yyyy-MM-dd HH:mm:ss" value="${note.createTime }" type="both"/>
-								</c:if>
-							</div>
-						</div>
-					</a>
-					<div class="state" id="note_status_${note.id}">
-					</div>
-				</div>
-				</li>
-			</c:forEach>
+			<jsp:include page="noteeach.jsp"></jsp:include>
 		</ul>
 		<input type="hidden" value="${firstNoteId }" id="firstNodeId" />
+		<input type="hidden" name="pageNo" id="note_pageNo" value="1"/>
 	</div>
 	</div>
 </div>
 <script type="text/javascript">
-function initScrollBar(){
-	var height = $("#noteList_div").height() - 10;//document.documentElement.clientHeight;//document.body.clientHeight;
-	$("#scrollbar1").height(height);
-}
 $(document).ready(function(){
-	var height = $("#noteList_div").height() - 10;//document.documentElement.clientHeight;//document.body.clientHeight;
-	//$("#scrollbar1").height(height);
-	var b = $('#scrollbar1').tinyscrollbar({wheelSpeed:200,size:height});
+	var nScrollHight = 0; //滚动距离总长(注意不是滚动条的长度)
+	var nScrollTop = 0;   //滚动到的当前位置
+	var nDivHight = $("#scrollbar1").height();
 	
-	if($("#note_deleted").val()==1){
-		$("span.recycle_png").show();
-	}
-	
-	$("#contentListUl").find("div.state").each(function(index,obj){
-		var noteid = obj.id.replace("note_status_","");
-		AT.get(webRoot+"/noteController/front/noteStatus.dht?id="+noteid,function(json){
-			if(json.isRead == 'true'){
-				$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/read.png\" /> <span>已读</span> ");
-			}else{
-				$("#"+obj.id).append("<img id=\"readpng_"+obj.id+"\" src=\""+imgPath+"/readno.png\" /> <span>未读</span> ");
-			}
-			if(parseInt(json.attachmentCount) > 0){
-				$("#"+obj.id).append("<img src=\""+imgPath+"/attachment.png\" />附件");
-			}
-		},false);
+	$("#scrollbar1").scroll(function(){
+		nScrollHight = $(this)[0].scrollHeight;
+		nScrollTop = $(this)[0].scrollTop;
+		if(nScrollTop + nDivHight >= nScrollHight)
+			loadMoreNotes();
 	});
 });
 
-//窗口大小改变事件
-var rId;
-$(window).wresize(function(){
-	//window.clearTimeout(rId);
-	//rId = window.setTimeout('initScrollBar();', 1000);
-});
+/* //滚动条在Y轴上的滚动距离
+function getScrollTop(){
+	var scrollTop = 0, bodyScrollTop = 0, documentScrollTop = 0;
+	if(document.body){
+		bodyScrollTop = document.body.scrollTop;
+	}
+	if(document.documentElement){
+		documentScrollTop = document.documentElement.scrollTop;
+	}
+	scrollTop = (bodyScrollTop - documentScrollTop > 0) ? bodyScrollTop : documentScrollTop;
+	return scrollTop;
+}
+
+//文档的总高度
+function getScrollHeight(){
+	var scrollHeight = 0, bodyScrollHeight = 0, documentScrollHeight = 0;
+	if(document.body){
+		bodyScrollHeight = document.body.scrollHeight;
+	}
+	if(document.documentElement){
+		documentScrollHeight = document.documentElement.scrollHeight;
+	}
+	scrollHeight = (bodyScrollHeight - documentScrollHeight > 0) ? bodyScrollHeight : documentScrollHeight;
+	return scrollHeight;
+}
+
+//浏览器视口的高度
+function getWindowHeight(){
+	var windowHeight = 0;
+	if(document.compatMode == "CSS1Compat"){
+		windowHeight = document.documentElement.clientHeight;
+	}else{
+		windowHeight = document.body.clientHeight;
+	}
+	return windowHeight;
+}
+
+window.onscroll = function(){
+　　if(getScrollTop() + getWindowHeight() == getScrollHeight()){
+　　　　alert("you are in the bottom!");
+　　}
+};
+*/
+function loadMoreNotes(undir){
+	var deleted = $("#deleted").val();
+	var input = $("#searchNoteField").val();//检索词
+	var orderField = $("#noteOrderField").val();//排序字段
+	var subjectId = $("#note_subjectId").val();//专题id
+	var dirId = $("#note_dirId").val();//目录id
+	var tagId = $("#note_tagId").val();//标签id
+	if(!input){
+		input = '';
+	}
+	input = encodeURIComponent(input);
+	if(!orderField){
+		orderField = '';
+	}
+	
+	if(!subjectId){
+		subjectId = '';
+	}
+	if(!dirId){
+		dirId = '';
+	}
+	if(undir&&dirId!='recycle_personal'){
+		dirId = '';
+	}
+	if(!tagId){
+		tagId = '';
+	}
+	var pn = $("#note_pageNo").val();
+	if(pn == ''){
+		pn = 1;
+	}
+	var	url = webRoot + "/noteController/front/noteListMore.dht?pageNo=" + pn + "&subjectId=" + subjectId + "&dirId=" + dirId + "&searchInput=" + input + "&orderField=" + orderField + "&tagId=" + tagId 
+			+ "&deleted=" + deleted;
+	AT.post(url, null, function(data){
+		var c = $("#contentListUl");
+		c.append(data);
+	});
+	$("#note_pageNo").val(parseInt(pn) + 1);
+}
 </script>

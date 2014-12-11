@@ -27,6 +27,11 @@ public interface NoteServiceI extends CommonService{
 	public List<AccountEntity> getShareEmailbyPage(String searchField,int start,int end); 
 	
 	/**
+	 * 根据专题ID查找专题被共享用户
+	 */
+	public List<AccountEntity> getShareEmailsubjectId(String subjectId);
+	
+	/**
 	 * 查找专题被共享用户
 	 */
 	public List<AccountEntity> getShareEmail();
