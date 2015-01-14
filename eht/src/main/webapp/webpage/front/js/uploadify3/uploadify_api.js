@@ -31,7 +31,7 @@
 	$("#"+uploadQueueId).css('background-color','#ffffff');
 	var defaultCfg={ 
 		//'method'    : 'GET',
-		'uploader'  : basePath+'/uploadify.swf',
+		'uploader'  : basePath+'/uploadify1.swf',
 		'script'    : options.uploadPath,
 		'scriptData':{'noteid':$('#noteForm_id').val(),'jsessionid':options.sessionId,'userId':options.userId},
 		'cancelImg' : basePath+'/cancel.png',

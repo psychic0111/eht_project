@@ -178,7 +178,7 @@ public class MessageController extends BaseController {
 	 *
 	 * @return
 	 */
-	@RequestMapping(value="/front/sendMessagAjax.dht", produces = { "application/json;charset=UTF-8" })
+	@RequestMapping(value="/front/sendMessagAjax.dht", produces = { "application/json;charset=UTF-8"})
 	@ResponseBody
 	public String messageMark(HttpServletRequest request) {
 		int fist=Integer.valueOf(request.getParameter("count"));
@@ -193,6 +193,22 @@ public class MessageController extends BaseController {
 		AccountEntity user = accountService.getUser4Session();
 		List<MessageEntity> msgList = messageService.findUserNoteMessages(user.getId());
 		return JsonUtil.list2json(msgList);
+	}
+	
+	@RequestMapping(value="/front/messageNoteMark.dht", produces = {"application/json;charset=UTF-8"})
+	@ResponseBody
+	public String messageNoteMark(HttpServletRequest request) {
+		Object obj = request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		if(obj != null){
+			AccountEntity user = (AccountEntity) obj;
+			List<MessageEntity> msgList = messageService.findUserNoteMessages(user.getId());
+			if(msgList != null && msgList.size() > 0){
+				for(MessageEntity msg : msgList){
+					messageService.markReadMessage(user.getId(), msg.getId());
+				}
+			}
+		}
+		return "true";
 	}
 	
 	/**

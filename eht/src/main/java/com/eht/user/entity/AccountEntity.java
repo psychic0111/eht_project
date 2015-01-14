@@ -79,8 +79,6 @@ public class AccountEntity extends User implements java.io.Serializable {
 	 *@return: java.lang.String  主键
 	 */
 	@Id
-	@GenericGenerator(name = "idGenerator", strategy = "uuid")
-	@GeneratedValue(generator = "idGenerator")
 	public java.lang.String getId() {
 		return id;
 	}

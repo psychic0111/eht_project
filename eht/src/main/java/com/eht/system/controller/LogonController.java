@@ -233,12 +233,12 @@ public class LogonController extends BaseController {
 		String linkpath = null;
 		try {
 			msg = "注册成功!";
+			account.setId(com.eht.common.util.UUIDGenerator.uuid());
 			account.setStatus(Constants.ACTIVATE);
 			account.setDeleted(Constants.DATA_NOT_DELETED);
 			account.setCreatetime(new Date());
 			account.setUpdatetime(new Date());
 			account.setPassword(Md5Utils.makeMD5(account.getPassword()));
-			accountService.save(account);
 			if(request.getParameter("id") != null && !request.getParameter("id").equals("")){
 				InviteMememberEntity inviteMememberEntity=subjectService.get(InviteMememberEntity.class,  request.getParameter("id"));
 				if(inviteMememberEntity!=null){
@@ -256,12 +256,15 @@ public class LogonController extends BaseController {
 					msg.setOperate(DataSynchAction.UPDATE.toString());
 					msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
 					messageService.saveMessages(msg, account.getId());
+					
 					account.setStatus(Constants.ENABLED);
+					accountService.save(account);
+					
 					subjectService.updateEntitie(account);
 					SubjectEntity subject = new SubjectEntity();
 					subject.setCreateUser(account.getId());
 					subject.setCreateTime(new Date());
-					subject.setId(com.eht.common.util.UUIDGenerator.uuid());
+					subject.setId(account.getId() + "_S");
 					subject.setDescription("");
 					subject.setSubjectType(1);
 					subject.setStatus(0);
@@ -272,6 +275,7 @@ public class LogonController extends BaseController {
 						subjectService.addSubject(subject, account.getId());
 					}
 				}else{
+					accountService.save(account);
 					String path = AppRequstUtiles.getAppUrl(request);
 					SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"/center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 					msg = "注册成功！请查看邮件并激活账号！";
@@ -499,7 +503,7 @@ public class LogonController extends BaseController {
 			SubjectEntity subject = new SubjectEntity();
 			subject.setCreateUser(account.getId());
 			subject.setCreateTime(new Date());
-			subject.setId(com.eht.common.util.UUIDGenerator.uuid());
+			subject.setId(account.getId() + "_S");
 			subject.setDescription("");
 			subject.setSubjectType(1);
 			subject.setStatus(0);
@@ -606,8 +610,8 @@ public class LogonController extends BaseController {
 	@Autowired
 	private SystemService systemService;
 
-	private  final String uppath="uptem"; 
 	private String msg;
+	
 	private AccountEntity user;
 	public AccountEntity getUser() {
 		return user;

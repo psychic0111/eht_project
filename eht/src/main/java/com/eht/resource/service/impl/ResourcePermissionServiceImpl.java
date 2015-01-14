@@ -179,6 +179,8 @@ public class ResourcePermissionServiceImpl extends CommonServiceImpl implements 
 				if(flag){
 					actionMap.put(ra.getAction(), String.valueOf(flag));
 					//break;
+				}else{
+					
 				}
 			}
 		}

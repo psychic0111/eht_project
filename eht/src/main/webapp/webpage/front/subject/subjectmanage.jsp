@@ -60,12 +60,15 @@
 				}
 				var params = {"subjectId":subjectId,"dirsId":dirsId};
 				AT.post("${webRoot}/subjectController/front/exportSuject.dht",params,function(data){
-					if(data.success){
+					if(data.success){ //正在导出中
 		           		//MSG.alert("等待专题导出完毕后才能继续导出");
-						jBox.tip("专题导出完毕后才能继续导出，请稍候！", "专题导出提示");
+						jBox.tip("专题导出完毕后才能继续导出，请稍候！", "info", {timeout:5000, top:"1px"});
 		            }else{
-		        	    jBox.tip("等待专题导出中,请稍后在用户消息中心下载！", "专题导出提示");
+		        	    jBox.tip("等待专题导出中,请稍后在用户消息中心下载！", "info", {timeout:5000, top:"1px"});
 		            }
+					window.clearInterval(actionSchedule);
+					actionSchedule = null;
+					startActionSchedule();
 				},false);
             }
             return true; 
@@ -123,25 +126,35 @@ function toSujectList(subjectType){
 	AT.load("subject_list", url, function(){});
 }
 
-if(actionSchedule!=null){
+function startActionSchedule(){
+	if(actionSchedule!=null){
+	}else{
+		actionSchedule=setInterval(
+			function(){
+			if(!document.getElementById("schedule_1409022827875")){
+				clearInterval(actionSchedule);
+				actionSchedule=null;
+				return;
+			}
+			 AT.post("${webRoot}/subjectController/front/sujectSchedule.dht",null,function(data){
+					if(data.success){
+					   var c='专题正在导出('+data.attributes.cout+'/'+data.attributes.couts+')';
+					   $("#"+data.attributes.subjectId + "_schedule").text(c);
+					}else{
+					   $(".schedulesubjects").text("");
+					   if(data.attributes != null){
+					   	  var url = '${webRoot}/subjectController/front/downzip.dht?id=' + data.attributes.id;
+					   	  jBox.tip("专题导出完成，<a href='"+url+"'>点击下载</a>，下载链接还可以在消息中心—系统消息中找到！", "info", {timeout:10000, top:"1px"});
+					   }
+					   window.clearInterval(actionSchedule);
+					   //actionSchedule = null;
+					}
+				},true);
+		},10000);
 
-}else{
-	actionSchedule=setInterval(
-		function(){
-		if(!document.getElementById("schedule_1409022827875")){
-			clearInterval(actionSchedule);
-			actionSchedule=null;
-			return;
-		}
-		 AT.post("${webRoot}/subjectController/front/sujectSchedule.dht",null,function(data){
-				if(data.success){
-				   var c='专题正在导出('+data.attributes.cout+'/'+data.attributes.couts+')';
-				   $("#"+data.attributes.subjectId + "_schedule").text(c);
-				}else{
-				   $(".schedulesubjects").text("");
-				}
-			},true);
-	},10000);
+	}
+}
 
-}		
+startActionSchedule();
+	
 </script>

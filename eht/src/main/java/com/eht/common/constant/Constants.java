@@ -149,6 +149,15 @@ public interface Constants {
 	 */
 	public static final int DISABLED=1;
 	
+	/**
+	 * 状态值：假、不可用、未完成。。。
+	 */
+	public static final int STATUS_FALSE = 0;
+	
+	/**
+	 * 状态值：真、可用、完成。。。
+	 */
+	public static final int STATUS_TRUE = 1;
 	
 	/**
 	 * 未激活
@@ -184,4 +193,9 @@ public interface Constants {
 	 * 附件类型：条目zip文件
 	 */
 	public static final int FILE_TYPE_NOTEHTML = 5;
+	
+	/**
+	 * 附件存储时的后缀名
+	 */
+	public static final String ATTACHMENT_SUFFIX = ".atm";
 }

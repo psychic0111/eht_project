@@ -9,8 +9,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -279,7 +281,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@Path("/upload/{attachmentId}")
 	public String uploadAttachment(@PathParam("attachmentId") String attachmentId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletRequest request, @Context HttpServletResponse res) {
 		AccountEntity user = accountService.getUser4Session();
-		logger.info("上传条目.eht文件：" + attachmentId);
+		logger.info("上传条目附件文件：" + attachmentId);
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			AttachmentEntity attachment = attachmentService.getAttachment(attachmentId);
 			if(attachment.getMd5() != null){
@@ -310,12 +312,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if (!folder.exists()) {
 				folder.mkdirs();
 			}
-			String zipName = attachment.getFileName().substring(0, attachment.getFileName().lastIndexOf('.')) + ".zip";
+			String zipName = attachment.getFileName() + Constants.ATTACHMENT_SUFFIX;
 			File savefile = new File(attachment.getFilePath() + File.separator + zipName);
 			try {
 				logger.info("开始 上传条目附件数据：" + savefile.getPath());
 				ins = request.getInputStream();
-				transfered = FileToolkit.copyFileFromStreamToZIP(ins, savefile, true, attachment.getFileName());
+				transfered = FileToolkit.copyFileFromStream(ins, savefile, true);
+				//transfered = FileToolkit.copyFileFromStreamToZIP(ins, savefile, true, attachment.getFileName());
 				/*ous = new FileOutputStream(file);
 				int n = 0;
 				int buffer = 1024;
@@ -465,21 +468,18 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 
 	@Override
 	@GET
-	@Path("/downloadphoto/{userId}")
-	public String downloadUserPhoto(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("userId") String userId, @Context HttpServletResponse response) throws Exception {
+	@Path("/downloadphoto/{photo}")
+	public String downloadUserPhoto(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("photo") String photo, @Context HttpServletResponse response) throws Exception {
 		//AccountEntity user = accountService.getUser4Session();
-		AccountEntity theUser = accountService.getUser(userId);
-		String photo = theUser.getPhoto();
-		String fileName = photo.substring(photo.lastIndexOf("/") + 1);
 		
-		File file = new File(FilePathUtil.getWebRootPath() + "/" + photo);
+		File file = new File(FilePathUtil.getWebRootPath() + AccountServiceI.uppath + "/" + photo);
 		
 		FileInputStream fis = new FileInputStream(file);
 		int length = fis.available();
 		
 		byte[] b = new byte[length];
 		fis.read(b);
-		response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+		response.setHeader("Content-Disposition", "attachment; filename=\"" + photo + "\"");
 		response.addHeader("Content-Length", "" + length);
 		response.setContentType("application/octet-stream;charset=UTF-8");
 		
@@ -507,36 +507,45 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	@GET
 	@Path("/download/{attachmentId}")
 	public String downloadAttachment(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("attachmentId") String attachmentId, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse response) throws Exception {
-		AccountEntity user = accountService.getUser4Session();
 		
 		if(!action.equals(DataSynchAction.FINISH.toString())){
 			AttachmentEntity attachment = attachmentService.getAttachment(attachmentId);
 			File file = null;
 			
 			String zipName = "";
+			String rName = "";
 			//传过来的是条目ID，以后再改
 			if(attachment == null){
 				//List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(noteService.getNote(attachmentId), Constants.FILE_TYPE_NOTEHTML);
 				
 				NoteEntity note = noteService.getNote(attachmentId);
 				zipName = FilePathUtil.getNoteZipFileName(attachmentId, null);
+				rName = zipName;
 				file = new File(FilePathUtil.getNoteHtmlPath(note) + zipName);
+				response.setHeader("Content-Disposition", "attachment; filename=\"" + rName + "\"");
 			}else{
-				zipName = attachment.getFileName().substring(0, attachment.getFileName().lastIndexOf('.')) + ".zip";
+				zipName = attachment.getFileName() + Constants.ATTACHMENT_SUFFIX;
+				rName = URLEncoder.encode(attachment.getFileName(), "UTF-8");//attachment.getId() + Constants.ATTACHMENT_SUFFIX;
 				file = new File(attachment.getFilePath() + File.separator + zipName);
+				response.setHeader("Content-Disposition", "attachment; filename=\"" + rName + "\"");
 			}
 			if(file != null && file.exists()){
 				FileInputStream fis = new FileInputStream(file);
 				int length = fis.available();
-				
+				logger.info("header_file_name:" + rName);
 				logger.info("客户端请求下载文件：" + file.getPath() + ", 请求主键：" + attachmentId);
 				//String nextRes = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataAction.REQUEST.toString(), synchLogService, response);
 				//System.out.println("下载文件返回字符串：" + nextRes);
 				byte[] b = new byte[length];
 				fis.read(b);
 				//byte[] bs = ArrayUtils.addAll(b, nextRes.getBytes());
-				response.setHeader("Content-Disposition", "attachment; filename=\"" + zipName + "\"");
-				//response.addHeader("File-Length", "" + length);
+				//try {
+					//response.setHeader("Content-Disposition", "attachment; filename=\"" + rName + "\"");
+				/*} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+					response.setHeader("Content-Disposition", "attachment; filename=\"" + new String(rName.getBytes("UTF-8"), "ISO8859-1") + "\"");
+				}*/
+				//response.setHeader("Content-Disposition", "attachment; filename=\"" + rName + "\"");
 				response.addHeader("Content-Length", "" + length);
 				response.setContentType("application/octet-stream;charset=UTF-8");
 				
@@ -558,18 +567,12 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					logger.info("客户端请求下载文件完成！");
 				}
 			}else{
-				response.setHeader(HeaderName.ACTION.toString(), DataSynchAction.DOWNLOAD.toString());
+				response.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 				response.setHeader(HeaderName.DATATYPE.toString(), DataType.FILE.toString());
 				
 				response.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 				response.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.FILE.toString());
 			}
-			
-			/*String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), response);
-			DataBean bean = new DataBean("", downloadData);
-			String returnVal = JsonUtil.bean2json(bean);
-			logger.info("返回下载文件数据：" + returnVal);
-			return returnVal;*/
 			
 		}else{
 			response.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.FINISH.toString());
@@ -833,7 +836,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 		}
 		
-		List<SynchLogEntity> result = synchLogService.findTruncSynchLogs(clientId, user.getId(), timeStamp, endTime, dataClass);
+		List<SynchLogEntity> result = synchLogService.findTruncSynchLogs(clientId, user.getId(), timeStamp, endTime, dataClass, true);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
 			//从查询到的日志中确定当前的数据类型
@@ -993,7 +996,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		
 		boolean filterDelete = false;  //只查询删除操作日志,过滤掉其它
 		logger.info("获取delete日志，[" + dataClass + "]" + timeStamp + " -- " + endTime);
-		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, filterDelete);
+		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, filterDelete, true);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
 			//从查询到的日志中确定当前的数据类型
@@ -1226,16 +1229,17 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		if(!StringUtil.isEmpty(endTimeStr)){
 			endTime = Long.parseLong(endTimeStr);
 		}else{
-			SynchResult sr = synchResultService.findSynchResults(clientId, user.getId());
-			if(sr.getStatus() == SynchConstants.SYNCHRONIZE_STATUS_CHECK){
+			/*SynchResult sr = synchResultService.findSynchResults(clientId, user.getId());
+			if(sr != null && sr.getStatus() == SynchConstants.SYNCHRONIZE_STATUS_CHECK){
 				endTime = sr.getLastSynTimestamp();
-			}
+			}*/
 		}
 		
 		boolean isDeleteFilter = true;
-		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, isDeleteFilter);
+		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, isDeleteFilter, true);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
+			dataClass = result.get(0).getClassName();
 			//判断回收站状态下的数据是否要返回客户端
 			List<SynchLogEntity> list = new ArrayList<SynchLogEntity>();
 			if(dataClass.equals(DataType.NOTE.toString())){
@@ -1246,13 +1250,6 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					// 需要返回
 					if(isReturn){
 						list.add(lg);
-						/*//如果是添加一个回收站下的条目，必须还有一条delete操作
-						if(lg.getAction().equals(DataSynchAction.ADD.toString())){
-							SynchronizedLogEntity synchedLog = synchLogService.findSynchedLog(clientId, user.getId(), DataType.NOTE.toString(), lg.getClassPK(), DataSynchAction.DELETE.toString());
-							if(synchedLog != null){
-								synchLogService.delete(synchedLog);
-							}
-						}*/
 					}else{
 						list.add(null);
 					}
@@ -1269,14 +1266,6 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					boolean isReturn = DataSynchizeUtil.recyclePermission(user.getId(), dir);
 					if(isReturn){
 						list.add(lg);
-						/*//如果是添加一个回收站下的条目，必须还有一条delete操作
-						if(lg.getAction().equals(DataSynchAction.ADD.toString())){
-							SynchronizedLogEntity synchedLog = synchLogService.findSynchedLog(clientId, user.getId(), DataType.DIRECTORY.toString(), lg.getClassPK(), DataSynchAction.DELETE.toString());
-							if(synchedLog != null){
-								synchLogService.delete(synchedLog);
-							}
-						}*/
-						
 					}else{
 						list.add(null);
 					}
@@ -1292,10 +1281,10 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			if(list != null && !list.isEmpty()){
 				if(list.size() == 1){
-					SynchLogEntity theLog = result.get(0);
+					SynchLogEntity theLog = list.get(0);
 					Map<String, Object> map = DataSynchizeUtil.parseLog(theLog);
 					
-					String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, endTime, null, theLog.getClassName(), dataTypes, synchLogService);
+					String nextDataType = DataSynchizeUtil.queryNextDataType(clientId, user.getId(), timeStamp, endTime, null, dataClass, dataTypes, synchLogService);
 					// 设置response头
 					if(nextDataType !=  null){
 						res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
@@ -1306,8 +1295,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.FILE.toString());
 					}
 					
-					res.setHeader(HeaderName.ACTION.toString(), theLog.getAction());
-					res.setHeader(HeaderName.DATATYPE.toString(), theLog.getClassName());
+					res.setHeader(HeaderName.ACTION.toString(), theLog == null ? DataSynchAction.NEXT.toString() :theLog.getAction());
+					res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
 					
 					String data = "";
 					if(map != null){
@@ -1320,12 +1309,13 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}else{
 					SynchLogEntity theLog = list.get(0);
 					Map<String, Object> map = DataSynchizeUtil.parseLog(theLog);
-					SynchLogEntity nextLog = result.get(1);
+					
+					SynchLogEntity nextLog = list.get(1);
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextLog.getClassName());
 					
-					res.setHeader(HeaderName.ACTION.toString(), theLog.getAction());
-					res.setHeader(HeaderName.DATATYPE.toString(), theLog.getClassName());
+					res.setHeader(HeaderName.ACTION.toString(), theLog == null ? DataSynchAction.NEXT.toString() :theLog.getAction());
+					res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
 					String data = "";
 					if(map != null){
 						data = JsonUtil.map2json(map);
@@ -1484,8 +1474,10 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	public String checkConfig(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @FormParam("data") String data, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res){
 		SynchResult sr = (SynchResult) JsonUtil.getObject4JsonString(data, SynchResult.class);
 		AccountEntity user = accountService.getUser4Session();
+		// 同步流程完成
 		if(action.equals(DataSynchAction.FINISH.toString())){
 			logger.info(clientId + ",用户ID:" + user.getId() + "同步完成 ！！！");
+			
 			sr = synchResultService.findSynchResults(clientId, user.getId());
 			long finishTime = System.currentTimeMillis();
 			if(sr == null){
@@ -1496,15 +1488,20 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				sr.setStatus(SynchConstants.SYNCHRONIZE_STATUS_CHECK);
 				synchResultService.addSynResult(sr);
 			}else{
-				sr.setLastSynTimestamp(finishTime);  // 完成更新结束时间
-				sr.setStatus(SynchConstants.SYNCHRONIZE_STATUS_CHECK);
-				synchResultService.updateSynResult(sr);
+				if(sr.getStatus() == SynchConstants.SYNCHRONIZE_STATUS_CHECK){
+					// 流程循环检查阶段
+				}else{
+					finishTime = System.currentTimeMillis();
+					sr.setLastSynTimestamp(finishTime);  // 完成更新结束时间
+					sr.setStatus(SynchConstants.SYNCHRONIZE_STATUS_CHECK);
+					synchResultService.updateSynResult(sr);
+				}
 			}
 			try {
 				String[] actionSort = SynchDataCache.getActionSort();
 				
 				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成,查询同步过程中其它客户端是否有日志生成["+actionSort[0]+"]:" + sr.getBeginTimestamp() + " -- " + sr.getLastSynTimestamp());
-				List<SynchLogEntity> logList = synchLogService.findTruncSynchLogs(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString());
+				List<SynchLogEntity> logList = synchLogService.findTruncSynchLogs(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString(), false);
 				logger.info(clientId + ",用户ID:" + user.getId() + "同步完成,查询同步过程中其它客户端是否有日志生成, 查询结果：" + logList);
 				if(logList != null && logList.size() > 0){
 					SynchLogEntity log = logList.get(0);
@@ -1516,7 +1513,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}
 				
 				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成,查询同步过程中其它客户端是否有日志生成["+actionSort[1]+"]:" + sr.getBeginTimestamp() + " -- " + sr.getLastSynTimestamp());
-				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString(), false);
+				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString(), false, false);
 				logger.info(clientId + ",用户ID:" + user.getId() + "同步完成,查询同步过程中其它客户端是否有日志生成, 查询结果：" + logList);
 				if(logList != null && logList.size() > 0){
 					SynchLogEntity log = logList.get(0);
@@ -1528,7 +1525,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}
 				
 				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成,查询同步过程中其它客户端是否有日志生成["+actionSort[2]+"]:" + sr.getBeginTimestamp() + " -- " + sr.getLastSynTimestamp());
-				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.ALL.toString(), true);
+				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.ALL.toString(), true, false);
 				logger.info(clientId + ",用户ID:" + user.getId() + "同步完成,查询同步过程中其它客户端是否有日志生成, 查询结果：" + logList);
 				if(logList != null && logList.size() > 0){
 					SynchLogEntity log = logList.get(0);
@@ -1542,12 +1539,16 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				synchResultService.updateSynResult(sr);
 				long synchTimeStamp = synchLogService.deleteSynchedLogs(clientId, user.getId());
 				
-				return JsonUtil.bean2json(sr);
+				String synchResult = JsonUtil.bean2json(sr);
+				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成, 返回时间戳：" + synchResult);
+				return synchResult;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			return JsonUtil.bean2json(sr);
 			
+			String synchResult = JsonUtil.bean2json(sr);
+			logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成, 返回时间戳：" + synchResult);
+			return synchResult;
 		}else{
 			logger.info(clientId + ",用户ID:" + user.getId() + "同步开始，检查上次同步完成时间戳：" + sr.getLastSynTimestamp());
 			long synchTimeStamp = synchLogService.deleteSynchedLogs(clientId, user.getId());
@@ -1557,7 +1558,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				dataInitService.registerClient(clientId, "PC");
 			}
 			
-			long beginTime = sr.getBeginTimestamp();
+			long beginTime = System.currentTimeMillis();//sr.getBeginTimestamp();
 			logger.info("同步开始时间：" + beginTime);
 			sr = synchResultService.findSynchResults(clientId, user.getId());
 			if(sr == null){
@@ -1651,7 +1652,11 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			SubjectEntity subject = (SubjectEntity) JsonUtil.getObject4JsonString(data, SubjectEntity.class);
 			
 			subject.setCreateUser(user.getId());
-			subjectService.addSubject(subject, user.getId());
+			try {
+				subjectService.addSubject(subject, user.getId());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
@@ -1682,8 +1687,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if(!hasPermission && needAuth){
 				logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【更新专题】, 请联系专题管理员。"));
 				SubjectEntity sub = subjectService.getSubject(subject.getId());
-				
-				DataSynchizeUtil.saveBanLog(DataType.SUBJECT.toString(), DataSynchAction.UPDATE.toString(), subject.getId(), sub.getUpdateUser(), user.getId(), sub.getUpdateTimeStamp(), System.currentTimeMillis());
+				long operateTime = sub.getUpdateTimeStamp() == null ? sub.getCreateTimeStamp() : sub.getUpdateTimeStamp();
+				DataSynchizeUtil.saveBanLog(DataType.SUBJECT.toString(), DataSynchAction.UPDATE.toString(), subject.getId(), sub.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
 				
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
@@ -1893,7 +1898,12 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			dir.setCreateUser(user.getId());
 			dir.setDeleted(Constants.DATA_NOT_DELETED);
-			directoryService.addDirectory(dir);
+			
+			try {
+				directoryService.addDirectory(dir);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.DIRECTORY.toString());
@@ -1997,7 +2007,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 			
 			if(saveLog){
-				DataSynchizeUtil.saveBanLog(DataType.DIRECTORY.toString(), DataSynchAction.UPDATE.toString(), dir.getId(), dir.getUpdateUser(), user.getId(), dir.getUpdateTimeStamp(), System.currentTimeMillis());
+				long operateTime = dir.getUpdateTimeStamp() == null ? dir.getCreateTimeStamp() : dir.getUpdateTimeStamp();
+				DataSynchizeUtil.saveBanLog(DataType.DIRECTORY.toString(), DataSynchAction.UPDATE.toString(), dir.getId(), dir.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
 				
 				DataBean bean = new DataBean();
 				String returnVal = JsonUtil.bean2json(bean);
@@ -2221,7 +2232,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				
 				DataBean bean = new DataBean(JsonUtil.map2json(delMap), "");
 				String returnVal = JsonUtil.bean2json(bean);
-				logger.info("权限不足，不能添加目录，删除新增目录数据：" + returnVal);
+				logger.info("权限不足，不能添加条目，删除新增的条目数据：" + returnVal);
 				return returnVal;
 			}
 			
@@ -2431,7 +2442,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			if(saveLog){
 				note = noteService.getNote(note.getId());
-				DataSynchizeUtil.saveBanLog(DataType.NOTE.toString(), DataSynchAction.UPDATE.toString(), note.getId(), note.getUpdateUser(), user.getId(), note.getUpdateTimeStamp(), System.currentTimeMillis());
+				long operateTime = 0;
+				if(note.getUpdateTimeStamp() != null){
+					operateTime = note.getUpdateTimeStamp().longValue();
+				}else if(note.getCreateTimeStamp() != null){
+					operateTime = note.getCreateTimeStamp().longValue();
+				}
+				
+				DataSynchizeUtil.saveBanLog(DataType.NOTE.toString(), DataSynchAction.UPDATE.toString(), note.getId(), note.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
 				
 				DataBean bean = new DataBean();
 				String returnVal = JsonUtil.bean2json(bean);
@@ -2451,11 +2469,12 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		return JsonUtil.bean2json(bean);
 	}
 	
+	@SuppressWarnings("unused")
 	private String updateNote(NoteEntity note, long timeStamp, boolean updateContent, HttpServletResponse res) throws Exception {
 		NoteEntity n = noteService.getNote(note.getId());
 		AccountEntity user = accountService.getUser4Session();
 		SynchLogEntity log = synchLogService.findLogByData(user.getClientId(), user.getId(), timeStamp, DataType.NOTE.toString(), note.getId());
-		if (n != null && (n.getDeleted() == Constants.DATA_NOT_DELETED || n.getDeleted() == Constants.DATA_NOTSEARCH)){
+		if (n != null){  // && (n.getDeleted() == Constants.DATA_NOT_DELETED || n.getDeleted() == Constants.DATA_NOTSEARCH)
 			//服务器上不存在该数据其它操作日志，或者有修改操作日志并且操作早于此次操作，才更新数据库数据
 			if(log == null || (log.getAction().equals(DataSynchAction.UPDATE.toString()) && log.getOperateTime() < note.getUpdateTimeStamp())){
 				note.setUpdateUser(user.getId());
@@ -2464,6 +2483,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					note.setDeleted(Constants.DATA_NOT_DELETED);
 				}
 				ReflectionUtils.copyBeanProperties(note, n);
+				if("".equals(n.getDirId())){
+					n.setDirId(null);
+				}
 				noteService.updateNote(n, updateContent);
 				
 				//保存note的html文件记录，等下通知客户端上传
@@ -2482,6 +2504,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			String op = DataSynchAction.DELETE.toString();
 			if(n == null){
+				logger.warn("条目：" + note.getId() + "已经不存在！可能已被删除。");
 				op = DataSynchAction.TRUNCATE.toString();
 			}
 			res.setHeader(HeaderName.ACTION.toString(), op);
@@ -2630,7 +2653,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			if(saveLog){
 				note = noteService.getNote(note.getId());
-				DataSynchizeUtil.saveBanLog(DataType.NOTE.toString(), DataSynchAction.UPDATE.toString(), note.getId(), note.getUpdateUser(), user.getId(), note.getUpdateTimeStamp(), System.currentTimeMillis());
+				long operateTime = note.getUpdateTimeStamp() == null ? note.getCreateTimeStamp() : note.getUpdateTimeStamp();
+				DataSynchizeUtil.saveBanLog(DataType.NOTE.toString(), DataSynchAction.UPDATE.toString(), note.getId(), note.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
 				
 				DataBean bean = new DataBean();
 				String returnVal = JsonUtil.bean2json(bean);
@@ -2787,6 +2811,20 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				String subjectId = note.getSubjectId();
 				
 				boolean saveLog = false;
+				TagEntity tag = tagService.getTag(noteTag.getTagId());
+				if(!StringUtil.isEmpty(tag.getSubjectId()) && !subjectId.equals(tag.getSubjectId())){
+					logger.warn("标签与条目的专题不相符", new InsufficientAuthenticationException("用户在目录黑名单中"));
+					saveLog = true;
+					
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTETAG.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTETAG.toString());
+					
+					logger.info("标签与条目的专题不相符：");
+				}
+				
 				//用户是否在条目目录黑名单中
 				if(!saveLog){
 					if(!StringUtil.isEmpty(note.getDirId())){
@@ -2909,7 +2947,11 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			AccountEntity user = accountService.getUser4Session();
 			tag.setCreateUser(user.getId());
 			tag.setDeleted(Constants.DATA_NOT_DELETED);
-			tagService.addTag(tag);
+			try {
+				tagService.addTag(tag);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.TAG.toString());
@@ -3267,7 +3309,11 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				rId = role.getId();
 			}
 			
-			roleService.addRoleUser(ru.getSubjectId(), ru.getUserId(), rId, user.getId(), System.currentTimeMillis());
+			try {
+				roleService.addRoleUser(ru.getSubjectId(), ru.getUserId(), rId, user.getId(), System.currentTimeMillis());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECTUSER.toString());
@@ -3434,7 +3480,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subject.getId(), ActionName.DELETE_SUBJECT);
 						if(!hasPermission && needAuth){
 							logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【删除专题】, 请联系专题管理员。"));
-							DataSynchizeUtil.saveBanLog(dataType, DataSynchAction.RESTORE.toString(), subject.getId(), subject.getCreateUser(), user.getId(), subject.getUpdateTimeStamp(), System.currentTimeMillis());
+							long operateTime = subject.getUpdateTimeStamp() == null ? subject.getCreateTimeStamp() : subject.getUpdateTimeStamp();
+							DataSynchizeUtil.saveBanLog(dataType, DataSynchAction.RESTORE.toString(), subject.getId(), subject.getCreateUser(), user.getId(), operateTime, System.currentTimeMillis());
 							subject.setOperation(DataSynchAction.BAN.toString());
 							
 							/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -3470,7 +3517,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 							
 							String act = DataSynchAction.RESTORE.toString();
 							if(!isBan){
-								DataSynchizeUtil.saveBanLog(dataType, act, dir.getId(), dir.getCreateUser(), user.getId(), dir.getUpdateTimeStamp(), System.currentTimeMillis());
+								long operateTime = dir.getUpdateTimeStamp() == null ? dir.getCreateTimeStamp() : dir.getUpdateTimeStamp();
+								DataSynchizeUtil.saveBanLog(dataType, act, dir.getId(), dir.getCreateUser(), user.getId(), operateTime, System.currentTimeMillis());
 							}
 							
 							dir.setOperation(DataSynchAction.BAN.toString());
@@ -3519,7 +3567,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 							logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【删除条目】, 请联系专题管理员。"));
 							String act = DataSynchAction.RESTORE.toString();
 							if(!isBan){
-								DataSynchizeUtil.saveBanLog(dataType, act, note.getId(), note.getCreateUser(), user.getId(), note.getUpdateTimeStamp(), System.currentTimeMillis());
+								long operateTime = note.getUpdateTimeStamp() == null ? note.getCreateTimeStamp() : note.getUpdateTimeStamp();
+								DataSynchizeUtil.saveBanLog(dataType, act, note.getId(), note.getCreateUser(), user.getId(), operateTime, System.currentTimeMillis());
 							}
 							beanMap.put("operation", DataSynchAction.BAN.toString());
 							/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -3803,7 +3852,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						if(!hasPermission && needAuth){
 							logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【删除专题】, 请联系专题管理员。"));
 							SubjectEntity sub = subjectService.getSubject(subject.getId());
-							DataSynchizeUtil.saveBanLog(dataType, DataSynchAction.RESTORE.toString(), sub.getId(), sub.getCreateUser(), user.getId(), sub.getUpdateTimeStamp(), System.currentTimeMillis());
+							long operateTime = sub.getUpdateTimeStamp() == null ? sub.getCreateTimeStamp() : sub.getUpdateTimeStamp();
+							DataSynchizeUtil.saveBanLog(dataType, DataSynchAction.RESTORE.toString(), sub.getId(), sub.getCreateUser(), user.getId(), operateTime, System.currentTimeMillis());
 							subject.setOperation(DataSynchAction.BAN.toString());
 							
 							/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
@@ -3837,7 +3887,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 							if(isBan){
 								act = DataSynchAction.TRUNCATE.toString();
 							}
-							DataSynchizeUtil.saveBanLog(dataType, act, dir.getId(), dir.getCreateUser(), user.getId(), dir.getUpdateTimeStamp(), System.currentTimeMillis());
+							long operateTime = dir.getUpdateTimeStamp() == null ? dir.getCreateTimeStamp() : dir.getUpdateTimeStamp();
+							DataSynchizeUtil.saveBanLog(dataType, act, dir.getId(), dir.getCreateUser(), user.getId(), operateTime, System.currentTimeMillis());
 							dir.setOperation(DataSynchAction.BAN.toString());
 							/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 							res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
@@ -3889,7 +3940,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 							if(isBan){
 								act = DataSynchAction.TRUNCATE.toString();
 							}
-							DataSynchizeUtil.saveBanLog(dataType, act, note.getId(), note.getCreateUser(), user.getId(), note.getUpdateTimeStamp(), System.currentTimeMillis());
+							long operateTime = note.getUpdateTimeStamp() == null ? note.getCreateTimeStamp() : note.getUpdateTimeStamp();
+							DataSynchizeUtil.saveBanLog(dataType, act, note.getId(), note.getCreateUser(), user.getId(), operateTime, System.currentTimeMillis());
 							beanMap = DataSynchizeUtil.toBeanMap(note);
 							beanMap.put("operation", DataSynchAction.BAN.toString());
 							/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());

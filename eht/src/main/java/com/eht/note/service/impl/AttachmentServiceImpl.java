@@ -10,6 +10,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.Type;
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.core.util.oConvertUtils;
@@ -157,7 +158,7 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
 		dc.add(Restrictions.eq("fileType", fileType));
 		dc.add(Restrictions.eq("noteId", noteId));
-		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
+		//dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_NOT_COMPLETED));
 		
 		List<AttachmentEntity> list = findByDetached(dc);
@@ -278,9 +279,10 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	@Override
 	public List<AttachmentEntity> findNeedUploadAttachmentByUser(String userId, String clientId, Integer[] fileType) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class);
-		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		dc.add(Restrictions.eq("status", Constants.FILE_TRANS_NOT_COMPLETED));
+		dc.add(Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 		if(fileType != null){
+			//Restrictions.and(Restrictions.eq("fileType", ft), Restrictions.eq("deleted", Constants.DATA_NOT_DELETED));
 			dc.add(Restrictions.in("fileType", fileType));
 		}
 		dc.add(Restrictions.eq("createUser", userId));

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.jeecgframework.core.util.StringUtil;
+import org.jsoup.Jsoup;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.web.authentication.rememberme.InvalidCookieException;
 import org.springframework.util.StringUtils;
@@ -33,6 +35,7 @@ import com.eht.common.enumeration.DataType;
 import com.eht.common.enumeration.HeaderName;
 import com.eht.common.enumeration.ResponseCode;
 import com.eht.common.util.AppContextUtils;
+import com.eht.common.util.CollectionUtil;
 import com.eht.common.util.FilePathUtil;
 import com.eht.common.util.FileToolkit;
 import com.eht.common.util.HtmlParser;
@@ -133,7 +136,13 @@ public class DataSynchizeUtil {
 				map.put("id", user.getId());
 				map.put("userName", user.getUserName());
 				map.put("email", user.getEmail());
-				map.put("photo", user.getPhoto());
+				
+				if(user.getPhoto() != null && !user.getPhoto().equals("")){
+					int start = user.getPhoto().lastIndexOf('/') + 1;
+					String uuidName = user.getPhoto().substring(start);
+					map.put("photo", uuidName);
+				}
+				
 				map.put("createTimeStamp", user.getCreateTimeStamp());
 				map.put("updateTimeStamp", user.getUpdateTimeStamp());
 				map.put("createUserId", user.getCreateUserId());
@@ -159,6 +168,9 @@ public class DataSynchizeUtil {
 		map.put("classPK", log.getClassPK());
 		map.put("operateTime", log.getOperateTime());
 		map.put("synchTime", log.getSynchTime());
+		if(log.getClassName().equals(DataType.NOTE.toString())){
+			map.put("content", "");
+		}
 		
 		return map;
 	}
@@ -492,11 +504,28 @@ public class DataSynchizeUtil {
 		String htmlPath = FilePathUtil.getNoteHtmlPath(note);
 		try {
 			File htmlFile = unZipNoteHtml(zipFile, htmlPath);
-			String content = HtmlParser.replaceClientHtmlImg(htmlFile, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
-			note.setContent(content);
-			
-			noteService.updateEntitie(note);
+			if(htmlFile.exists() && htmlFile.isFile()){
+				FileInputStream fis = new FileInputStream(htmlFile);
+				FileChannel fc = fis.getChannel();
+				long fileSize = fc.size();
+				String content = "";
+				String plainText = "";
+				if(fileSize > 0){
+					content = HtmlParser.replaceClientHtmlImg(htmlFile, "../../notes/"+note.getSubjectId()+"/"+note.getId()+"/");
+					plainText = Jsoup.parse(content).text();
+				}else{
+					logger.info("条目【"+noteId+"】.eht文件大小为0,文件路径：" + htmlFile.getPath());
+				}
+				
+				note.setContent(content);
+				note.setPlaintext(plainText);
+				
+				noteService.updateEntitie(note);
+			}else{
+				logger.warn("条目【"+noteId+"】.eht文件不存在,文件路径：" + htmlFile.getPath());
+			}
 		} catch (IOException e) {
+			logger.error("同步条目【"+noteId+"】内容出错,文件路径：" + htmlPath, e);
 			e.printStackTrace();
 		}
 	}
@@ -552,7 +581,6 @@ public class DataSynchizeUtil {
 			
 			attachmentService.updateEntitie(atta);
 		}else{
-			//现在没用
 			AttachmentEntity atta = new AttachmentEntity();
 			atta.setId(UUIDGenerator.uuid());
 			atta.setCreateTime(note.getCreateTime());
@@ -573,6 +601,7 @@ public class DataSynchizeUtil {
 			atta.setUpdateUser(note.getUpdateUser());
 			atta.setUpdateTimeStamp(note.getUpdateTimeStamp());
 			atta.setClientId(user.getClientId());
+			attachmentService.save(atta);
 		}
 		
 	}
@@ -598,7 +627,7 @@ public class DataSynchizeUtil {
 		
 		ResourcePermissionService resourcePermissionService = AppContextUtils.getBean("resourcePermissionService");
 		Map<String, String> map = resourcePermissionService.findSubjectPermissionsByUser(userId, subjectId);
-		if(map.get(actionName).equals("true")){
+		if(map.get(actionName) != null && map.get(actionName).equals("true")){
 			return true;
 		}else{
 			return false;
@@ -788,6 +817,33 @@ public class DataSynchizeUtil {
 		beanMap.put("createTimeStamp", String.valueOf(note.getCreateTimeStamp()));
 		
 		return beanMap;
+	}
+	
+	/**
+	 * 按照operateTime顺序排的日志，把相同classpk的数据排列在一起
+	 * @param logList 已经是按照operateTime顺序排的
+	 * @return
+	 */
+	public static List<SynchLogEntity> sortSynchLog(List<SynchLogEntity> logList){
+		if(CollectionUtil.isValidateCollection(logList)){
+			Map<String, Integer> map = new HashMap<String, Integer>();
+			List<SynchLogEntity> sortList = new ArrayList<SynchLogEntity>(logList.size());
+			int index = 0;
+			for(SynchLogEntity log : logList){
+				//此ID的数据在结果集合中的索引
+				Integer logIndex = map.get(log.getClassPK());
+				if(logIndex == null){
+					sortList.add(log);
+					map.put(log.getClassPK(), index);
+					index ++;
+				}else{
+					sortList.add(logIndex + 1, log);   //将此日志插入到前一条此ID数据后
+					map.put(log.getClassPK(), logIndex + 1);
+					index ++;
+				}
+			}
+		}
+		return logList;
 	}
 	
 	public static void main(String[] args){

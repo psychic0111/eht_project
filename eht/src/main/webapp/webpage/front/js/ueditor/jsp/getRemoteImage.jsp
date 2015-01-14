@@ -21,7 +21,7 @@
     		String type = getFileType(arr[i]);
 			if(type.equals("")){
 				state = "图片类型不正确！";
-				continue;
+				//continue;
 			}
     		String saveName = Long.toString(new Date().getTime())+type;
     		//大小验证
@@ -29,10 +29,11 @@
 		    HttpURLConnection   conn   = (HttpURLConnection) new URL(arr[i]).openConnection(); 
 		    if(conn.getContentType().indexOf("image")==-1){
 		    	state = "请求地址头不正确";
-		    	continue;
+		    	//continue;
 		    }
 		    if(conn.getResponseCode() != 200){
 		    	state = "请求地址不存在！";
+		    	System.out.println("抓取图片状态：" + conn.getResponseCode());
 		    	continue;
 		    }
             File dir = new File(savePath);
@@ -40,6 +41,7 @@
 				dir.mkdirs();
 			}
     		File savetoFile = new File(savePath +"/"+ saveName);
+    		System.out.println("抓取图片保存在：" + savetoFile.getPath());
     		outSrc[i]=filePath +"/"+ saveName;
     		try {
     			InputStream is = conn.getInputStream();

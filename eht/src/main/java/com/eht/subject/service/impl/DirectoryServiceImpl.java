@@ -79,7 +79,7 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		Group group = groupService.addGroup(c.getClassNameId(), dir.getId(), dir.getDirName(), dir.getId(), parentGroupId);
 		grantDirectoryPermissions(dir);
 		
-		if(!StringUtil.isEmpty(dir.getParentId())){
+		if(!StringUtil.isEmpty(dir.getParentId()) && !dir.getSubjectId().equals(dir.getParentId())){
 			Group parentGroup = groupService.findGroup(DirectoryEntity.class.getName(), dir.getParentId());
 			List<GroupUser> list = groupService.findGroupUsers(parentGroup.getGroupId());
 			if(list != null && !list.isEmpty()){
@@ -287,7 +287,7 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 		
 		//生成黑名单中的用户在客户端删除此目录的日志
 		DirectoryEntity dir = getDirectory(dirId);
-		synchLogService.recordLog(dir, dir.getClassName(), DataSynchAction.BAN.toString(), userId, timestamp);
+		synchLogService.recordLog(dir, dir.getClassName(), DataSynchAction.TRUNCATE.toString(), userId, timestamp);
 	}
 	
 	@Override
@@ -489,8 +489,9 @@ public class DirectoryServiceImpl extends CommonServiceImpl implements Directory
 	}
 	@Override
 	public void findUpDirs(String dirId,List<String> list) {
-		DirectoryEntity  directoryEntity=getEntity(DirectoryEntity.class, dirId);
-		if(directoryEntity.getParentId()!=null&&!directoryEntity.getParentId().equals("")){
+		DirectoryEntity directoryEntity = getEntity(DirectoryEntity.class, dirId);
+		//同步时客户端传来的数据，parentId可能为专题ID，这点与WEB不一样
+		if(directoryEntity.getParentId()!=null && !directoryEntity.getParentId().trim().equals("") && !directoryEntity.getParentId().equals(directoryEntity.getSubjectId())){
 			list.add(directoryEntity.getParentId());
 			findUpDirs(directoryEntity.getParentId(),list);
 		}

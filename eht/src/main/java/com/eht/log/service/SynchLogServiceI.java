@@ -181,7 +181,7 @@ public interface SynchLogServiceI extends CommonService{
 	 * @return
 	 * @throws Exception
 	 */
-	public List<SynchLogEntity> mergeAllLogs(List<SynchLogEntity> logList, String clientId, String userId) throws Exception;
+	public List<SynchLogEntity> mergeAllLogs(List<SynchLogEntity> logList, String clientId, String userId, String mergetAction, boolean saveLog) throws Exception;
 	
 	/**
 	 * 返回客户端日志查询方法
@@ -190,10 +190,11 @@ public interface SynchLogServiceI extends CommonService{
 	 * @param timeStamp
 	 * @param dataClass
 	 * @param isDeleteFilter
+	 * @param saveLog   是否存记录表（存入后表示此日志已同步过）
 	 * @return
 	 * @throws Exception 
 	 */
-	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, long endTime, String dataClass, boolean isDeleteFilter) throws Exception;
+	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, long endTime, String dataClass, boolean isDeleteFilter, boolean saveLog) throws Exception;
 	
 	/**
 	 * 日志保存到已同步表中
@@ -228,15 +229,17 @@ public interface SynchLogServiceI extends CommonService{
 
 	/**
 	 * 查询truncate日志
-	 * @param clientId
-	 * @param userId
-	 * @param timeStamp
-	 * @param dataClass
+	 * @param clientId  客户端ID
+	 * @param userId    用户ID
+	 * @param timeStamp 同步下限时间戳
+	 * @param endTime   同步上限时间戳
+	 * @param dataClass 数据类型
+	 * @param saveLog   是否存记录表（存入后表示此日志已同步过）
 	 * @return
 	 * @throws Exception
 	 */
 	public List<SynchLogEntity> findTruncSynchLogs(String clientId, String userId,
-			long timeStamp, long endTime, String dataClass) throws Exception;
+			long timeStamp, long endTime, String dataClass, boolean saveLog) throws Exception;
 
 	/**
 	 * 生成删除成员角色的日志

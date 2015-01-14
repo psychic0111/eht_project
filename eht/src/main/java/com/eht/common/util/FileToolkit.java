@@ -12,6 +12,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.AndFileFilter;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
@@ -29,14 +34,16 @@ public final class FileToolkit {
 	 * @param desc
 	 * @param closeStream
 	 */
-	public static void copyFileFromStream(InputStream in, File desc, boolean closeStream) {
+	public static long copyFileFromStream(InputStream in, File desc, boolean closeStream) {
 		byte[] cache = new byte[10240];
 		int len = 0;
+		long trans = 0;
 		BufferedOutputStream bos = null;
 		try {
 			bos = new BufferedOutputStream(new FileOutputStream(desc), 10240);
 			while ((len = in.read(cache)) > 0) {
 				bos.write(cache, 0, len);
+				trans += len;
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -60,6 +67,7 @@ public final class FileToolkit {
 				}
 			}
 		}
+		return trans;
 	}
 
 	/**
@@ -86,7 +94,12 @@ public final class FileToolkit {
 			zos = new ZipOutputStream(bos);
 			ZipEntry entry = new ZipEntry(fileName);
 			zos.putNextEntry(entry);
-			zos.setEncoding("gb2312");
+			/*SortedMap<String, Charset> m = Charset.availableCharsets();
+			Iterator<Entry<String, Charset>> it = m.entrySet().iterator();
+			while(it.hasNext()){
+				Entry<String, Charset> en = it.next();
+				System.out.println(en.getKey() + " : " + en.getValue().name() + " - " + en.getValue().displayName());
+			}*/
 			while ((len = bis.read(cache)) > 0) {
 				zos.write(cache, 0, len);
 				transfered += len;

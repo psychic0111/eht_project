@@ -136,7 +136,7 @@ public class AttachmentController extends BaseController {
 	 */
 	@RequestMapping(params = "viewFile")
 	public ModelAndView viewFile(HttpServletRequest request, HttpServletResponse response) {
-		AttachmentEntity	attachment = attachmentService.getEntity(AttachmentEntity.class,request.getParameter("id"));
+		AttachmentEntity attachment = attachmentService.getEntity(AttachmentEntity.class,request.getParameter("id"));
 		response.setContentType("UTF-8");
 		response.setCharacterEncoding("UTF-8");
 		InputStream bis = null;

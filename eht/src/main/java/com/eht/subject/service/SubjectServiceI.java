@@ -152,7 +152,7 @@ public interface SubjectServiceI extends CommonService{
 	 * 导出专题生成ZIP
 	 * @return
 	 */
-    public void exportSuject(String subjectId,String path,String basePath,AccountEntity user,String ids[]) ;
+    public void exportSuject(String uuid, String subjectId,String path,String basePath,AccountEntity user,String ids[]) ;
     
     /**
 	 * 导入专题

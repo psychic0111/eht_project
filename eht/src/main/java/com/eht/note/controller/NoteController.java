@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -225,7 +226,6 @@ public class NoteController extends BaseController {
 				MultipartFile mf = entity.getValue();// 获取上传文件对象
 				String fileName = mf.getOriginalFilename();// 获取文件名
 				String extend = FileUtils.getExtend(fileName);// 获取文件扩展名
-				String fileZipName = FileUtils.getFilePrefix(fileName)+".zip";//压缩后名
 				// 判断类型
 				if (".exe.com.bat.sh".indexOf(extend) >= 0) {
 					json = "{success:false,msg:'您不能上传后缀为.exe .com .bat .sh的文件！'}";
@@ -241,22 +241,24 @@ public class NoteController extends BaseController {
 					if(!file.exists()){
 						file.mkdirs();
 					}
+					
+					String fileZipName = fileName + Constants.ATTACHMENT_SUFFIX;//压缩后名
 					String savePath = realPath + File.separator + fileZipName;// 文件保存全路径
 					File savefile = new File(savePath);
 
 					// 判断是否已存在
-					if (!file.exists()) {
+					/*if (!file.exists()) {
 						file.mkdirs();// 创建根目录
-					}
+					}*/
 					// FileCopyUtils.copy(mf.getBytes(), savefile);
-					//FileToolkit.copyFileFromStream(mf.getInputStream(), savefile, true);
-					FileToolkit.copyFileFromStreamToZIP(mf.getInputStream(), savefile, true,fileName);
+					FileToolkit.copyFileFromStream(mf.getInputStream(), savefile, true);
+					//FileToolkit.copyFileFromStreamToZIP(mf.getInputStream(), savefile, true,fileName);
 					// 根据md5查询是否
 					// String md5 = MD5FileUtil.getFileMD5String(savefile);
 					String md5 = null;
 					AttachmentEntity newAttach = new AttachmentEntity();
 
-					newAttach.setId(UUID.randomUUID().toString().replace("-", ""));
+					newAttach.setId(UUIDGenerator.uuid());
 					newAttach.setFileName(fileName);
 					newAttach.setSuffix(extend);
 					newAttach.setNoteId(noteid);
@@ -292,10 +294,12 @@ public class NoteController extends BaseController {
 
 	@RequestMapping(value = "/front/downloadNodeAttach.dht")
 	public void downloadNodeAttach(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		response.setContentType("text/html;charset=UTF-8");
+		response.setContentType("application/octet-stream;charset=UTF-8");
 		String attachmentId = request.getParameter("id");
 		AttachmentEntity attachment = attachmentService.getAttachment(attachmentId);
-		String fileName =  FileUtils.getFilePrefix(attachment.getFileName())+".zip";
+		
+		String rName = attachment.getFileName();
+		String fileName = rName + Constants.ATTACHMENT_SUFFIX;
 		try {
 			File file = new File(attachment.getFilePath() + File.separator + fileName);
 			FileInputStream fis = new FileInputStream(file);
@@ -303,7 +307,12 @@ public class NoteController extends BaseController {
 			byte[] b = new byte[length];
 			fis.read(b);
 
-			response.setHeader("Content-Disposition", "attachment; filename=\"" + java.net.URLEncoder.encode(fileName, "gb2312") + "\"");
+			try {
+				response.setHeader("Content-Disposition", "attachment; filename=\"" + new String(rName.getBytes("GBK"), "ISO8859-1") + "\"");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+				response.setHeader("Content-Disposition", "attachment; filename=\"" + new String(rName.getBytes("UTF-8"), "ISO8859-1") + "\"");
+			}
 			response.addHeader("Content-Length", "" + length);
 			OutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
 			outputStream.write(b);
@@ -311,7 +320,8 @@ public class NoteController extends BaseController {
 			outputStream.close();
 			fis.close();
 		} catch (Exception e) {
-			response.getWriter().write("您请求的 《" + fileName + "》 文件已不存在！");
+			response.getWriter().write("您请求的 《" + rName + "》 文件已不存在！");
+			e.printStackTrace();
 		}
 	}
 
@@ -483,7 +493,6 @@ public class NoteController extends BaseController {
 			}
 		}
 		str.append("]}");
-		System.out.println(str);
 		try {
 			response.getWriter().write(str.toString());
 		} catch (IOException e) {
@@ -595,20 +604,24 @@ public class NoteController extends BaseController {
 			orderField = "createTime";
 		}
 		List<NoteEntity> noteList = null;
-		if (Constants.SUBJECT_PID_M.equals(topNodeId)) {
-			// 多人专题
-			if (deleted == Constants.DATA_DELETED) {
-				noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_M);
+		try {
+			if (Constants.SUBJECT_PID_M.equals(topNodeId)) {
+				// 多人专题
+				if (deleted == Constants.DATA_DELETED) {
+					noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_M);
+				} else {
+					noteList = noteService.findMNotesByParams(subjectId, dirId, searchInput, tagId, orderField, user.getId(),request.getParameter("userId"));
+				}
 			} else {
-				noteList = noteService.findMNotesByParams(subjectId, dirId, searchInput, tagId, orderField, user.getId(),request.getParameter("userId"));
+				// 个人专题
+				if (deleted == Constants.DATA_DELETED) {
+					noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_P);
+				} else {
+					noteList = noteService.findNotesByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField);
+				}
 			}
-		} else {
-			// 个人专题
-			if (deleted == Constants.DATA_DELETED) {
-				noteList = noteService.findNotesInRecycleByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField, Constants.SUBJECT_TYPE_P);
-			} else {
-				noteList = noteService.findNotesByParams(user.getId(), subjectId, dirId, searchInput, tagId, orderField);
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
 		if(noteList.size() > noteNum){
@@ -895,7 +908,6 @@ public class NoteController extends BaseController {
 			}
 		}
 		// 不转成map，转json有问题
-		System.out.println(JsonUtil.list2json(list));
 		return JsonUtil.list2json(list);
 	}
 	

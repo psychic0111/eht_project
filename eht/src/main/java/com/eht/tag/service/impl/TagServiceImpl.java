@@ -239,10 +239,13 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	@Override
 	//@RecordOperate(dataClass=DataType.NOTETAG, action=DataSynchAction.ADD, keyIndex=0, keyMethod = "getId")
 	public String saveNoteTag(NoteTag noteTag) {
-		save(noteTag);
-		
-		synchLogService.recordLog(noteTag, noteTag.getClassName(), DataSynchAction.ADD.toString(), null, System.currentTimeMillis());
-		return noteTag.getId();
+		if(!StringUtil.isEmpty(noteTag.getTagId()) && !StringUtil.isEmpty(noteTag.getNoteId())){
+			save(noteTag);
+			//注解不起作用，只好这样添加日志
+			synchLogService.recordLog(noteTag, noteTag.getClassName(), DataSynchAction.ADD.toString(), null, System.currentTimeMillis());
+			return noteTag.getId();
+		}
+		return null;
 	}
 	
 	@Override
@@ -330,9 +333,7 @@ public class TagServiceImpl extends CommonServiceImpl implements TagServiceI {
 	
 	@Override
 	public void deleteNoteTagByNoteId(String noteId) {
-		DetachedCriteria dc = DetachedCriteria.forClass(NoteTag.class);
-		dc.add(Restrictions.eq("noteId", noteId));
-		List<NoteTag> list = findByDetached(dc);
+		List<NoteTag> list = findNoteTagsByNote(noteId);
 		if(list != null && !list.isEmpty()){
 			for(NoteTag noteTag : list){
 				deleteNoteTag(noteTag);

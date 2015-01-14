@@ -380,15 +380,23 @@ public class SubjectController extends BaseController {
 	@ResponseBody
 	public AjaxJson sujectSchedule(HttpServletRequest request) {
 		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-		Info  info =SujectSchedule.getSchedule(user.getId());
+		Info info = SujectSchedule.getSchedule(user.getId());
 		AjaxJson j = new AjaxJson();
 		if(info!=null){
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("subjectId", info.getSubjectId());
 			map.put("cout", info.getCout());
 			map.put("couts", info.getCouts());
-			j.setSuccess(true);
+			map.put("id", info.getId());
+			map.put("finish", info.getFinish());
 			j.setAttributes(map);
+			
+			if(info.getFinish() == 1){
+				SujectSchedule.remveSchedule(user.getId());
+				j.setSuccess(false);
+			}else{
+				j.setSuccess(true);
+			}
 		}else{
 			j.setSuccess(false);
 		}
@@ -642,18 +650,23 @@ public class SubjectController extends BaseController {
 		final String dirs[] =request.getParameter("dirsId").split(",");
 		final String path = request.getSession().getServletContext().getRealPath("/");
 		final  String basePath = AppRequstUtiles.getAppUrl(request);
+		
+		String uuid = UUIDGenerator.uuid();
+		
 		Info info=new Info();
 		info.setCouts(dirs.length);
 		info.setSubjectId(subjectId);
 		info.setUserId(user.getId());
+		info.setId(uuid);
+		info.setFinish(0);
 		AjaxJson ajaxJson=new AjaxJson();
 		boolean b=SujectSchedule.putSchedule(user.getId(), info);
-		if(b){
+		if(b){  // true：新添加成功
 			ajaxJson.setSuccess(false);
-			Thread thread = new Thread() {
+			Thread thread = new Thread(uuid) {
 				public void run() {
 					try {
-						subjectService.exportSuject(subjectId, path,basePath, user,dirs);
+						subjectService.exportSuject(this.getName(), subjectId, path,basePath, user, dirs);
 					} catch (Exception e) {
 						
 					}

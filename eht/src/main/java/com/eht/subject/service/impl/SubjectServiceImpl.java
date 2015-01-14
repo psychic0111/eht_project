@@ -21,9 +21,12 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
 import javax.servlet.http.HttpServletRequest;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -41,6 +44,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.ActionName;
 import com.eht.common.constant.Constants;
@@ -70,6 +74,7 @@ import com.eht.role.entity.Role;
 import com.eht.role.entity.RoleUser;
 import com.eht.role.service.RoleService;
 import com.eht.subject.entity.DirectoryEntity;
+import com.eht.subject.entity.Info;
 import com.eht.subject.entity.InviteMememberEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.entity.SubjectMht;
@@ -159,7 +164,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 		if (subject.getOldId() == null) {// 判断是否是导入专题
 			// 给新增专题添加文档资料文件夹
 			DirectoryEntity dir = new DirectoryEntity();
-			dir.setId(UUIDGenerator.uuid());
+			dir.setId(subject.getId() + "_D");
 			dir.setDeleted(0);
 			dir.setCreateTime(new Date());
 			dir.setCreateUser(subject.getCreateUser());
@@ -611,7 +616,7 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 				String newRoleId = ownerRole.getId();
 				
 				u.setRoleId(ownerRole.getId());
-				roleService.updateEntitie(u);
+				roleService.updateRoleUser(u);
 				
 				synchLogService.generateRecycleLogs(u.getSubjectId(), u.getUserId(), roleId, newRoleId);
 			}
@@ -851,13 +856,12 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 	}
 //=========================================================================页面展现报告结束
 	@Override
-	public void exportSuject(String subjectId,String path,String basePath, AccountEntity user,String ids[])  {
+	public void exportSuject(String uuid, String subjectId,String path,String basePath, AccountEntity user,String ids[])  {
 		String  message=null;
 		ZipOutputStream zos =null;
 		FileOutputStream f=null;
 		SubjectEntity SubjectEntity=null;
 		
-		String uuid=UUIDGenerator.uuid();
 		String zipPath=new StringBuffer(path).append("/zip/").append(uuid).append("/").append(uuid).append(".zip").toString();
 		Document document=createDocument();
 		Element root = createRootXml(document);
@@ -897,11 +901,11 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			z.setPath(zipPath);
 			z.setCreateUser(user.getId());
 			save(z);
-			 message="<a  target='_blank' href='"
-					+ basePath
-					+ "/subjectController/front/downzip.dht?id="
-					+ uuid + "'>" + SubjectEntity.getSubjectName()
-					+ "下载</a>";
+			message = "专题【" + SubjectEntity.getSubjectName()
+					 + "】导出完成，<a  target='_blank' href='"
+					 + basePath
+					 + "/subjectController/front/downzip.dht?id="
+					 + uuid + "'>点击下载</a>";
 		} catch (Exception e) {
 			SujectSchedule.remveSchedule(user.getId());
 			message=SubjectEntity.getSubjectName()+"下载失败";
@@ -929,8 +933,8 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		 m.setId(UUIDGenerator.uuid());
 		 m.setContent( message);
 		 m.setCreateTime(new Date());
-		 m.setCreateUser(user.getId());
-		 m.setMsgType(Constants.MSG_USER_TYPE);
+		 //m.setCreateUser(user.getId());
+		 m.setMsgType(Constants.MSG_SYSTEM_TYPE);
 		 m.setUserIsRead(Constants.NOT_READ_OBJECT);
 		 MessageServiceI.save(m);
 		 MessageUserEntity k=new MessageUserEntity();
@@ -938,7 +942,8 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 		 k.setMessageId(m.getId());
 		 k.setUserId(user.getId());
 		 MessageServiceI.save(k);
-		 SujectSchedule.remveSchedule(user.getId());
+		 Info info = SujectSchedule.getSchedule(user.getId());
+		 info.setFinish(1);
 	}
 	
 	private void createXml(Document document, ZipOutputStream zos)throws IOException {

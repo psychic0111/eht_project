@@ -85,14 +85,18 @@ public class IndexController extends BaseController {
 		
 			List<TreeData> dataList = new ArrayList<TreeData>();
 			
-			//个人专题菜单部分
-			dataList.addAll(treeMenuService.buildPersonalSubject(user.getId()));
-			
-			//多人专题菜单部分
-			dataList.addAll(treeMenuService.buildSharedSubject(user.getId()));
-			
-			//消息中心菜单部分
-			dataList.addAll(treeMenuService.buildMessageCenter(user.getId()));
+			try {
+				//个人专题菜单部分
+				dataList.addAll(treeMenuService.buildPersonalSubject(user.getId()));
+				
+				//多人专题菜单部分
+				dataList.addAll(treeMenuService.buildSharedSubject(user.getId()));
+				
+				//消息中心菜单部分
+				dataList.addAll(treeMenuService.buildMessageCenter(user.getId()));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			return JSONHelper.collection2json(TreeUtils.buildTreeData(dataList));
 		} 
 		return "";

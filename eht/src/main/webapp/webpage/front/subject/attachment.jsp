@@ -26,8 +26,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>附件信息</title>
 <!-- 附件上传 -->
-<link rel="stylesheet" type="text/css" href="<%=frontPath %>/js/uploadify3/uploadify.css"/>
-<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/jquery.uploadify.js"></script>
+<%-- <link rel="stylesheet" type="text/css" href="<%=frontPath %>/js/uploadify3/uploadify.css"/>
+<script type="text/javascript" src="<%=frontPath %>/js/uploadify3/jquery.uploadify.js"></script> --%>
 <!-- 附件上传 -->
 <script type="text/javascript"> 
 window.UEDITOR_HOME_URL = "${frontPath}/js/ueditor/";
@@ -41,7 +41,7 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 	 var basePath = "${uploadifyPath}"; 
 	 $(document).ready(function() {
 			$(function() {
-				$("#attachment").uploadify({
+				$("#document_attachment").uploadify({
 					height        : 20,
 					swf           : '<%=frontPath %>/js/uploadify3/uploadify.swf',
 					width         : 50,
@@ -71,11 +71,11 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 						type=$.trim(type);
 						if(disableType[type]){
 							alert("您不能上传后缀为.exe .com .bat .sh的文件！");
-							$("#attachment").uploadify("cancel",file.id);			
+							$("#document_attachment").uploadify("cancel",file.id);			
 						}
 					},
 					onUploadComplete:function(file){
-						$("#attachment").uploadify("cancel",file.id);	
+						$("#document_attachment").uploadify("cancel",file.id);	
 						var url="${webRoot}/subjectController/front/dirAttaManage.dht?subjectId=${subjectId}&dirId=${dirId}&ispage=true";
 						AT.get(url,function(data){
 							$("#datadiv").html(data);
@@ -104,7 +104,7 @@ window.UEDITOR_IMG_URL = "${webRoot}";
     <div class="right_top">
        <div class="Nav" id="nav_div" style="position:absolute;">
 			<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ADD_NOTE %>">
-					<div id="attachment"></div> 
+					<div id="document_attachment"></div> 
 			</xd:hasPermission>	    
        </div>
     </div>

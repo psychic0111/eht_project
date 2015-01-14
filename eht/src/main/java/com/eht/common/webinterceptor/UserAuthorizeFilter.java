@@ -1,7 +1,5 @@
 package com.eht.common.webinterceptor;
 
-import java.util.Enumeration;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,11 +11,11 @@ public class UserAuthorizeFilter extends AbstractPreAuthenticatedProcessingFilte
 
 	@Override
 	protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) {
-		Enumeration<String> enu = request.getHeaderNames();
+		/*Enumeration<String> enu = request.getHeaderNames();
 		while(enu.hasMoreElements()){
 			String name = enu.nextElement();
-			/*System.out.println(name + "=============" + request.getHeader(name));*/
-		}
+			System.out.println(name + "=============" + request.getHeader(name));
+		}*/
 		Object principal = request.getUserPrincipal() == null ? null : request.getUserPrincipal().getName();
 		if (logger.isDebugEnabled()) {
             logger.debug("PreAuthenticated UserAuthorizeFilter principal: " + principal);

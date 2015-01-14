@@ -71,8 +71,9 @@ function getNoteMessage(){
 						index = 0;
 					}
 					if(typeof(msgData[index].content) != 'undefined'){
-						$.jBox.messager(msgData[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>', "新消息", 5000, options
-						);
+						var msgContent = msgData[index].content + '<input type="hidden" id="msgId" name="msgId" value="'+msgData[index].id+'"/><input type="hidden" id="msgIndex" name="msgIndex" value="'+index+'"/>';
+						msgContent = msgContent + '<br/><a onclick="markAllNoteMessage()" class="link1" style="float:right;" href="#">[不在提醒]</a>';
+						$.jBox.messager(msgContent, "新消息", 0, options);
 					}
 					
 				}
@@ -81,6 +82,25 @@ function getNoteMessage(){
 		},true);
 	}else{
 		window.clearInterval(periodId);
+	}
+}
+
+function markAllNoteMessage(){
+	var url = webRoot + "/messageController/front/messageNoteMark.dht";
+	AT.post(url, null, function(data){
+		
+	});
+	$.jBox.closeMessager();
+	var nodes = zTree_Menu.getNodesByFilter(findTreeMsgNode);
+	for(var i = 0; i < nodes.length; i++){
+		var index = nodes[i].name.indexOf('（');
+		if(index >= 0){
+			nodes[i].name = nodes[i].name.substring(0, index);
+			zTree_Menu.updateNode(nodes[i]);
+		}
+	}
+	if(!!$("#noReadMsgNum").attr("id")){
+		$("#noReadMsgNum").empty().append(0);
 	}
 }
 

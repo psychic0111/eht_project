@@ -16,6 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.jeecgframework.core.util.StringUtil;
 
 import com.eht.common.annotation.ClientJsonIgnore;
 import com.eht.common.enumeration.DataType;
@@ -475,13 +476,20 @@ public class NoteEntity implements java.io.Serializable {
 	@Transient
 	@ClientJsonIgnore
 	public String getSummary() {
-		if(content!=null){
-			HtmlParser parser = new HtmlParser(content);
-			return parser.subStrAsText(50, "...");
-			
+		if(!StringUtil.isEmpty(plaintext)){
+			if(plaintext.length() > 50){
+				return plaintext.substring(0, 50) + "...";
+			}else{
+				return plaintext;
+			}
+		}else{
+			if(content!=null){
+				HtmlParser parser = new HtmlParser(content);
+				return parser.subStrAsText(50, "...");
+				
+			}
 		}
 		return content;
-		
 	}
 
 	public void setSummary(String summary) {

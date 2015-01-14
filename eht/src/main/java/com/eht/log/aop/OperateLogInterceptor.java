@@ -79,18 +79,6 @@ public class OperateLogInterceptor {
 	public void pointCut() {
 	}
 
-	/*
-	 * @Before("@annotation(sc)") public void addResponseHeader(JoinPoint jp,
-	 * SynchControl sc) { Object[] args = jp.getArgs(); HttpServletResponse
-	 * response = null; for(Object obj : args){ if(obj != null && obj instanceof
-	 * HttpServletResponse){ response = (HttpServletResponse) obj; break; } }
-	 * if(response != null){ response.addHeader(SynchConstants.HEADER_DATATYPE,
-	 * sc.dataType()); response.addHeader(SynchConstants.HEADER_ACTION,
-	 * sc.action()); response.addHeader(SynchConstants.HEADER_NEXT_ACTION,
-	 * sc.nextAction()); response.addHeader(SynchConstants.HEADER_NEXT_DATATYPE,
-	 * sc.nextDataType()); } }
-	 */
-
 	@AfterReturning("@annotation(rp)")
 	public void recordLog(JoinPoint jp, RecordOperate rp) {
 		// 获取方法参数
@@ -132,7 +120,20 @@ public class OperateLogInterceptor {
 					log.setOperateUser(userId);
 				}
 
-			} else {
+			} else if (log.getClassName().equals(DataType.SUBJECT.toString())){
+				SubjectEntity sub = (SubjectEntity) paramEntity;
+				if(sub.getSubjectName().equals("默认专题")){
+					continue;
+				}
+			}else if (log.getClassName().equals(DataType.DIRECTORY.toString())){
+				DirectoryEntity dir = (DirectoryEntity) paramEntity;
+				if(dir.getDirName().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)){
+					SubjectEntity sub = subjectService.getSubject(dir.getSubjectId());
+					if(sub.getSubjectName().equals("默认专题")){
+						continue;
+					}
+				}
+			}else {
 				log.setOperateUser(userId);
 			}
 			log.setOperateResult(SynchConstants.LOG_NOT_SYNCHRONIZED);
@@ -211,17 +212,27 @@ public class OperateLogInterceptor {
 				}
 				if (userIdList != null && !userIdList.isEmpty()) {
 					for (String uid : userIdList) {
-						if(log.getClassName().equals(DataType.DIRECTORY) && log.getAction().equals(DataSynchAction.DELETE.toString())){
+						String newAction = log.getAction();
+						if(log.getClassName().equals(DataType.DIRECTORY.toString()) && (log.getAction().equals(DataSynchAction.DELETE.toString()) || log.getAction().equals(DataSynchAction.TRUNCATE.toString()))){
+							//判断是否需要同步到客户端回收站中
 							boolean flag = DataSynchizeUtil.recyclePermission(uid, (DirectoryEntity)paramEntity);
 							if(!flag){
-								continue;
+								if(log.getAction().equals(DataSynchAction.DELETE.toString())){
+									newAction = DataSynchAction.TRUNCATE.toString();
+								}else{
+									continue;
+								}
 							}
 						}
 						
-						if(log.getClassName().equals(DataType.NOTE) && log.getAction().equals(DataSynchAction.DELETE.toString())){
+						if(log.getClassName().equals(DataType.NOTE.toString()) && (log.getAction().equals(DataSynchAction.DELETE.toString()) || log.getAction().equals(DataSynchAction.TRUNCATE.toString()))){
 							boolean flag = DataSynchizeUtil.recyclePermission(uid, (NoteEntity)paramEntity);
 							if(!flag){
-								continue;
+								if(log.getAction().equals(DataSynchAction.DELETE.toString())){
+									newAction = DataSynchAction.TRUNCATE.toString();
+								}else{
+									continue;
+								}
 							}
 						}
 						
@@ -230,6 +241,7 @@ public class OperateLogInterceptor {
 							BeanUtils.copyProperties(newLog, log);
 							newLog.setId(UUIDGenerator.uuid());
 							newLog.setTargetUser(uid);
+							newLog.setAction(newAction);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

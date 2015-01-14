@@ -96,7 +96,7 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 			String fileName = mf.getOriginalFilename();// 获取文件名
 			if(fileName==null||fileName.equals("")){ 
 				if(user.getPhoto()==null||user.getPhoto().equals("")){
-					String defaultPath = "/uptem/user.png";
+					String defaultPath = "/" + uppath + "/user.png";
 					list.add(defaultPath);
 				}
 			}else{
@@ -171,7 +171,7 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 		SubjectEntity subject = new SubjectEntity();
 		subject.setCreateUser(account.getId());
 		subject.setCreateTime(new Date());
-		subject.setId(UUIDGenerator.uuid());
+		subject.setId(account.getId() + "_S");
 		subject.setDescription("");
 		subject.setSubjectType(1);
 		subject.setStatus(0);

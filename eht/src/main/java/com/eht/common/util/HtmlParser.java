@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.util.List;
 import java.util.Stack;
 
@@ -390,41 +391,14 @@ public class HtmlParser {
 	
 	
 	public static void main(String[] args) {
-
-		String content ="<html> <head></head> <body s='11'>"+
-				"123" +
-				"<div>" +
-				"	陈光标纽约街头送钱" +
-				"<img title=\"Chrysanthemum.jpg\" src=\"../../notes/ebd4ea5593e048a280bb1bc1d789e2c6/e774aa5ae70e4ba994ae90afa9f17d94/files/img/74171407307085658.jpg\">"+
-				"	<IMG imgId=\"img1\" src=\"71761403848376295.jpg\">" +
-				"	<img  src=\"http://www.baidu.com/img/bdlogo.png\">" +
-				"</div>" +
-				"456"+" </body></html>";
-		Document doc =Jsoup.parse(content);
-		//Document doc = Jsoup.parseBodyFragment(content);
-		Elements imgs = doc.select("img");
-		for(int i=0;i<imgs.size();i++){
-		String url=imgs.get(i).attr("src");
-			
-		System.out.println(url);
-		imgs.get(i).attr("src", "3D\"http://www.baidu.com/img/bdlogo.png");
+		File htmlFile = new File("d:/C90BFE5087C949BAB9E8D3EE5E6C7DA8.html");
+		try {
+			FileChannel fc = new FileInputStream(htmlFile).getChannel();
+			replaceClientHtmlImg(htmlFile, "../notes");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		System.out.println(doc.select("body").get(0).html());
-		System.out.println(doc.select("body").get(0).html().replaceAll("\"3D&quot;", "3D\""));
-		//System.out.println(doc.text());
-
-//String l="../../notes/ebd4ea5593e048a280bb1bc1d789e2c6/e774aa5ae70e4ba994ae90afa9f17d94/files/img/74171407307085658.jpg";
-
-//System.out.println(l.lastIndexOf("."));
-//;
-//		HtmlParser hu = new HtmlParser(content);
-//		String str;
-//		try {
-//			str = hu.parseNoteContent("img1", "/eht/aaa.jpg");
-//			System.out.println(str);
-//		} catch (ParserException e) {
-//			e.printStackTrace();
-//		}
 
 	}
 }

@@ -109,6 +109,8 @@ public class SynchLogEntity implements java.io.Serializable {
 				this.operateType = 0;
 			}else if(action.equals(DataSynchAction.TRUNCATE.toString())){
 				this.operateType = -2;
+			}else if(action.equals(DataSynchAction.CREATEORUPDATE.toString())){
+				this.operateType = 2;
 			}
 		}
 	}

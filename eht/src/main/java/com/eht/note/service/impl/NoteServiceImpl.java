@@ -187,6 +187,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 			attachmentService.markDelAttachment(attachment);
 		}
 		note.setDeleted(Constants.DATA_DELETED);
+		getSession().clear();
 		updateEntitie(note);
 	}
 
@@ -481,7 +482,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		
 		//生成黑名单中的用户在客户端删除此条目的日志
 		NoteEntity note = getNote(noteId);
-		synchLogService.recordLog(note, note.getClassName(), DataSynchAction.BAN.toString(), userId, timestamp);
+		synchLogService.recordLog(note, note.getClassName(), DataSynchAction.TRUNCATE.toString(), userId, timestamp);
 	}
 
 	@Override
@@ -609,7 +610,7 @@ public class NoteServiceImpl extends CommonServiceImpl implements NoteServiceI {
 		return null;
 	}
 
-	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.RESTORE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
+	@RecordOperate(dataClass = DataType.NOTE, action = DataSynchAction.UPDATE, keyIndex = 0, keyMethod = "getId", timeStamp = "updateTime")
 	public void markNoteUnDeleted(NoteEntity note) {
 		note.setDeleted(Constants.DATA_NOT_DELETED);
 		updateEntitie(note);
