@@ -7,6 +7,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.apache.ws.security.util.UUIDGenerator;
 import org.jeecgframework.core.common.controller.BaseController;
@@ -21,12 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import com.eht.common.constant.Constants;
 import com.eht.common.enumeration.DataSynchAction;
 import com.eht.common.util.AppRequstUtiles;
+import com.eht.common.util.StringUtil;
 import com.eht.message.entity.MessageEntity;
 import com.eht.message.service.MessageServiceI;
 import com.eht.subject.entity.InviteMememberEntity;
@@ -58,15 +62,15 @@ public class LogonController extends BaseController {
 	 * 登陆
 	 * @return
 	 */
-	@RequestMapping("/login.dht")
+	@RequestMapping(value="/login.dht",method=RequestMethod.POST)
 	public ModelAndView account(HttpServletRequest request,HttpSession session,HttpServletResponse response) {
 		ModelMap mmp = new ModelMap();
 		ModelAndView mv = null;
 		
-		String username = null;
-		String password = null;
+		String username = request.getParameter("username");
+		String password = request.getParameter("password");
 		AccountEntity u = null;
-		username = request.getParameter("username");
+		//username = StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(username));
 		password = Md5Utils.makeMD5(request.getParameter("password"));
 		
 		if(username!=null&&password!=null){
@@ -126,7 +130,7 @@ public class LogonController extends BaseController {
 			}else{
 				account =accountService.findUserByEmail(request.getParameter("username"));
 			}
-			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
+			String path = AppRequstUtiles.getAppUrl() + "/";
 			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 		  } catch (Exception e) {
 	     	e.printStackTrace();
@@ -145,7 +149,7 @@ public class LogonController extends BaseController {
 		AjaxJson j = new AjaxJson();
 		try {
 			 AccountEntity	account =accountService.findUserByAccount(request.getParameter("username"));
-			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
+			String path = AppRequstUtiles.getAppUrl() + "/";
 			SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 			j.setSuccess(true);
 		  } catch (Exception e) {
@@ -276,7 +280,7 @@ public class LogonController extends BaseController {
 					}
 				}else{
 					accountService.save(account);
-					String path = AppRequstUtiles.getAppUrl(request);
+					String path = AppRequstUtiles.getAppUrl();
 					SendMailUtil.sendCommonMail(account.getEmail(), "注册E划通", "<a href=\""+path+"/center/register.dht?id="+account.getId()+"\">点击激活帐号</a><br/>");
 					msg = "注册成功！请查看邮件并激活账号！";
 				}
@@ -314,22 +318,30 @@ public class LogonController extends BaseController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping("/sendEmailPWD.dht")
+	@RequestMapping(value="/sendEmailPWD.dht", method=RequestMethod.POST)
 	public ModelAndView sendEmailPWD(HttpServletRequest request) {
 		String linkname = null;
 		String linkpath = null;
 		try {
 			String email = request.getParameter("email");
-			String code = Md5Utils.makeMD5(email)+UUIDGenerator.getUUID().toString();
-			SendEmailSession ses = new SendEmailSession();
-			ses.setEmail(email);
-			ses.setCode(code);
-			msg = "发送成功请查看邮件重置密码";
-			 
-			accountService.save(ses);
-			String path = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
-			SendMailUtil.sendCommonMail(ses.getEmail(), "E划通 密码找回", "<a href=\""+path+"center/reqEmailPWD.dht?code="+ses.getCode()+"\">点击修改您的密码</a><br/>");
-			systemService.addLog(msg, Globals.Log_Type_INSERT, Globals.Log_Leavel_INFO);
+			String btnValue = request.getParameter("button");
+			if (StringUtil.SQLInjection(email) || StringUtil.SQLInjection(btnValue)) {  
+				msg = "含有非法字符！";
+		     	linkpath = "webpage/user/retrievepassword.jsp";
+		     	linkname = "密码找回"; 
+		    }else{
+		
+				String code = Md5Utils.makeMD5(email)+UUIDGenerator.getUUID().toString();
+				SendEmailSession ses = new SendEmailSession();
+				ses.setEmail(email);
+				ses.setCode(code);
+				msg = "发送成功请查看邮件重置密码";
+				 
+				accountService.save(ses);
+				String path = AppRequstUtiles.getAppUrl() + "/";
+				SendMailUtil.sendCommonMail(ses.getEmail(), "E划通 密码找回", "<a href=\""+path+"center/reqEmailPWD.dht?code="+ses.getCode()+"\">点击修改您的密码</a><br/>");
+				systemService.addLog(msg, Globals.Log_Type_INSERT, Globals.Log_Leavel_INFO);
+		    }
 		  } catch (Exception e) {
 	     	e.printStackTrace();
 	     	msg = "发送失败！";
@@ -560,7 +572,7 @@ public class LogonController extends BaseController {
 	 */
 	private ModelAndView linkLoginMessage(String message,ModelMap mmp,String linkpath,String linkname,String viewUrl){
 		mmp = mmp==null?new ModelMap():mmp;
-		ModelAndView mv = new ModelAndView(viewUrl==null?"/user/register_status":viewUrl);
+		ModelAndView mv = new ModelAndView(viewUrl==null?"user/register_status":viewUrl);
      	mmp.put("linkpath", linkpath==null?"":linkpath);
      	mmp.put("linkname", linkname==null?"登陆":linkname);
      	mmp.put("msg", message);

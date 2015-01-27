@@ -21,6 +21,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.eht.common.constant.Constants;
+import com.eht.common.util.AppRequstUtiles;
 import com.eht.common.util.sessionProc.MySessionContext;
 
 
@@ -69,6 +70,7 @@ public class UserInterceptor implements HandlerInterceptor {
 	 */
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception {
 		String requestPath = ResourceUtil.getRequestPath(request);// 用户访问的资源地址
+		
 		if(requestPath.startsWith("noteController/front/downloadNodeAttach.dht")){
 			Cookie cookies[] = request.getCookies();
 			if (cookies != null ) {
@@ -91,7 +93,7 @@ public class UserInterceptor implements HandlerInterceptor {
 		} else {
 			if(hasMenuAuth(request)){
 				HttpSession session = request.getSession();
-				String projectName = request.getContextPath();
+				String projectName = AppRequstUtiles.getAppUrl().substring(AppRequstUtiles.getAppUrl().lastIndexOf("/"));
 			    
 			    if(request.getParameter("jsessionid")!=null){
 			    	session = ClientManager.getInstance().getSession(request.getParameter("jsessionid"));

@@ -141,6 +141,11 @@
 	</repositories>
 	
   <dependencies>
+  		<!-- <dependency>
+		   <groupId>net.sf.xss-html-filter</groupId>
+		   <artifactId>xss-html-filter</artifactId>
+		   <version>1.1</version> remember to check for newer versions
+		</dependency> -->
   		<!-- activation -->
 		<dependency>
 			<groupId>javax.activation</groupId>

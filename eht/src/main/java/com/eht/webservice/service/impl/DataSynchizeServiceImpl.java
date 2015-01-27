@@ -1295,13 +1295,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.FILE.toString());
 					}
 					
-					res.setHeader(HeaderName.ACTION.toString(), theLog == null ? DataSynchAction.NEXT.toString() :theLog.getAction());
-					res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
-					
 					String data = "";
 					if(map != null){
 						data = JsonUtil.map2json(map);
 					}
+					
+					res.setHeader(HeaderName.ACTION.toString(), map == null ? DataSynchAction.NEXT.toString() :theLog.getAction());
+					res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
+					
 					DataBean bean = new DataBean("", data);
 					String returnVal = JsonUtil.bean2json(bean);
 					logger.info("返回下载元数据：" + returnVal);
@@ -1314,12 +1315,14 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.REQUEST.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), nextLog.getClassName());
 					
-					res.setHeader(HeaderName.ACTION.toString(), theLog == null ? DataSynchAction.NEXT.toString() :theLog.getAction());
-					res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
 					String data = "";
 					if(map != null){
 						data = JsonUtil.map2json(map);
 					}
+					
+					res.setHeader(HeaderName.ACTION.toString(), map == null ? DataSynchAction.NEXT.toString() :theLog.getAction());
+					res.setHeader(HeaderName.DATATYPE.toString(), dataClass);
+					
 					DataBean bean = new DataBean("", data);
 					String returnVal = JsonUtil.bean2json(bean);
 					logger.info("返回下载元数据：" + returnVal);

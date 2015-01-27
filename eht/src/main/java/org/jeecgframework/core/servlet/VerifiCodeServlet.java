@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.jeecgframework.core.util.StringUtil;
+
 
 public class VerifiCodeServlet extends HttpServlet {
 
@@ -24,6 +26,17 @@ public class VerifiCodeServlet extends HttpServlet {
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
+			String rnd = request.getParameter("r");
+			
+			try {
+				if(!StringUtil.isEmpty(rnd)){
+					Long.parseLong(rnd);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new ServletException("Invalid parameter value!");
+			}
+			
 			response.setContentType("image/jpeg");
 			response.setHeader("Pragma", "No-cache");
 			response.setHeader("Cache-Control", "no-cache");

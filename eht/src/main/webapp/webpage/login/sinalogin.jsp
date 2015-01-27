@@ -1,9 +1,9 @@
+<%@page import="com.eht.common.util.AppRequstUtiles"%>
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
 <%@ page import="weibo4j.*,weibo4j.http.*,weibo4j.org.json.*"%>
 
 <%
-	String context=request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + context;
+	String basePath = AppRequstUtiles.getAppUrl();
 	String uid=null;//用户ID
 	String code=request.getParameter("code");//微博返回的客户端
 	System.out.println("========================================================="+code);

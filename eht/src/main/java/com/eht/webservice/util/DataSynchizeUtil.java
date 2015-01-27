@@ -655,7 +655,7 @@ public class DataSynchizeUtil {
 		}
 		
 		if(subject.getSubjectType().intValue() == Constants.SUBJECT_TYPE_P){
-			return true;
+			return false;
 		}
 		
 		RoleService roleService = AppContextUtils.getBean("roleService");

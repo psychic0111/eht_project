@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
 import org.apache.log4j.Logger;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
@@ -36,6 +38,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.AppRequstUtiles;
@@ -54,6 +57,7 @@ import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.entity.SubjectMht;
 import com.eht.subject.entity.SujectSchedule;
 import com.eht.subject.entity.ZipEntity;
+import com.eht.subject.service.ImportServiceI;
 import com.eht.subject.service.InviteMememberServiceI;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.template.entity.TemplateEntity;
@@ -100,6 +104,9 @@ public class SubjectController extends BaseController {
 	
 	@Autowired
 	private InviteMememberServiceI inviteMememberService;
+	
+	@Autowired
+	private ImportServiceI importService;
 	
 	private String message;
 
@@ -649,7 +656,7 @@ public class SubjectController extends BaseController {
 		final String subjectId=request.getParameter("subjectId");
 		final String dirs[] =request.getParameter("dirsId").split(",");
 		final String path = request.getSession().getServletContext().getRealPath("/");
-		final  String basePath = AppRequstUtiles.getAppUrl(request);
+		final  String basePath = AppRequstUtiles.getAppUrl();
 		
 		String uuid = UUIDGenerator.uuid();
 		
@@ -747,7 +754,7 @@ public class SubjectController extends BaseController {
 		try {
 			out = response.getWriter();
 			AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
-			String basePath = AppRequstUtiles.getAppUrl(request)+"/noteController/front/downloadNodeAttach.dht?id=";
+			String basePath = AppRequstUtiles.getAppUrl()+"/noteController/front/downloadNodeAttach.dht?id=";
 			SubjectMht  mht=subjectService.SubjectforMht(request.getParameter("id"),user);
 			SubjectToMht.subjectToMht(mht, request);
 			Map map=new HashMap<String, Object>();
@@ -820,7 +827,7 @@ public class SubjectController extends BaseController {
 	@RequestMapping("/front/leadinginSuject.dht")
 	public ModelAndView leadinginSuject(HttpServletRequest request) {
 		try {
-			subjectService.leadinginSuject(request);
+			importService.leadinginSuject(request);
 		} catch (Exception e) {
 			e.printStackTrace();
 			request.setAttribute("msg", "导入失败");

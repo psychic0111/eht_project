@@ -155,12 +155,6 @@ public interface SubjectServiceI extends CommonService{
     public void exportSuject(String uuid, String subjectId,String path,String basePath,AccountEntity user,String ids[]) ;
     
     /**
-	 * 导入专题
-	 * @return
-	 */
-    public void leadinginSuject(HttpServletRequest request) throws Exception;
-	
-    /**
      * 标记删除专题
      * @param subject
      */

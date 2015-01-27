@@ -1,11 +1,11 @@
+<%@page import="com.eht.common.util.AppRequstUtiles"%>
 <%@ taglib prefix="t" uri="/easyui-tags"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
 <%@ taglib prefix="xd" uri="http://www.xd-tech.com.cn/" %>
 <%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
+	String basePath = AppRequstUtiles.getAppUrl();
 	String frontPath = basePath + "/webpage/front";
 	String cssPath = basePath + "/webpage/front/css";
 	String imgPath = basePath + "/webpage/front/images";

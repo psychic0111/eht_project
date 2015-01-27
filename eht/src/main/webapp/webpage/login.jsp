@@ -38,13 +38,13 @@ if(top != window){
 	                <tr>
 	                  <td width="100">用户名：</td>
 	                  <td>
-	                  	<input class="InputTxt2"  style=" width:40%; height:28px;line-height:28px; " type="text" name="username" id="username" autocomplete="off" value="${username}"/><c:if test="${sendmail eq '1'}"><input class="Button1" type="button" onclick="repeat('${username}');" value="账号未激活,重发邮件？" style="display:inline" /></c:if>
+	                  	<input class="InputTxt2"  style=" width:40%; height:28px;line-height:28px; " type="text" name="username" id="username" autocomplete="off"/><c:if test="${sendmail eq '1'}"><input class="Button1" type="button" onclick="repeat('${username}');" value="账号未激活,重发邮件？" style="display:inline" /></c:if>
                   	  </td>
 	                </tr>
 	                <tr>
 	                  <td>密码：</td>
 	                  <td>
-	                  	<input class="InputTxt2" style=" width:40%; height:28px;line-height:28px; " type="password" name="password" id="textfield2" autocomplete="off" value="${password}" />
+	                  	<input class="InputTxt2" style=" width:40%; height:28px;line-height:28px; " type="password" name="password" id="textfield2" autocomplete="off"/>
                   	  </td>
 	                </tr>
 	                <tr>
@@ -108,12 +108,12 @@ $().ready(function() {
 	$("#username").focus();
 	$("#loginForm").validate({
  	   rules:{
-			username:{required:true,maxlength:200},
+			username:{required:true,chrnum:true,maxlength:200},
 			password:{required:true,maxlength:20},
 			code:{required:true,remote:{url:'${webRoot}/center/checkCode.dht'}
 			}
 		},
-		messages:{
+		messages:{		
 			username:{required:'*账号不能为空！'},
 			password:{required:'*密码不能为空！'},
 			code:{remote:'* 验证码不正确！',required:"* 请输入验证码！"}
@@ -123,7 +123,7 @@ $().ready(function() {
 }); 
 	function getVerifiCode(){
         document.getElementById("verifi_code").src ="${webRoot}/getVerifiCode.dht?r=" + new Date().getTime();
-        }  
+    }  
 </script>
 </body>
 </html>

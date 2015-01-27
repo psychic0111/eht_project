@@ -1,4 +1,5 @@
-    <%@ page language="java" pageEncoding="utf-8"%>
+    <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
+<%@ page language="java" pageEncoding="utf-8"%>
     <%@ page import="java.io.*"%>
     <%@ page import="java.net.*"%>
     <%@ page import="java.util.*"%>
@@ -6,7 +7,7 @@
     <%
     	request.setCharacterEncoding("utf-8");
     	response.setCharacterEncoding("utf-8");
-    	String url = request.getParameter("upfile");
+    	String url = StringEscapeUtils.unescapeJavaScript(StringEscapeUtils.unescapeHtml(request.getParameter("upfile")));
     	String state = "远程图片抓取成功！";
     	String filePath = "upload";
     	String[] arr = url.split("ue_separate_ue");
@@ -20,20 +21,28 @@
     		//格式验证
     		String type = getFileType(arr[i]);
 			if(type.equals("")){
-				state = "图片类型不正确！";
+				//state = "图片类型不正确！";
+				type = ".jpg";
+				//outSrc[i] = arr[i];
 				//continue;
 			}
     		String saveName = Long.toString(new Date().getTime())+type;
     		//大小验证
     		HttpURLConnection.setFollowRedirects(false); 
-		    HttpURLConnection   conn   = (HttpURLConnection) new URL(arr[i]).openConnection(); 
-		    if(conn.getContentType().indexOf("image")==-1){
+    		URL u = new URL(StringEscapeUtils.unescapeJavaScript(StringEscapeUtils.unescapeHtml(arr[i])));
+    		System.out.println("arr[i]:" + StringEscapeUtils.unescapeJavaScript(StringEscapeUtils.unescapeHtml(arr[i])));
+		    HttpURLConnection   conn   = (HttpURLConnection) u.openConnection();
+		    System.out.println("referer:" + u.getHost());
+		    conn.setRequestProperty("Referer", u.getHost());
+		    /* if(conn.getContentType().indexOf("image")==-1){
 		    	state = "请求地址头不正确";
+		    	//outSrc[i] = arr[i];
 		    	//continue;
-		    }
+		    } */
 		    if(conn.getResponseCode() != 200){
 		    	state = "请求地址不存在！";
 		    	System.out.println("抓取图片状态：" + conn.getResponseCode());
+		    	outSrc[i] = arr[i];
 		    	continue;
 		    }
             File dir = new File(savePath);

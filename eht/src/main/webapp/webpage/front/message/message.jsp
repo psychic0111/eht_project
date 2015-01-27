@@ -1,3 +1,4 @@
+<%@page import="com.eht.common.util.AppRequstUtiles"%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
@@ -5,8 +6,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt_rt"%>
 <%@ taglib prefix="xd" uri="http://www.xd-tech.com.cn/" %>
 <%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort() + path;
+	String basePath = AppRequstUtiles.getAppUrl();
 	String frontPath = basePath + "/webpage/front";
 	String cssPath = basePath + "/webpage/front/css";
 	String imgPath = basePath + "/webpage/front/images";

@@ -35,9 +35,20 @@ jQuery.validator.addMethod("ip", function(value, element) {
 
 //字母和数字的验证
 jQuery.validator.addMethod("chrnum", function(value, element) {
- var chrnum = /^([a-zA-Z0-9]+)$/;
+ var chrnum = /^([a-zA-Z0-9_]+)$/;
  return this.optional(element) || (chrnum.test(value));
-}, "只能输入数字和字母(字符A-Z, a-z, 0-9)");
+}, "只能输入数字和字母(字符A-Z, a-z, 0-9)和下划线");
+
+//字母和数字的验证
+jQuery.validator.addMethod("keywords", function(value, element) {
+	if(value.indexOf('and') != -1 || value.indexOf('And') != -1 || value.indexOf('ANd') != -1 || value.indexOf('AND') != -1 || value.indexOf('anD') != -1 || value.indexOf('aND') != -1 || value.indexOf('AnD') != -1){
+		return false;
+	}
+	if(value.indexOf('or') != -1 || value.indexOf('oR') != -1 || value.indexOf('oR') != -1 || value.indexOf('OR') != -1){
+		return false;
+	}
+	return true;
+}, "输入值中不能包括关键词");
 
 //中文的验证
 jQuery.validator.addMethod("chinese", function(value, element) {

@@ -293,12 +293,38 @@ function deleteNote(){
 	    					},true);
 	    				}
 	    		}
+	    		clearNoteField();
+				
 	    		searchNotes(selectInfo.isDeleted);
 	    	});
 	    }
 	    return true;
 	}; 
 	$.jBox.confirm("您确定删除？", "提示", submit, { buttons: { '确定': true, '取消': false} })
+}
+
+//清除当前条目信息
+function clearNoteField(){
+	clearAttaMore();
+	$("#noteForm_id").val('');
+	$("#noteTitleField").val('');
+	$("#noteForm_version").val('');
+	$("#noteForm_subjectId").val('');
+	$("#noteForm_dirId").val('');
+	$("#noteForm_createuser").val('');
+	noteEditor.setContent('');
+	noteEditor.sync("noteForm");
+	$("#divhiden").text('');
+	$("#htmlViewFrame").height(0);
+	$("#htmlViewFrame").contents().find('body').html('');
+	
+	$("#tagSelectNode").empty();
+	$("input[name='noteTagId']").remove();
+	$("#tagSelectNode_hidden").empty();
+	$("#attachmentListDiv").empty();
+	
+	$("#noteSubjectName").text('');
+	$("#comments_list").empty();
 }
 
 //========================上传附件 start===================================================================

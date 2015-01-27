@@ -45,6 +45,8 @@
            	        <p><a href="${webRoot}/${linkpath}" style="color: blue; text-decoration:none;" >跳转到${linkname}</a></p>   	 	
           	 	</c:when>
           	 	<c:otherwise>
+          	 		<p><span class="showbox" style="color:blue;font-size:15px"></span>秒之后将自动跳转到登录页面。</p>
+           	        <p><a href="${webRoot}" style="color: blue; text-decoration:none;" >跳转到登录</a></p>
           	 	</c:otherwise>
           	 </c:choose>
           	  <p><a href="#" onclick="window.close();">关闭此页</a></p>

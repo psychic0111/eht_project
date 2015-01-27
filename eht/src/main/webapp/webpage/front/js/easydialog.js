@@ -1,7 +1,7 @@
 /** 
  * easyDialog v2.2
  * Url : http://stylechen.com/easydialog-v2.0.html
- * Author : chenmnkken@gmail.com
+ * Author : chenmnkken
  * Date : 2012-04-22
  */
 (function( win, undefined ){

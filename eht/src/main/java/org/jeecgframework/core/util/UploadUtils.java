@@ -112,7 +112,7 @@ public class UploadUtils {
 		// 文件保存目录路径
 		savePath = request.getSession().getServletContext().getRealPath("/") + basePath + "/";
 		// 文件保存目录URL
-		saveUrl = request.getContextPath() + "/" + basePath + "/";
+		saveUrl = "/eht/" + basePath + "/";
 		File uploadDir = new File(savePath);
 		if (contentType == null || !contentType.startsWith("multipart")) {
 			// TODO

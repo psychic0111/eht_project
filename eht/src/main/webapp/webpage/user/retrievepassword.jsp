@@ -36,8 +36,8 @@
 	                <tr>
 	                  <td width="100">邮箱：</td>
 	                  <td>
-	                   <input class="InputTxt2" id="email"    style=" width:40%; height:28px; " type="text"   name="email" datatype="e,*5-20"  autocomplete="off"/>
-		                    <span class="Validform_checktip"></span> 
+	                   <input class="InputTxt2" id="email" style="width:40%; height:28px;" type="text" name="email" datatype="e,*5-20"  autocomplete="off"/>
+		                    <span class="Validform_checktip">${msg}</span> 
 	                  </td>
 	                </tr>
 	                <tr>
@@ -71,7 +71,7 @@
 
 <script type="text/javascript">  
 $().ready(function() {
-	$("#getpwdForm").validate({
+	 $("#getpwdForm").validate({
  	   rules:{
  		    email:{required:true,email:true,remote:{url:'${webRoot}/center/checkisEmail.dht'}},
 		},
