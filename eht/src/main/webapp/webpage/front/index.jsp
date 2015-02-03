@@ -6,7 +6,7 @@
 <head>
 <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>e划通</title>  
+<title>DPaper</title>  
 <%@  include file="/webpage/front/include/front_common.jsp" %> 
 <style type="text/css">
 .ztree li a.level0 {

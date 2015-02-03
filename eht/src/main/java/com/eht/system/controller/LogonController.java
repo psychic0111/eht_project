@@ -74,7 +74,11 @@ public class LogonController extends BaseController {
 		password = Md5Utils.makeMD5(request.getParameter("password"));
 		
 		if(username!=null&&password!=null){
-			u = accountService.findUserByAccount(username);
+			try {
+				u = accountService.findUserByAccount(username);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		if(u!=null&&u.getStatus()!=null&&u.getStatus()==Constants.ACTIVATE){
 			mv = new ModelAndView("/login");
@@ -89,10 +93,10 @@ public class LogonController extends BaseController {
 			session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, u);
 			ClientManager.getInstance().addSession(session.getId(), session);
 			//绑定账号信息
-			String openid = request.getParameter("bind_openid"),
-				   openuser = request.getParameter("bind_openuser"),
-				   opentype = request.getParameter("bind_opentype"),
-				   uid = u.getId();
+			String openid = request.getParameter("openId"),
+			openuser = request.getParameter("openUser"),
+			opentype = request.getParameter("type"),
+			uid = u.getId();
 			saveGadUser(openid,openuser,opentype,uid);
 			String host = request.getServerName();
 			Cookie cookie = new Cookie("username", username);
@@ -168,19 +172,14 @@ public class LogonController extends BaseController {
 		ModelMap mmp = new ModelMap();
 		ModelAndView mv = null;
 
-		String uid = null;
-		String logintype = null;
-		Object obj=request.getSession().getAttribute("3uinfo");
-		if(obj!=null){
-			String[] terms=obj.toString().split("\t");
-			uid=terms[0].trim();
-			logintype=terms[1].trim();
-			request.getSession().removeAttribute("3uinfo");
-		}
-		GadUserEntity gad =  accountService.findUserByGad(uid);
+		String openId = request.getParameter("openId");
+		String openUser = request.getParameter("openUser");
+		String logintype = request.getParameter("type");
+		
+		GadUserEntity gad =  accountService.findUserByGad(logintype, openId);
 		//跳转到账号绑定页面
 		mv = new ModelAndView("uniteLogin");
-		if(gad!=null&&gad.getOpenType().equals(logintype)){
+		if(gad != null && gad.getOpenType().equals(logintype)){
 			AccountEntity user = accountService.getUser(gad.getUid());
 			if(user!=null){
 				if(user.getPassword()==null){
@@ -195,8 +194,9 @@ public class LogonController extends BaseController {
 				}
 			}
 		}
-		mmp.put("uid", uid);
-		mmp.put("logintype", logintype);
+		mmp.put("openId", openId);
+		mmp.put("openUser", openUser);
+		mmp.put("type", logintype);
 		mv.addAllObjects(mmp); 
 		return mv;
 	}
@@ -221,6 +221,7 @@ public class LogonController extends BaseController {
 		ModelMap mmp = new ModelMap();
 		ModelAndView mv = null; 
 		session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, null);
+		mmp.put("logout", "true");
 		mv = new ModelAndView("login");
 		mv.addAllObjects(mmp); 
 		return mv;
@@ -286,9 +287,9 @@ public class LogonController extends BaseController {
 				}
 			}
 			//绑定账号信息
-			String openid = request.getParameter("reg_openid"),
-				   openuser = request.getParameter("reg_openuser"),
-				   opentype = request.getParameter("reg_opentype"),
+			String openid = request.getParameter("openId"),
+				   openuser = request.getParameter("openUser"),
+				   opentype = request.getParameter("type"),
 				   uid = account.getId();
 			saveGadUser(openid,openuser,opentype,uid);
 		  } catch (Exception e) {

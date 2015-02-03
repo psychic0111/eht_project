@@ -5,8 +5,11 @@ import java.io.File;
 import org.jeecgframework.core.util.PropertiesUtil;
 import org.jeecgframework.core.util.StringUtil;
 
+import com.eht.log.service.SynchLogServiceI;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
+import com.eht.subject.entity.DirectoryEntity;
+import com.eht.subject.service.DirectoryServiceI;
 
 /**
  * 获取系统路径
@@ -43,12 +46,16 @@ public class FilePathUtil {
 		if(note != null){
 			subjectId = note.getSubjectId();
 			sb.append(File.separator).append(subjectId);
+		}else if(!StringUtil.isEmpty(dirId)){
+			DirectoryServiceI directoryService = AppContextUtils.getBean("directoryService");
+			DirectoryEntity dir = directoryService.getDirectory(dirId);
+			subjectId = dir.getSubjectId();
+			sb.append(File.separator).append(subjectId);
 		}
 		
 		if(!StringUtil.isEmpty(dirId)){
 			sb.append(File.separator).append(dirId);
 		}
-		
 		if(note != null){
 			sb.append(File.separator).append(note.getId());
 		}

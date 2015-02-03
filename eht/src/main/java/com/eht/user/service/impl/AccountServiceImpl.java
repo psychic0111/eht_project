@@ -66,15 +66,22 @@ public class AccountServiceImpl extends CommonServiceImpl implements AccountServ
 	}
 	
 	@Override
-	public GadUserEntity findUserByGad(String account) {
-		return findUniqueByProperty(GadUserEntity.class, "openid", account);
+	public GadUserEntity findUserByGad(String type, String openId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(GadUserEntity.class);
+		dc.add(Restrictions.eq("openType", type));
+		dc.add(Restrictions.eq("openid", openId));
+		List<GadUserEntity> list = findByDetached(dc);
+		if(list != null && !list.isEmpty()){
+			return list.get(0);
+		}
+		return null;
 	}
 
 	@Override
 	public AccountEntity findUserByEmail(String email) {
 		return findUniqueByProperty(AccountEntity.class, "email", email);
 	}
-
+	
 	@Override
 	public void delEmailSessionByEmal(String email) {
 		this.commonDao.executeHql("delete from SendEmailSession ses where email='"+email+"'");

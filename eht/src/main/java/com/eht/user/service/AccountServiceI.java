@@ -14,11 +14,12 @@ public interface AccountServiceI extends CommonService{
 	public final String uppath="uptem";
 	
 	/**
-	 * 查找用户id
-	 * @param account
+	 * 查找用户第三方
+	 * @param openId
+	 * @param type SINA QQ
 	 * @return
 	 */
-	public GadUserEntity findUserByGad(String account);
+	public GadUserEntity findUserByGad(String type, String openId);
 	/**
 	 * 
 	 * @param ids
@@ -87,4 +88,5 @@ public interface AccountServiceI extends CommonService{
 	 * 激活用户
 	 */
 	public void activeUser(AccountEntity account,String sessionId);
+	
 }

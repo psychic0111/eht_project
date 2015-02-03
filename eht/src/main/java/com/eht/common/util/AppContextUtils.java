@@ -2,6 +2,7 @@ package com.eht.common.util;
 
 import javax.servlet.ServletContext;
 
+import org.jeecgframework.core.util.PropertiesUtil;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -65,7 +66,9 @@ public class AppContextUtils {
 	}
 
 	public static String getContextPath() {
-		return contextPath;
+		PropertiesUtil p = new PropertiesUtil("sysConfig.properties");
+		String path = p.readProperty("eht.server.context") == null ? "" : p.readProperty("eht.server.context");
+		return path;
 	}
 
 }

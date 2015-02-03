@@ -5,14 +5,13 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.GenericGenerator;
 
 import com.eht.auth.bean.User;
 import com.eht.common.annotation.ClientJsonIgnore;
@@ -73,6 +72,8 @@ public class AccountEntity extends User implements java.io.Serializable {
 	private java.lang.String createUserId;
 	/**修改者,接口使用*/
 	private java.lang.String updateUserId;
+	
+	private String nickName;
 	
 	/**
 	 *方法: 取得java.lang.String
@@ -324,6 +325,12 @@ public class AccountEntity extends User implements java.io.Serializable {
 		this.updateUserId = updateUserId;
 		this.updateuser = updateUserId;
 	}
-
 	
+	@JsonIgnore
+	public String getNickName() {
+		return nickName;
+	}
+	public void setNickName(String nickName) {
+		this.nickName = nickName;
+	}
 }

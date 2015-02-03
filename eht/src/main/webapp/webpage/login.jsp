@@ -1,17 +1,27 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
+<%@ include file="/webpage/front/include/front_common.jsp" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta property="wb:webmaster" content="d35f84c34aa93c58" />
+<meta property="qc:admins" content="2447516343105264136136367" />
+
+<!-- QQ第三方登录JS导入 -->
+<script type="text/javascript" src="http://qzonestyle.gtimg.cn/qzone/openapi/qc_loader.js" data-appid="101190840" data-redirecturi="http://idpaper.las.ac.cn" charset="utf-8"></script>
+<!-- Sina第三方登录JS导入 -->
+<script  type="text/javascript" src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=398741386&debug=true"  charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8" src="${frontPath}/js/login.js"></script>
 <script type="text/javascript">
 if(top != window){
 	top.location.href = window.location.href;
 }
+
 </script>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<%@ include file="/webpage/front/include/front_common.jsp" %>
-<title>登录e划通</title>
+
+<title>DPaper</title>
 </head>
-<body >
+<body>
 <!-- Begin header-->
 <div class="header">
   <div class="left1"><img src="${imgPath}/logo.png"  height="40" /></div>
@@ -33,7 +43,7 @@ if(top != window){
           <div class="Information" style="padding:50px; padding-top:20px;">
             <div class="title">填写登录信息</div>
             <div class="Table"> 
-            <form id="loginForm" name="loginForm" action="<c:url value="/center/login.dht"/>" method="post">
+            <form id="loginForm" name="loginForm" action="http://idpaper.las.ac.cn/center/login.dht" method="post">
 	               <table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                  <td width="100">用户名：</td>
@@ -65,9 +75,8 @@ if(top != window){
 	                  <td>&nbsp;</td>
 	                  <td>
 	                  	     第三方登录：
-	                  	 <a href="https://api.weibo.com/oauth2/authorize?client_id=4257296204&response_type=code&redirect_uri=http://127.0.0.1:81/eht/webpage/login/sinalogin.jsp"><img src="${imgPath}/sina.jpg" /></a>
-	                  	 <a href="https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=801445396&redirect_uri=${webRoot}/gadUser/qqUniteLogin.dht" class="link5"> <img src="${imgPath}/qq.jpg" /></a>
-					     <img src="${imgPath}/others.jpg" />
+	                  	 <span id="wb_connect_btn"></span>
+	                  	 <span id="qq_login_btn"></span>
            			  </td>
 	                </tr>
 	                <tr>
@@ -83,17 +92,19 @@ if(top != window){
         <!-- End mainer_index--></td>
     </tr>
   </table>
+  <div id="test_div">
+  </div>
 </div>
 <!-- End mainer--> 
 <!-- Begin footer-->
 <div class="footer">
-  <div class="left">&copy; Copyright <a href="#" class="link3">website.com</a></div>
+  <div class="left">&copy; Copyright <a href="#" class="link3">idpaper.las.ac.cn</a></div>
   <div class="right">Powered by CNOOC-VS</div>
   <div class="clear"></div>
 </div>
 <!-- End footer-->
 
-<script type="text/javascript"> 
+<script type="text/javascript" charset="utf-8"> 
 function repeat(obj){
    var params = {'username':obj};
    AT.post("${webRoot}/center/repeatajax.dht",params,function(data){
@@ -121,9 +132,63 @@ $().ready(function() {
 	}
 	);
 }); 
-	function getVerifiCode(){
-        document.getElementById("verifi_code").src ="${webRoot}/getVerifiCode.dht?r=" + new Date().getTime();
-    }  
+function getVerifiCode(){
+       document.getElementById("verifi_code").src ="${webRoot}/getVerifiCode.dht?r=" + new Date().getTime();
+}
+
+var toLogin = true;
+if('${logout}' == 'true'){
+	 toLogin = false;
+}
+//document.getElementByIdx_x("qq_login_btn").innerHTML = document.getElementByIdx_x("qq_login_btn").getAttribute("_origText");
+var cbLoginFun = function(o, oOpts){
+	if(QC.Login.check()){
+		self.close();
+		self.window.location = "<%=AppRequstUtiles.getAppUrl()%>";
+	}
+};
+QC.Login(
+	{btnId:"qq_login_btn"}, //插入按钮的节点id
+	cbLoginFun
+);
+
+if(QC.Login.check()){//如果已登录
+	QC.Login.getMe(function(openId, accessToken){
+	   //alert(["当前登录用户的", "openId为："+openId, "accessToken为："+accessToken].join("n"));
+		if(toLogin){
+	   		login(openId, accessToken, '<%=Constants.OPEN_LOGIN_QQ%>');
+		}else{
+	  		toLogin = true;
+	  	}
+	});
+	//这里可以调用自己的保存接口
+	//...
+}
+
+//新浪登录
+ WB2.anyWhere(function(W){
+	W.widget.connectButton({
+	 id: "wb_connect_btn",
+	 callback : {
+	  login:function(o){
+	  //登录成功之后执行
+	  	if(toLogin){
+	  		login(o.idstr, o.name, '<%=Constants.OPEN_LOGIN_SINA%>');
+	  	}else{
+	  		toLogin = true;
+	  	}
+	  	<%-- var url = "${webRoot}/center/openLogin.dht";
+	  	var params = {"openId": o.idstr, "type": "<%=Constants.OPEN_LOGIN_SINA%>", "openUser":o.name};
+	  	AT.post(url, params, function(data){
+	  		alert(123);
+	  	}); --%>
+	  },
+	  logout:function(){
+	   //退出之后执行
+	  }
+	 }
+	});
+});
 </script>
 </body>
 </html>

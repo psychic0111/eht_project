@@ -608,24 +608,38 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				//条目不存在了
 				if(note == null || note.getDeleted().intValue() == Constants.DATA_DELETED){
 					logger.info("附件所属条目已无效 : " + attachment.getNoteId());
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 					
-					String uploadData = DataSynchizeUtil.queryUploadFile(user, res);
-					DataBean bean = new DataBean(uploadData, "");
+					DataBean bean = new DataBean("", "");
 					return JsonUtil.bean2json(bean);
 				}else{
 					subjectId = note.getSubjectId();
 				}
 			}else{
 				DirectoryEntity dir = directoryService.getDirectory(attachment.getDirectoryId());
-				subjectId = dir.getSubjectId();
+				if(dir != null && dir.getDeleted() == Constants.DATA_NOT_DELETED){
+					subjectId = dir.getSubjectId();
+				}else{
+					logger.info("附件所属目录已无效 : " + attachment.getDirectoryId());
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					DataBean bean = new DataBean("", "");
+					return JsonUtil.bean2json(bean);
+				}
 			}
 			
 			boolean saveLog = false;
 			//用户是否在条目目录黑名单中
 			if(!saveLog){
-				if(!StringUtil.isEmpty(note.getDirId())){
+				if(note != null && !StringUtil.isEmpty(note.getDirId())){
 					boolean isBan = directoryService.inDirBlackList(user.getId(), note.getDirId());
 					if(isBan){
 						logger.warn("用户在目录黑名单中", new InsufficientAuthenticationException("用户在目录黑名单中"));
@@ -644,33 +658,36 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			
 			//用户是否在条目黑名单中
 			if(!saveLog){
-				boolean isBan = noteService.inNoteBlackList(user.getId(), note.getId());
-				if(isBan){
-					logger.warn("用户在条目黑名单中", new InsufficientAuthenticationException("用户在条目黑名单中"));
+				if(note != null){
+					boolean isBan = noteService.inNoteBlackList(user.getId(), note.getId());
+					if(isBan){
+						logger.warn("用户在条目黑名单中", new InsufficientAuthenticationException("用户在条目黑名单中"));
+						saveLog = true;
+						
+						res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+						res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+						
+						res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
+						res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+						
+						logger.info("用户在条目黑名单中：");
+					}
+				}
+			}
+			
+			if(!saveLog){
+				//所有者
+				boolean isOwner = (note != null && note.getCreateUserId().equals(user.getId())) || note == null;
+				//编辑
+				boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subjectId, ActionName.ADD_DIRECTORY);
+				if(!hasPermission && needAuth && !isOwner){
+					logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【上传附件】, 请联系专题管理员。"));
 					saveLog = true;
 					
 					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
 					
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
-					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
-					
-					logger.info("用户在条目黑名单中：");
-				}
-			}
-			
-			if(!saveLog){
-				//作者
-				boolean isOwner = (note != null && note.getCreateUserId().equals(user.getId())) || note == null;
-				//编辑
-				boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subjectId, ActionName.ADD_DIRECTORY);
-				if(!hasPermission && needAuth && !isOwner){
-					logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【上传附件】, 请联系专题管理员。"));
-					
-					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
-					
-					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 					
 					logger.info("权限不足，不能添加附件，删除新增附件：");

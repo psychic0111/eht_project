@@ -20,11 +20,15 @@
   	        	 <c:if test='${fn:length(SESSION_USER_ATTRIBUTE.userName)>20}'>${fn:substring(SESSION_USER_ATTRIBUTE.userName,0,19)}...</c:if>
   	        	 <c:if test='${fn:length(SESSION_USER_ATTRIBUTE.userName)<=20}'>${SESSION_USER_ATTRIBUTE.userName}</c:if>
   	        	 <img src="<%=imgPath %>/Sline.png"  height="40" onclick="window.location.href='${webRoot}/accountController/front/viewEditUser.dht'" /></a>
-  	        <a href="${webRoot}/center/logout.dht">注销</a>
+  	        <a href="#" onclick="logout();">注销</a>
 		</div>
   </div>
   <div class="clear"></div>
 </div>
+<!-- QQ第三方登录JS导入 -->
+<script type="text/javascript" src="http://qzonestyle.gtimg.cn/qzone/openapi/qc_loader.js" data-appid="101190840" data-redirecturi="http://idpaper.las.ac.cn" charset="utf-8"></script>
+<!-- Sina第三方登录JS导入 -->
+<script  type="text/javascript" src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=398741386&debug=true"  charset="utf-8"></script>
 <script type="text/javascript">
 <!--
 function sendmessages(obj){
@@ -51,6 +55,18 @@ function sendmessages(obj){
 	});
     $("#jbox-content").css('overflow', 'hidden');
 }	
+
+function logout(){
+	if(QC.Login.check()){
+		QC.Login.signOut();
+		window.location = "${webRoot}/center/logout.dht";
+	}
+	
+	WB2.logout(function() {
+		window.location = "${webRoot}/center/logout.dht";
+	});
+	window.location = "${webRoot}/center/logout.dht";
+}
 //-->
 </script>
 <!-- End header-->  

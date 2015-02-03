@@ -198,4 +198,14 @@ public interface Constants {
 	 * 附件存储时的后缀名
 	 */
 	public static final String ATTACHMENT_SUFFIX = ".atm";
+	
+	/**
+	 * 第三方登录新浪微博
+	 */
+	public static final String OPEN_LOGIN_SINA = "SINA";
+	
+	/**
+	 * 第三方登录腾讯
+	 */
+	public static final String OPEN_LOGIN_QQ = "QQ";
 }
