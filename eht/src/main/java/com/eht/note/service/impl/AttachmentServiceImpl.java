@@ -2,6 +2,7 @@ package com.eht.note.service.impl;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.criterion.Criterion;
@@ -71,11 +72,13 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 	@Override
 	public void updateAttachment(AttachmentEntity attachment) {
 		updateEntitie(attachment);
+		synchLogService.recordLog(attachment, DataType.ATTACHMENT.toString(), DataSynchAction.ADD.toString(), null, System.currentTimeMillis());
 	}
 	
 	@Override
 	@RecordOperate(dataClass=DataType.ATTACHMENT, action=DataSynchAction.DELETE, keyIndex=0, keyMethod="getId", timeStamp="updateTime")
 	public void markDelAttachment(AttachmentEntity attachment) {
+		attachment.setUpdateTime(new Date());
 		attachment.setDeleted(Constants.DATA_DELETED);
 		updateEntitie(attachment);
 		//deleteAttachment(attachment);
@@ -206,6 +209,37 @@ public class AttachmentServiceImpl extends CommonServiceImpl implements Attachme
 		List<AttachmentEntity> list = findByDetached(dc);
 		return list;
 	}
+	
+	@Override
+	public List<AttachmentEntity> findAttachmentsByDir(String directoryId,int firstResult,int maxResult) {
+		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class, "a");
+		
+		dc.add(Restrictions.eq("a.deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("a.status", Constants.FILE_TRANS_COMPLETED));
+		dc.add(Restrictions.eq("a.fileType", Constants.FILE_TYPE_NORMAL));
+		dc.add(Restrictions.eq("a.directoryId", directoryId));
+		dc.addOrder(Order.desc("a.createTime"));
+		//分页查询
+		int firstRow = (firstResult - 1) * maxResult;
+		List<AttachmentEntity> list = pageList(dc, firstRow, maxResult);
+		
+		return list;
+	}
+	
+	@Override
+	public long countAttachmentsByDir(String directoryId) {
+		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class, "a");
+		
+		dc.add(Restrictions.eq("a.deleted", Constants.DATA_NOT_DELETED));
+		dc.add(Restrictions.eq("a.status", Constants.FILE_TRANS_COMPLETED));
+		dc.add(Restrictions.eq("a.fileType", Constants.FILE_TYPE_NORMAL));
+		dc.add(Restrictions.eq("a.directoryId", directoryId));
+		
+		long count = 
+				oConvertUtils.getInt((dc.getExecutableCriteria(getSession()).setProjection(Projections.rowCount())).uniqueResult(), 0);
+		return count;
+	}
+	
 	@Override
 	public List<AttachmentEntity> findAttachmentsByDir(String subjectId, String directoryId,int firstResult,int maxResult) {
 		DetachedCriteria dc = DetachedCriteria.forClass(AttachmentEntity.class, "a");

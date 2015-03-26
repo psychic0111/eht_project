@@ -2328,6 +2328,110 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 	}
 
 	/**
+	 * 处理BAN掉条目相关的日志
+	 * 
+	 * @throws Exception
+	 */
+	@Override
+	public List<SynchLogEntity> dealBanNoteSynchLogs(String noteId, String clientId,
+			String userId, long timeStamp, long endTime, String[] dataClass,
+			boolean filterDelete, boolean saveLog){
+		List<String> idList = findSynchedLogIds(clientId, userId);
+		
+		List<NoteTag> tagList = tagService.findNoteTagsByNote(noteId);
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(noteId, null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
+		List<String> banIdList = new ArrayList<String>();
+		if(attaList != null && !attaList.isEmpty()){
+			for(AttachmentEntity atta : attaList){
+				banIdList.add(atta.getId());
+			}
+		}
+		
+		if(tagList != null && !tagList.isEmpty()){
+			for(NoteTag nt : tagList){
+				banIdList.add(nt.getId());
+			}
+		}
+		
+		DetachedCriteria dc = DetachedCriteria.forClass(SynchLogEntity.class);
+		dc.add(Restrictions.or(Restrictions.and(
+				Restrictions.eq("targetUser", userId),
+				Restrictions.neProperty("operateUser", "targetUser")),
+				Restrictions.and(Restrictions.eq("operateUser", userId),
+						Restrictions.ne("clientId", clientId))));
+		if (idList != null && !idList.isEmpty()) {
+			dc.add(Restrictions.not(Restrictions.in("id", idList))); // 不包括已经同步过的日志
+		}
+		if(banIdList != null && !banIdList.isEmpty()){
+			dc.add(Restrictions.in("classPK", banIdList));
+		}
+		
+		dc.add(Restrictions.in("className", dataClass));
+		dc.add(Restrictions.gt("synchTime", timeStamp));
+		dc.add(Restrictions.le("synchTime", endTime));
+		
+		//dc.addOrder(Order.asc("classPK"));
+		dc.addOrder(Order.asc("operateTime"));
+		dc.addOrder(Order.desc("operateType"));
+		List<SynchLogEntity> subLogList = findByDetached(dc);
+		if (subLogList != null && !subLogList.isEmpty()) {
+			if (subLogList != null && !subLogList.isEmpty()) {
+				saveSynchedLog(subLogList, clientId, userId);
+			}
+		}
+		return subLogList;
+	}
+	
+	/**
+	 * 处理BAN掉条目相关的日志
+	 * 
+	 * @throws Exception
+	 */
+	@Override
+	public List<SynchLogEntity> dealBanDirSynchLogs(String dirId, String clientId,
+			String userId, long timeStamp, long endTime, String dataClass,
+			boolean filterDelete, boolean saveLog){
+		List<String> idList = findSynchedLogIds(clientId, userId);
+		
+		List<AttachmentEntity> attaList = attachmentService.findAttachmentByDir(dirId);
+		List<String> attaIdList = null;
+		if(attaList != null && !attaList.isEmpty()){
+			attaIdList = new ArrayList<String>(attaList.size());
+			for(AttachmentEntity atta : attaList){
+				attaIdList.add(atta.getId());
+			}
+		}
+		
+		DetachedCriteria dc = DetachedCriteria.forClass(SynchLogEntity.class);
+		dc.add(Restrictions.or(Restrictions.and(
+				Restrictions.eq("targetUser", userId),
+				Restrictions.neProperty("operateUser", "targetUser")),
+				Restrictions.and(Restrictions.eq("operateUser", userId),
+						Restrictions.ne("clientId", clientId))));
+		if (idList != null && !idList.isEmpty()) {
+			dc.add(Restrictions.not(Restrictions.in("id", idList))); // 不包括已经同步过的日志
+		}
+		if(attaIdList != null && !attaIdList.isEmpty()){
+			dc.add(Restrictions.in("classPK", attaIdList));
+		}
+		
+		dc.add(Restrictions.gt("synchTime", timeStamp));
+		dc.add(Restrictions.le("synchTime", endTime));
+		dc.add(Restrictions.eq("className", dataClass));
+		
+		//dc.addOrder(Order.asc("classPK"));
+		dc.addOrder(Order.asc("operateTime"));
+		dc.addOrder(Order.desc("operateType"));
+		List<SynchLogEntity> subLogList = findByDetached(dc);
+		if (subLogList != null && !subLogList.isEmpty()) {
+			if (subLogList != null && !subLogList.isEmpty()) {
+				saveSynchedLog(subLogList, clientId, userId);
+			}
+		}
+		return subLogList;
+	}
+	
+	/**
 	 * 返回客户端日志查询方法
 	 * 
 	 * @throws Exception

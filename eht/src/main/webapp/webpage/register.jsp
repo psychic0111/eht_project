@@ -31,10 +31,10 @@
             <div class="title">填写注册信息</div>
             <div class="Table">
             <form id="regForm" name="regForm" action="<c:url value="/center/reg.dht"/>" method="post">
-            <input type="hidden" name="id" value="<%=request.getParameter("id")%>"/>
-            <input type="hidden" name="openId" value="<%=request.getParameter("openId")%>"/>
-            <input type="hidden" name="openUser" value="<%=request.getParameter("openUser")%>"/>
-            <input type="hidden" name="type" value="<%=request.getParameter("type")%>"/>
+            <input type="hidden" name="id" value="<%=request.getParameter("id") %>"/>
+            <input type="hidden" name="openId" value="<%=request.getParameter("openId")==null?"":request.getParameter("openId")%>"/>
+            <input type="hidden" name="openUser" value="<%=request.getParameter("openUser")==null?"":request.getParameter("openUser")%>"/>
+            <input type="hidden" name="type" value="<%=request.getParameter("type")==null?"":request.getParameter("type")%>"/>
 	              <table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                  <td width="100">用户名：</td>

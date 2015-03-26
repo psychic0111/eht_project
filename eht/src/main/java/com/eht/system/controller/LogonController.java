@@ -191,6 +191,9 @@ public class LogonController extends BaseController {
 					ClientManager.getInstance().addSession(session.getId(), session);
 					//跳转到用户主页面
 					mv = new ModelAndView(new RedirectView("/indexController/front/index.dht", true));
+					if(logintype.equals(Constants.OPEN_LOGIN_QQ)){
+						mv = new ModelAndView("qqresult");
+					}
 				}
 			}
 		}
@@ -236,49 +239,31 @@ public class LogonController extends BaseController {
 	public ModelAndView save(AccountEntity account, HttpServletRequest request) {
 		String linkname = null;
 		String linkpath = null;
+		String viewUrl = null;
 		try {
 			msg = "注册成功!";
+			String openid = request.getParameter("openId");
+			String openuser = request.getParameter("openUser");
+			String opentype = request.getParameter("type");
+			
 			account.setId(com.eht.common.util.UUIDGenerator.uuid());
 			account.setStatus(Constants.ACTIVATE);
 			account.setDeleted(Constants.DATA_NOT_DELETED);
 			account.setCreatetime(new Date());
 			account.setUpdatetime(new Date());
 			account.setPassword(Md5Utils.makeMD5(account.getPassword()));
+			
 			if(request.getParameter("id") != null && !request.getParameter("id").equals("")){
 				InviteMememberEntity inviteMememberEntity=subjectService.get(InviteMememberEntity.class,  request.getParameter("id"));
 				if(inviteMememberEntity!=null){
 					subjectService.acceptInviteMember(inviteMememberEntity,account);
-					MessageEntity msg = new MessageEntity();
-					msg.setClassName(AccountEntity.class.getName());
-					msg.setClassPk(account.getId());
-					msg.setContent("请完善自己的帐号信息。");
-					Date date = new Date();
-					msg.setCreateTime(date);
-					msg.setCreateTimeStamp(date.getTime());
-					msg.setCreateUser(null);
-					msg.setId(com.eht.common.util.UUIDGenerator.uuid());
-					msg.setUserIsRead(Constants.NOT_READ_OBJECT);
-					msg.setOperate(DataSynchAction.UPDATE.toString());
-					msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
-					messageService.saveMessages(msg, account.getId());
-					
-					account.setStatus(Constants.ENABLED);
-					accountService.save(account);
-					
-					subjectService.updateEntitie(account);
-					SubjectEntity subject = new SubjectEntity();
-					subject.setCreateUser(account.getId());
-					subject.setCreateTime(new Date());
-					subject.setId(account.getId() + "_S");
-					subject.setDescription("");
-					subject.setSubjectType(1);
-					subject.setStatus(0);
-					subject.setDeleted(0);
-					subject.setSubjectName("默认专题");	
-					List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
-					if(list == null || list.isEmpty()){
-						subjectService.addSubject(subject, account.getId());
-					}
+					saveRegUserInfo(account);
+				}else if(StringUtil.isValidateString(openid)){//第三方登录绑定帐号注册，直接激活
+					viewUrl = "front/index";
+					saveRegUserInfo(account);
+					HttpSession session = request.getSession();
+					session.setAttribute(Constants.SESSION_USER_ATTRIBUTE, account);
+					ClientManager.getInstance().addSession(session.getId(), session);
 				}else{
 					accountService.save(account);
 					String path = AppRequstUtiles.getAppUrl();
@@ -287,10 +272,7 @@ public class LogonController extends BaseController {
 				}
 			}
 			//绑定账号信息
-			String openid = request.getParameter("openId"),
-				   openuser = request.getParameter("openUser"),
-				   opentype = request.getParameter("type"),
-				   uid = account.getId();
+			String uid = account.getId();
 			saveGadUser(openid,openuser,opentype,uid);
 		  } catch (Exception e) {
 	     	e.printStackTrace();
@@ -298,7 +280,41 @@ public class LogonController extends BaseController {
 	     	linkpath = "webpage/register.jsp";
 	     	linkname = "注册";
 	    } 
-		return linkLoginMessage(msg,null,linkpath,linkname,null);
+		return linkLoginMessage(msg,null,linkpath,linkname,viewUrl);
+	}
+	
+	private void saveRegUserInfo(AccountEntity account){
+		MessageEntity msg = new MessageEntity();
+		msg.setClassName(AccountEntity.class.getName());
+		msg.setClassPk(account.getId());
+		msg.setContent("请完善自己的帐号信息。");
+		Date date = new Date();
+		msg.setCreateTime(date);
+		msg.setCreateTimeStamp(date.getTime());
+		msg.setCreateUser(null);
+		msg.setId(com.eht.common.util.UUIDGenerator.uuid());
+		msg.setUserIsRead(Constants.NOT_READ_OBJECT);
+		msg.setOperate(DataSynchAction.UPDATE.toString());
+		msg.setMsgType(Constants.MSG_SYSTEM_TYPE);
+		messageService.saveMessages(msg, account.getId());
+		
+		account.setStatus(Constants.ENABLED);
+		accountService.save(account);
+		
+		subjectService.updateEntitie(account);
+		SubjectEntity subject = new SubjectEntity();
+		subject.setCreateUser(account.getId());
+		subject.setCreateTime(new Date());
+		subject.setId(account.getId() + "_S");
+		subject.setDescription("");
+		subject.setSubjectType(1);
+		subject.setStatus(0);
+		subject.setDeleted(0);
+		subject.setSubjectName("默认专题");	
+		List<SubjectEntity> list = subjectService.findSubjectByParam(subject.getSubjectName(), account.getId(), subject.getSubjectType());
+		if(list == null || list.isEmpty()){
+			subjectService.addSubject(subject, account.getId());
+		}
 	}
 	
 	private void saveGadUser(String openid,String openuser,String opentype,String uid){

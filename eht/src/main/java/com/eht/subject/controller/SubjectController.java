@@ -171,8 +171,24 @@ public class SubjectController extends BaseController {
 		if (pageResult != null && pageResult.getPageSize() != 10) {
 			pageResult.setPageSize(10);
 		}
-		List<AttachmentEntity> attList = attachmentService.findAttachmentsByDir(subjectId, dirId, pageResult.getPageNo(), pageResult.getPageSize());
-		pageResult.setTotal(attachmentService.findAttachmentsByDirCount(subjectId, dirId));
+		
+		String showUpload = "true";
+		String ext = dirId.substring(dirId.length() - 2, dirId.length());
+		// “数据”目录
+		if(ext.toLowerCase().equals("_o")){
+			showUpload = "false";
+		}
+		
+		List<AttachmentEntity> attList = null;
+		long total = 0;
+		if(showUpload.equals("true")){
+			attList = attachmentService.findAttachmentsByDir(subjectId, dirId, pageResult.getPageNo(), pageResult.getPageSize());
+			total = attachmentService.findAttachmentsByDirCount(subjectId, dirId);
+		}else{
+			attList = attachmentService.findAttachmentsByDir(dirId, pageResult.getPageNo(), pageResult.getPageSize());
+			total = attachmentService.countAttachmentsByDir(dirId);
+		}
+		pageResult.setTotal(total);
 		pageResult.setRows(attList);
 
 		String viewUrl = "front/subject/attachment";
@@ -181,6 +197,8 @@ public class SubjectController extends BaseController {
 		if (ispage != null && ispage.equals("true")) {
 			viewUrl = "front/subject/attachmentList";
 		}
+		
+		mmp.put("showUpload", showUpload);
 		mmp.put("pageResult", pageResult);
 		mmp.put("dirId", dirId);
 		mmp.put("subjectId", subjectId);

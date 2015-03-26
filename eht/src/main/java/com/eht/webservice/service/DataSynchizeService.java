@@ -16,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.htmlparser.util.ParserException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 
 import com.eht.common.constant.SynchConstants;
 
@@ -572,5 +573,19 @@ public interface DataSynchizeService {
 	 * @return
 	 */
 	public String checkUser(String clientId, String userName, String token, HttpServletRequest request);
+
+	/**
+	 * 更新附件
+	 * @param data
+	 * @param timeStamp
+	 * @param action
+	 * @param res
+	 * @return
+	 * @throws ParserException
+	 * @throws InsufficientAuthenticationException
+	 */
+	public String updateAttachment(String data, long timeStamp, String action,
+			HttpServletResponse res) throws ParserException,
+			InsufficientAuthenticationException;
 
 }

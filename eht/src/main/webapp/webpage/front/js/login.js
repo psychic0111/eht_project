@@ -31,8 +31,8 @@ function login(openId, openUser, openType){
 				        buttonsFocus: 0
 				    }
 			};
-
-			$.jBox.open(content, '绑定帐号', 420, 'auto');
+			var title = '欢迎使用' + openType + '登录, 请绑定您的DPaper帐号';
+			$.jBox.open(content, '<span style="font-size:14px;">' + title + '</span>', 420, 'auto');
 		}else{
 			window.location = webRoot + "/indexController/front/index.dht";
 		}

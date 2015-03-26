@@ -500,6 +500,12 @@ function isDocumentFolder(node){
 		}
 		parentNode = parentNode.getParentNode();
 	}
+	
+	var ss = node.id.substring(node.id.length -2, node.id.length);
+	if(ss.toLowerCase() == '_o'){
+		return true;
+	}
+	
 	return false;
 }
 

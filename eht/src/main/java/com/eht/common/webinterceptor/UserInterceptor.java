@@ -93,7 +93,7 @@ public class UserInterceptor implements HandlerInterceptor {
 		} else {
 			if(hasMenuAuth(request)){
 				HttpSession session = request.getSession();
-				String projectName = AppRequstUtiles.getAppUrl().substring(AppRequstUtiles.getAppUrl().lastIndexOf("/"));
+				String projectName = AppRequstUtiles.getContextPath();
 			    
 			    if(request.getParameter("jsessionid")!=null){
 			    	session = ClientManager.getInstance().getSession(request.getParameter("jsessionid"));

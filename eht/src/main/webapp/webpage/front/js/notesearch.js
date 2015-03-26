@@ -719,7 +719,10 @@ function isNoteStats(){
 		if(edui1.is(":visible")){
 		   var uecontent=noteEditor.getContent();
 		   if(uecontent!=$("#divhiden").text()){
-				return true;
+			   if($("#noteForm_id").val() != '' && $("#noteForm_id").val() != null){
+				   saveNoteQuiet();
+			   }
+			   return false;
 		   }
 		}
 	}

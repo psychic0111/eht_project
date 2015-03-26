@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.io.FilenameUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -913,15 +914,10 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			 if(zos!=null){
 				 try {
 					zos.flush();
-				} catch (IOException e) {
-				}
-			 }
-			if(zos!=null){
-				try {
 					zos.close();
 				} catch (IOException e) {
 				}
-			}
+			 }
 			if(f!=null){
 				try {
 					f.close();
@@ -1078,15 +1074,27 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 			} else {
 				note.addElement("tagId").addText("");
 			}
-			String uuidFiename = UUIDGenerator.uuid() + ".txt";
-			note.addElement("filepath").addText(uuidFiename);
-			byte[] buf = noteEntity.getContent().getBytes();
+			String uuidFiename = FilePathUtil.getNoteZipFileName(noteEntity.getId(), null);
+			String noteHtmlPath = FilePathUtil.getNoteHtmlPath(noteEntity) + uuidFiename;
+			File noteFile = new File(noteHtmlPath);
+			FileInputStream fis = new FileInputStream(noteFile);
+			byte[] buf = new byte[fis.available()];
+			fis.read(buf);
 			zos.putNextEntry(new ZipEntry(uuidFiename));
 			zos.write(buf);
 			zos.flush();
+			fis.close();
+			
+			String txtName = FilenameUtils.getBaseName(uuidFiename) + ".txt";
+			buf = noteEntity.getContent().getBytes();
+			note.addElement("filepath").addText(txtName);
+			zos.putNextEntry(new ZipEntry(txtName));
+			zos.write(buf);
+			zos.flush();
+			
 			List<AttachmentEntity> list = attachmentServiceI
 					.findAttachmentByNote(noteEntity.getId(),
-							null, null, new Integer[]{Constants.FILE_TYPE_NORMAL});
+							Constants.FILE_TRANS_COMPLETED, Constants.DATA_NOT_DELETED, new Integer[]{Constants.FILE_TYPE_NORMAL});
 			createAttachmentXml(root, list, zos, cotextpath);
 		}
 	}
@@ -1094,9 +1102,9 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 	private void createAttachmentXml(Element root, List<AttachmentEntity> list,
 			ZipOutputStream zos, String cotextpath) {
 		for (AttachmentEntity attachmentEntity : list) {
-			String uuidFiename = UUIDGenerator.uuid() + ".zip";
+			String uuidFiename = UUIDGenerator.uuid() + Constants.ATTACHMENT_SUFFIX;
 			String filePath = attachmentEntity.getFilePath() + "/"
-					+ attachmentEntity.getFileName().substring(0,attachmentEntity.getFileName().lastIndexOf("."))+".zip";
+					+ attachmentEntity.getFileName() + Constants.ATTACHMENT_SUFFIX;
 			InputStream is = null;
 			try {
 				byte[] buf = new byte[1024];

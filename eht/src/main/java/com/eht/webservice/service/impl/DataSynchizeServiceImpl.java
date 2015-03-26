@@ -9,9 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -614,8 +612,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 					
-					DataBean bean = new DataBean("", "");
-					return JsonUtil.bean2json(bean);
+					String returnVal = DataSynchizeUtil.banResult(attachment.getClassName(), attachment.getId());
+					return returnVal;
 				}else{
 					subjectId = note.getSubjectId();
 				}
@@ -631,8 +629,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
 					
-					DataBean bean = new DataBean("", "");
-					return JsonUtil.bean2json(bean);
+					String returnVal = DataSynchizeUtil.banResult(attachment.getClassName(), attachment.getId());
+					return returnVal;
 				}
 			}
 			
@@ -695,9 +693,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 			
 			if(saveLog){
-				DataSynchizeUtil.saveBanLog(DataType.ATTACHMENT.toString(), DataSynchAction.TRUNCATE.toString(), attachment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				//DataSynchizeUtil.saveBanLog(DataType.ATTACHMENT.toString(), DataSynchAction.TRUNCATE.toString(), attachment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
+				
+				String returnVal = DataSynchizeUtil.banResult(attachment.getClassName(), attachment.getId());
 				logger.info("权限不足，不能添加附件，删除新增附件：" + returnVal);
 				return returnVal;
 			}
@@ -766,6 +764,176 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		return JsonUtil.bean2json(bean);
 	}
 
+	@Override
+	@POST
+	@Path("/send/attachment/u/{timeStamp}")
+	public String updateAttachment(@FormParam("data") String data, @PathParam("timeStamp") long timeStamp, @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws ParserException, InsufficientAuthenticationException {
+		logger.info("更新附件信息 : " + data);
+		AccountEntity user = accountService.getUser4Session();
+		if(!action.equals(DataSynchAction.FINISH.toString())){
+			AttachmentEntity attachment = (AttachmentEntity) JsonUtil.getObject4JsonString(data, AttachmentEntity.class);
+			attachment.setClientId(user.getClientId());
+			String subjectId = null;
+			NoteEntity note = null;
+			if(!StringUtil.isEmpty(attachment.getNoteId())){
+				note = noteService.getNote(attachment.getNoteId());
+				//条目不存在了
+				if(note == null || note.getDeleted().intValue() == Constants.DATA_DELETED){
+					logger.info("附件所属条目已无效 : " + attachment.getNoteId());
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					String returnVal = DataSynchizeUtil.banResult(attachment.getClassName(), attachment.getId());
+					return returnVal;
+				}else{
+					subjectId = note.getSubjectId();
+				}
+			}else{
+				DirectoryEntity dir = directoryService.getDirectory(attachment.getDirectoryId());
+				if(dir != null && dir.getDeleted() == Constants.DATA_NOT_DELETED){
+					subjectId = dir.getSubjectId();
+				}else{
+					logger.info("附件所属目录已无效 : " + attachment.getDirectoryId());
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					String returnVal = DataSynchizeUtil.banResult(attachment.getClassName(), attachment.getId());
+					return returnVal;
+				}
+			}
+			
+			boolean saveLog = false;
+			//用户是否在条目目录黑名单中
+			if(!saveLog){
+				if(note != null && !StringUtil.isEmpty(note.getDirId())){
+					boolean isBan = directoryService.inDirBlackList(user.getId(), note.getDirId());
+					if(isBan){
+						logger.warn("用户在目录黑名单中", new InsufficientAuthenticationException("用户在目录黑名单中"));
+						saveLog = true;
+						
+						res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+						res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+						
+						res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
+						res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+						
+						logger.info("用户在目录黑名单中：");
+					}
+				}
+			}
+			
+			//用户是否在条目黑名单中
+			if(!saveLog){
+				if(note != null){
+					boolean isBan = noteService.inNoteBlackList(user.getId(), note.getId());
+					if(isBan){
+						logger.warn("用户在条目黑名单中", new InsufficientAuthenticationException("用户在条目黑名单中"));
+						saveLog = true;
+						
+						res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+						res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+						
+						res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
+						res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+						
+						logger.info("用户在条目黑名单中：");
+					}
+				}
+			}
+			
+			if(!saveLog){
+				//所有者
+				boolean isOwner = (note != null && note.getCreateUserId().equals(user.getId())) || note == null;
+				//编辑
+				boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subjectId, ActionName.ADD_DIRECTORY);
+				if(!hasPermission && needAuth && !isOwner){
+					logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【上传附件】, 请联系专题管理员。"));
+					saveLog = true;
+					
+					res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+					res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
+					res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+					
+					logger.info("权限不足，不能修改附件，删除新增附件：");
+				}
+			}
+			
+			if(saveLog){
+				//DataSynchizeUtil.saveBanLog(DataType.ATTACHMENT.toString(), DataSynchAction.TRUNCATE.toString(), attachment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
+				
+				String returnVal = DataSynchizeUtil.banResult(attachment.getClassName(), attachment.getId());
+				logger.info("权限不足，不能修改附件，删除新增附件：" + returnVal);
+				return returnVal;
+			}
+			
+			//普通附件
+			if (attachment.getFileType().intValue() == Constants.FILE_TYPE_NORMAL) {
+				String filePath = FilePathUtil.getFileUploadPath(note, attachment.getDirectoryId());
+				attachment.setFilePath(filePath);
+			} else { // 目前设计应该没有下面的附件类型
+				if(note != null){
+					String suffix = attachment.getFileName().substring(attachment.getFileName().lastIndexOf('.') + 1);
+					String filePath = FilePathUtil.getImageUploadPath(note);
+					attachment.setFilePath(filePath);
+					attachment.setId(UUIDGenerator.uuid());
+					attachment.setFilePath(filePath);
+					attachment.setSuffix(suffix);
+					attachment.setFileType(Constants.FILE_TYPE_IMAGE);
+					if(!StringUtil.isEmpty(suffix) && suffix.equalsIgnoreCase("js")){
+						attachment.setFileType(Constants.FILE_TYPE_JS);
+					}
+					if(!StringUtil.isEmpty(suffix) && suffix.equalsIgnoreCase("css")){
+						attachment.setFileType(Constants.FILE_TYPE_CSS);
+					}
+					attachment.setFileType(Constants.FILE_TYPE_IMAGE);
+					
+					HtmlParser parser = new HtmlParser(note.getContent());
+					String imgUrl = FilePathUtil.getImageUrl(note);
+					String content = parser.parseNoteContentByFileName(attachment.getFileName(), imgUrl + "/" + attachment.getFileName());
+					note.setContent(content);
+					noteService.updateEntitie(note);
+				}
+			}
+			attachment.setDeleted(Constants.DATA_NOT_DELETED);
+			attachment.setStatus(Constants.FILE_TRANS_NOT_COMPLETED);
+			attachment.setTranSfer(0L);
+			attachment.setCreateUser(user.getId());
+			if(StringUtil.isEmpty(attachment.getSuffix())){
+				attachment.setSuffix(FilenameUtils.getExtension(attachment.getFileName()));
+			}
+			attachmentService.updateAttachment(attachment);
+			
+			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.ATTACHMENT.toString());
+			
+			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+			res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+			
+			/*int count = synchLogService.countAttachmentLogByNote(user.getClientId(), user.getId(), timeStamp, attachment.getNoteId());
+			if(count > 0){
+				res.setHeader("ACTION", "NEXT");
+				res.setHeader("dataType", "ATTACHMENT");
+			}*/
+		}else{
+			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
+			res.setHeader(HeaderName.DATATYPE.toString(), DataType.ATTACHMENT.toString());
+			
+			String uploadData = DataSynchizeUtil.queryUploadFile(user, res);
+			DataBean bean = new DataBean(uploadData, "");
+			return JsonUtil.bean2json(bean);
+		}
+		DataBean bean = new DataBean("", "");
+		return JsonUtil.bean2json(bean);
+	}
+	
 	@Override
 	@DELETE
 	@Path("/send/attachment/d/{id}/{timeStamp}")
@@ -1235,6 +1403,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 	public String getSynchDataByStep(@HeaderParam(SynchConstants.HEADER_CLIENT_ID) String clientId, @PathParam("timeStamp") long timeStamp, String endTimeStr, @DefaultValue(SynchConstants.DATA_CLASS_ALL) @HeaderParam(SynchConstants.HEADER_DATATYPE) String dataClass, @DefaultValue(SynchConstants.CLIENT_SYNCH_REQUEST) @HeaderParam(SynchConstants.HEADER_ACTION) String action, @Context HttpServletResponse res) throws Exception {
 		AccountEntity user = accountService.getUser4Session();
 		String[] dataTypes = SynchDataCache.getDatasSort();
+		logger.info("请求下载日志数据类型：" + dataClass);
 		if(dataClass.equals(DataType.FILE.toString())){ // 请求下载文件
 			String downloadData = DataSynchizeUtil.queryDownloadFile(user.getId(), clientId, DataSynchAction.REQUEST.toString(), res);
 			DataBean bean = new DataBean("", downloadData);
@@ -1269,6 +1438,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						list.add(lg);
 					}else{
 						list.add(null);
+						DataSynchizeUtil.dealBanLog(note, user.getId(), clientId, timeStamp, endTime);
 					}
 				}else{
 					list.add(lg);
@@ -1285,6 +1455,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						list.add(lg);
 					}else{
 						list.add(null);
+						//DataSynchizeUtil.dealBanLog(dir, user.getId(), clientId, timeStamp, endTime);
 					}
 				}else{
 					list.add(lg);
@@ -1707,8 +1878,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			if(!hasPermission && needAuth){
 				logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【更新专题】, 请联系专题管理员。"));
 				SubjectEntity sub = subjectService.getSubject(subject.getId());
-				long operateTime = sub.getUpdateTimeStamp() == null ? sub.getCreateTimeStamp() : sub.getUpdateTimeStamp();
-				DataSynchizeUtil.saveBanLog(DataType.SUBJECT.toString(), DataSynchAction.UPDATE.toString(), subject.getId(), sub.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
+				//long operateTime = sub.getUpdateTimeStamp() == null ? sub.getCreateTimeStamp() : sub.getUpdateTimeStamp();
+				//DataSynchizeUtil.saveBanLog(DataType.SUBJECT.toString(), DataSynchAction.UPDATE.toString(), subject.getId(), sub.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
 				
 				res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 				res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.SUBJECT.toString());
@@ -1716,8 +1887,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.SUBJECT.toString());
 				
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				String returnVal = DataSynchizeUtil.banResult(subject.getClassName(), subject.getId());
 				logger.info("权限不足，不能修改专题信息，恢复专题数据：" + returnVal);
 				return returnVal;
 			}
@@ -1893,8 +2063,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 					
-					DataBean bean = new DataBean();
-					String returnVal = JsonUtil.bean2json(bean);
+					String returnVal = DataSynchizeUtil.banResult(dir.getClassName(), dir.getId());
 					logger.info("用户在黑名单中：" + returnVal);
 					return returnVal;
 				}
@@ -1910,8 +2079,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.DIRECTORY.toString());
 				
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				String returnVal = DataSynchizeUtil.banResult(dir.getClassName(), dir.getId());
 				logger.info("权限不足，不能添加目录，删除新增目录数据：" + returnVal);
 				return returnVal;
 			}
@@ -2027,11 +2195,10 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 			
 			if(saveLog){
-				long operateTime = dir.getUpdateTimeStamp() == null ? dir.getCreateTimeStamp() : dir.getUpdateTimeStamp();
-				DataSynchizeUtil.saveBanLog(DataType.DIRECTORY.toString(), DataSynchAction.UPDATE.toString(), dir.getId(), dir.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
+				//long operateTime = dir.getUpdateTimeStamp() == null ? dir.getCreateTimeStamp() : dir.getUpdateTimeStamp();
+				//DataSynchizeUtil.saveBanLog(DataType.DIRECTORY.toString(), DataSynchAction.UPDATE.toString(), dir.getId(), dir.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
 				
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				String returnVal = DataSynchizeUtil.banResult(directory.getClassName(), directory.getId());
 				return returnVal;
 			}
 			
@@ -2225,12 +2392,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 					
-					Map<String, String> delMap = new HashMap<String, String>();
-					delMap.put("dataType", DataType.NOTE.toString());
-					delMap.put("action", DataSynchAction.TRUNCATE.toString());
-					
-					DataBean bean = new DataBean(JsonUtil.map2json(delMap), "");
-					String returnVal = JsonUtil.bean2json(bean);
+					String returnVal = DataSynchizeUtil.banResult(note.getClassName(), note.getId());
 					logger.info("用户在黑名单中：" + returnVal);
 					return returnVal;
 				}
@@ -2246,12 +2408,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 				
-				Map<String, String> delMap = new HashMap<String, String>();
-				delMap.put("dataType", DataType.NOTE.toString());
-				delMap.put("action", DataSynchAction.TRUNCATE.toString());
-				
-				DataBean bean = new DataBean(JsonUtil.map2json(delMap), "");
-				String returnVal = JsonUtil.bean2json(bean);
+				String returnVal = DataSynchizeUtil.banResult(note.getClassName(), note.getId());
 				logger.info("权限不足，不能添加条目，删除新增的条目数据：" + returnVal);
 				return returnVal;
 			}
@@ -2313,8 +2470,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 					
-					DataBean bean = new DataBean();
-					String returnVal = JsonUtil.bean2json(bean);
+					String returnVal = DataSynchizeUtil.banResult(note.getClassName(), note.getId());
 					logger.info("用户在黑名单中：" + returnVal);
 					return returnVal;
 				}
@@ -2330,8 +2486,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 				res.setHeader(HeaderName.DATATYPE.toString(), DataType.NOTE.toString());
 				
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				String returnVal = DataSynchizeUtil.banResult(note.getClassName(), note.getId());
 				logger.info("权限不足，不能添加条目，删除新增条目数据：" + returnVal);
 				return returnVal;
 			}
@@ -2461,7 +2616,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 			
 			if(saveLog){
-				note = noteService.getNote(note.getId());
+				/*note = noteService.getNote(note.getId());
 				long operateTime = 0;
 				if(note.getUpdateTimeStamp() != null){
 					operateTime = note.getUpdateTimeStamp().longValue();
@@ -2470,9 +2625,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}
 				
 				DataSynchizeUtil.saveBanLog(DataType.NOTE.toString(), DataSynchAction.UPDATE.toString(), note.getId(), note.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
-				
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				*/
+				String returnVal = DataSynchizeUtil.banResult(note.getClassName(), note.getId());
 				logger.info("权限不足，不能修改条目，恢复条目数据：" + returnVal);
 				return returnVal;
 			}
@@ -2672,12 +2826,12 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 			
 			if(saveLog){
-				note = noteService.getNote(note.getId());
+				/*note = noteService.getNote(note.getId());
 				long operateTime = note.getUpdateTimeStamp() == null ? note.getCreateTimeStamp() : note.getUpdateTimeStamp();
 				DataSynchizeUtil.saveBanLog(DataType.NOTE.toString(), DataSynchAction.UPDATE.toString(), note.getId(), note.getUpdateUser(), user.getId(), operateTime, System.currentTimeMillis());
+				*/
 				
-				DataBean bean = new DataBean();
-				String returnVal = JsonUtil.bean2json(bean);
+				String returnVal = DataSynchizeUtil.banResult(note.getClassName(), note.getId());
 				logger.info("权限不足，不能修改条目，恢复条目数据：" + returnVal);
 				return returnVal;
 			}
@@ -2900,10 +3054,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}
 				
 				if(saveLog){
-					DataSynchizeUtil.saveBanLog(DataType.NOTETAG.toString(), DataSynchAction.TRUNCATE.toString(), noteTag.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
+					//DataSynchizeUtil.saveBanLog(DataType.NOTETAG.toString(), DataSynchAction.TRUNCATE.toString(), noteTag.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
 					
-					DataBean bean = new DataBean();
-					String returnVal = JsonUtil.bean2json(bean);
+					String returnVal = DataSynchizeUtil.banResult(noteTag.getClassName(), noteTag.getId());
 					logger.info("权限不足，不能添加条目标签，删除新增条目标签：" + returnVal);
 					return returnVal;
 				}
@@ -3071,7 +3224,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
 			res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.NOTE.toString());
 			
-			res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.NEXT.toString());
+			res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.NEXT.toString());
 			res.setHeader(HeaderName.DATATYPE.toString(), DataType.TAG.toString());
 		}
 		DataBean bean = new DataBean("", "");
@@ -3139,8 +3292,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 					res.setHeader(HeaderName.DATATYPE.toString(), DataType.COMMENT.toString());
 					
-					DataSynchizeUtil.saveBanLog(DataType.COMMENT.toString(), DataSynchAction.TRUNCATE.toString(), comment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
-					
+					//DataSynchizeUtil.saveBanLog(DataType.COMMENT.toString(), DataSynchAction.TRUNCATE.toString(), comment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
+					String returnVal = DataSynchizeUtil.banResult(comment.getClassName(), comment.getId());
+					return returnVal;
 				}else{
 					boolean isBan = noteService.inNoteBlackList(user.getId(), comment.getNoteId());
 					if(isBan){
@@ -3150,8 +3304,9 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 						res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.BAN.toString());
 						res.setHeader(HeaderName.DATATYPE.toString(), DataType.COMMENT.toString());
 						
-						DataSynchizeUtil.saveBanLog(DataType.COMMENT.toString(), DataSynchAction.TRUNCATE.toString(), comment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
-						
+						//DataSynchizeUtil.saveBanLog(DataType.COMMENT.toString(), DataSynchAction.TRUNCATE.toString(), comment.getId(), user.getId(), user.getId(), System.currentTimeMillis(), System.currentTimeMillis());
+						String returnVal = DataSynchizeUtil.banResult(comment.getClassName(), comment.getId());
+						return returnVal;
 					}else{
 						commentService.addComment(comment);
 						
@@ -3641,45 +3796,53 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 					for(Object obj : list){
 						Map<String, String> objMap = (Map<String, String>) obj;
 						String id = objMap.get("id");
-						AttachmentEntity attachment = attachmentService.getAttachment(id);
-						
-						String subjectId = null;
-						boolean isBan = false;
-						if(!StringUtil.isEmpty(attachment.getNoteId())){
-							subjectId = noteService.getNote(attachment.getNoteId()).getSubjectId();
-							isBan = noteService.inNoteBlackList(user.getId(), attachment.getNoteId());
-						}else{
-							subjectId = directoryService.getDirectory(attachment.getDirectoryId()).getSubjectId();
+						AttachmentEntity attachment = null;
+						if(!StringUtil.isEmpty(id)){
+							attachment = attachmentService.getAttachment(id);
 						}
-						
-						boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subjectId, ActionName.ADD_NOTE);
-						if((!hasPermission || isBan) && needAuth){
-							logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【删除附件】, 请联系专题管理员。"));
-							
-							String act = DataSynchAction.RESTORE.toString();
-							if(!isBan){
-								DataSynchizeUtil.saveBanLog(dataType, act, attachment.getId(), attachment.getCreateUser(), user.getId(), attachment.getCreateTimeStamp(), System.currentTimeMillis());
+						if(attachment != null){
+							String subjectId = null;
+							boolean isBan = false;
+							if(!StringUtil.isEmpty(attachment.getNoteId())){
+								subjectId = noteService.getNote(attachment.getNoteId()).getSubjectId();
+								isBan = noteService.inNoteBlackList(user.getId(), attachment.getNoteId());
+							}else{
+								subjectId = directoryService.getDirectory(attachment.getDirectoryId()).getSubjectId();
 							}
-							attachment.setOperation(DataSynchAction.BAN.toString());
-							/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
-							res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
 							
-							res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
-							res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
-							
-							attachment.setClassName(DataType.NOTE.toString());
-							attachment.setOperation(DataSynchAction.RESTORE.toString());
-							DataBean bean = new DataBean("", JsonUtil.bean2json(attachment));
-							
-							String returnVal = JsonUtil.bean2json(bean);
-							logger.info("权限不足，不能删除附件，恢复附件数据：" + returnVal);
-							return returnVal;*/
+							boolean hasPermission = DataSynchizeUtil.hasPermission(user.getId(), subjectId, ActionName.ADD_NOTE);
+							if((!hasPermission || isBan) && needAuth){
+								logger.warn("用户操作权限不足", new InsufficientAuthenticationException("用户没有进行此操作的权限： 【删除附件】, 请联系专题管理员。"));
+								
+								String act = DataSynchAction.RESTORE.toString();
+								if(!isBan){
+									DataSynchizeUtil.saveBanLog(dataType, act, attachment.getId(), attachment.getCreateUser(), user.getId(), attachment.getCreateTimeStamp(), System.currentTimeMillis());
+								}
+								attachment.setOperation(DataSynchAction.BAN.toString());
+								/*res.setHeader(HeaderName.NEXT_ACTION.toString(), DataSynchAction.SEND.toString());
+								res.setHeader(HeaderName.NEXT_DATATYPE.toString(), DataType.BATCHDATA.toString());
+								
+								res.setHeader(HeaderName.ACTION.toString(), DataSynchAction.SUCCESS.toString());
+								res.setHeader(HeaderName.DATATYPE.toString(), DataType.BATCHDATA.toString());
+								
+								attachment.setClassName(DataType.NOTE.toString());
+								attachment.setOperation(DataSynchAction.RESTORE.toString());
+								DataBean bean = new DataBean("", JsonUtil.bean2json(attachment));
+								
+								String returnVal = JsonUtil.bean2json(bean);
+								logger.info("权限不足，不能删除附件，恢复附件数据：" + returnVal);
+								return returnVal;*/
+							}else{
+								try {
+									attachmentService.deleteAttachment(attachment);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								attachment.setOperation(DataSynchAction.SUCCESS.toString());
+							}
 						}else{
-							try {
-								attachmentService.deleteAttachment(attachment);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
+							attachment = new AttachmentEntity();
+							attachment.setId(id);
 							attachment.setOperation(DataSynchAction.SUCCESS.toString());
 						}
 						result.add(attachment);

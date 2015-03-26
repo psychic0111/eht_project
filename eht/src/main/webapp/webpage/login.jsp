@@ -24,7 +24,7 @@ if(top != window){
 <body>
 <!-- Begin header-->
 <div class="header">
-  <div class="left1"><img src="${imgPath}/logo.png"  height="40" /></div>
+  <div class="left1"><img src="${imgPath}/logo.png"  height="30" style="margin-top:6px;"/></div>
   <div class="right1"></div>
   <div class="clear"></div>
 </div>
@@ -43,7 +43,7 @@ if(top != window){
           <div class="Information" style="padding:50px; padding-top:20px;">
             <div class="title">填写登录信息</div>
             <div class="Table"> 
-            <form id="loginForm" name="loginForm" action="http://idpaper.las.ac.cn/center/login.dht" method="post">
+            <form id="loginForm" name="loginForm" action="<%=AppRequstUtiles.getAppUrl() %>/center/login.dht" method="post">
 	               <table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                  <td width="100">用户名：</td>
@@ -143,15 +143,14 @@ if('${logout}' == 'true'){
 //document.getElementByIdx_x("qq_login_btn").innerHTML = document.getElementByIdx_x("qq_login_btn").getAttribute("_origText");
 var cbLoginFun = function(o, oOpts){
 	if(QC.Login.check()){
-		self.close();
 		self.window.location = "<%=AppRequstUtiles.getAppUrl()%>";
 	}
 };
 QC.Login(
-	{btnId:"qq_login_btn"}, //插入按钮的节点id
-	cbLoginFun
+	{btnId:"qq_login_btn"} //插入按钮的节点id
+	//cbLoginFun
 );
-
+//login("123", "uuuui", "QQ");
 if(QC.Login.check()){//如果已登录
 	QC.Login.getMe(function(openId, accessToken){
 	   //alert(["当前登录用户的", "openId为："+openId, "accessToken为："+accessToken].join("n"));
@@ -163,8 +162,10 @@ if(QC.Login.check()){//如果已登录
 	});
 	//这里可以调用自己的保存接口
 	//...
+}else{
+	//jBox.tip("QQ登录未成功！", "info", {timeout:3000, top:"1px"});
 }
-
+//login("222", "uuul", 'QQ');
 //新浪登录
  WB2.anyWhere(function(W){
 	W.widget.connectButton({

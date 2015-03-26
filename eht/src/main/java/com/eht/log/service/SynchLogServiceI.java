@@ -337,4 +337,12 @@ public interface SynchLogServiceI extends CommonService{
 	public SynchronizedLogEntity findSynchedLog(String clientId, String userId,
 			String className, String classPK, String action);
 
+	public List<SynchLogEntity> dealBanNoteSynchLogs(String noteId, String clientId,
+			String userId, long timeStamp, long endTime, String[] dataClass,
+			boolean filterDelete, boolean saveLog);
+
+	public List<SynchLogEntity> dealBanDirSynchLogs(String dirId, String clientId,
+			String userId, long timeStamp, long endTime, String dataClass,
+			boolean filterDelete, boolean saveLog);
+
 }

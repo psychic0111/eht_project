@@ -41,47 +41,49 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 	 var basePath = "${uploadifyPath}"; 
 	 $(document).ready(function() {
 			$(function() {
-				$("#document_attachment").uploadify({
-					height        : 20,
-					swf           : '<%=frontPath %>/js/uploadify3/uploadify.swf',
-					width         : 50,
-					buttonText    : '上传文件',
-					uploader      : upLoadPath,
-					queueSizeLimit: 10,
-					formData	  :{
-										'jsessionid':'<%=sessionId%>',
-										'dirId':'${dirId}',
-										'userId':'${SESSION_USER_ATTRIBUTE.id}',
-										'noteid':''
-									},
-					onSelect:function(file){
-						var disableType=new Array();
-						disableType["exe"]=true;
-						disableType["com"]=true;
-						disableType["bat"]=true;
-						disableType["sh"]=true;
-						var fileName=file.name;
-						fileName=fileName.toLocaleLowerCase();
-						var terms=fileName.split("\.");
-						var type="";
-						if(fileName.indexOf(".")>-1){
+				if('${showUpload}' == "true"){
+					$("#document_attachment").uploadify({
+						height        : 20,
+						swf           : '<%=frontPath %>/js/uploadify3/uploadify.swf',
+						width         : 50,
+						buttonText    : '上传文件',
+						uploader      : upLoadPath,
+						queueSizeLimit: 10,
+						formData	  :{
+											'jsessionid':'<%=sessionId%>',
+											'dirId':'${dirId}',
+											'userId':'${SESSION_USER_ATTRIBUTE.id}',
+											'noteid':''
+										},
+						onSelect:function(file){
+							var disableType=new Array();
+							disableType["exe"]=true;
+							disableType["com"]=true;
+							disableType["bat"]=true;
+							disableType["sh"]=true;
+							var fileName=file.name;
+							fileName=fileName.toLocaleLowerCase();
 							var terms=fileName.split("\.");
-							type=terms[terms.length-1];
+							var type="";
+							if(fileName.indexOf(".")>-1){
+								var terms=fileName.split("\.");
+								type=terms[terms.length-1];
+							}
+							type=$.trim(type);
+							if(disableType[type]){
+								alert("您不能上传后缀为.exe .com .bat .sh的文件！");
+								$("#document_attachment").uploadify("cancel",file.id);			
+							}
+						},
+						onUploadComplete:function(file){
+							$("#document_attachment").uploadify("cancel",file.id);	
+							var url="${webRoot}/subjectController/front/dirAttaManage.dht?subjectId=${subjectId}&dirId=${dirId}&ispage=true";
+							AT.get(url,function(data){
+								$("#datadiv").html(data);
+							});
 						}
-						type=$.trim(type);
-						if(disableType[type]){
-							alert("您不能上传后缀为.exe .com .bat .sh的文件！");
-							$("#document_attachment").uploadify("cancel",file.id);			
-						}
-					},
-					onUploadComplete:function(file){
-						$("#document_attachment").uploadify("cancel",file.id);	
-						var url="${webRoot}/subjectController/front/dirAttaManage.dht?subjectId=${subjectId}&dirId=${dirId}&ispage=true";
-						AT.get(url,function(data){
-							$("#datadiv").html(data);
-						});
-					}
-				});
+					});
+				}
 			});
 		});
 	 
@@ -103,9 +105,11 @@ window.UEDITOR_IMG_URL = "${webRoot}";
 
     <div class="right_top">
        <div class="Nav" id="nav_div" style="position:absolute;">
-			<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ADD_NOTE %>">
+			<c:if test="${showUpload == 'true' }">
+				<xd:hasPermission  resource="SubjectManage" subjectId="${subjectId}" action="<%=ActionName.ADD_NOTE %>">
 					<div id="document_attachment"></div> 
-			</xd:hasPermission>	    
+				</xd:hasPermission>	    
+			</c:if>
        </div>
     </div>
     <div class="right_index" >

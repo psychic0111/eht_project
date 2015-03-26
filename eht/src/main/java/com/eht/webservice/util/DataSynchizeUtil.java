@@ -57,6 +57,7 @@ import com.eht.subject.entity.DirectoryEntity;
 import com.eht.subject.entity.SubjectEntity;
 import com.eht.subject.service.SubjectServiceI;
 import com.eht.user.entity.AccountEntity;
+import com.eht.webservice.bean.DataBean;
 import com.eht.webservice.bean.Step;
 
 public class DataSynchizeUtil {
@@ -708,6 +709,36 @@ public class DataSynchizeUtil {
 	}
 	
 	/**
+	 * 处理BAN掉的条目日志的关联日志
+	 * @param userId
+	 * @param clientId
+	 * @param note
+	 */
+	public static void dealBanLog(NoteEntity note, String userId, String clientId, long timeStamp, long endTime){
+		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
+		try {
+			synchLogService.dealBanNoteSynchLogs(note.getId(), clientId, userId, timeStamp, endTime, new String[]{DataType.ATTACHMENT.toString(), DataType.NOTETAG.toString()}, true, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 处理BAN掉的条目日志的关联日志
+	 * @param userId
+	 * @param clientId
+	 * @param dir
+	 */
+	public static void dealBanLog(DirectoryEntity dir, String userId, String clientId, long timeStamp, long endTime){
+		SynchLogServiceI synchLogService = AppContextUtils.getBean("synchLogService");
+		try {
+			//synchLogService.dealBanNoteSynchLogs(dir.getId(), clientId, userId, timeStamp, endTime, DataType.ATTACHMENT.toString(), true, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * 判断是否返回该回收站数据
 	 * @param userId
 	 * @param subjectId
@@ -844,6 +875,16 @@ public class DataSynchizeUtil {
 			}
 		}
 		return logList;
+	}
+	
+	public static String banResult(String className, String uuid){
+		Map<String, String> map = new HashMap<String, String>();
+		map.put(SynchConstants.HEADER_HOST_DATATYPE, className);
+		map.put(SynchConstants.HEADER_HOST_UUID, uuid);
+		
+		DataBean bean = new DataBean("", JsonUtil.map2json(map));
+		String returnVal = JsonUtil.bean2json(bean);
+		return returnVal;
 	}
 	
 	public static void main(String[] args){

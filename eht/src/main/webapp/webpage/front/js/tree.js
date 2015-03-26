@@ -133,11 +133,11 @@ function onNodeClickDo(e, treeId, node) {
 			}
 		}else{
 			//处理文档类
-				if($("#noteEditor_td").is(":visible")){
-					hideNotePage();
-				}
-				currentDirId = node.id; 
-				dirAttachmentManage(node.subjectId);
+			if($("#noteEditor_td").is(":visible")){
+				hideNotePage();
+			}
+			currentDirId = node.id; 
+			dirAttachmentManage(node.subjectId);
 		}
 	}else if(node.dataType == 'RECYCLEP' || node.dataType == 'RECYCLE'){
 		if(!$("#noteEditor_td").is(":visible")){
@@ -302,6 +302,11 @@ function nodeBeforeRightClickDo(treeId, node){
 	if(node.level == 0){
 		return false;
 	}
+	var ss = node.id.substring(node.id.length -2, node.id.length);
+	if(ss.toLowerCase() == '_o'){
+		return false;
+	}
+	
 	rightClickNode = node;
 	if(selectInfo.curMenu != node){
 		//先执行click事件

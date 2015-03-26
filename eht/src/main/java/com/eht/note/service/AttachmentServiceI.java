@@ -148,4 +148,15 @@ public interface AttachmentServiceI extends CommonService{
 	
 	public List<AttachmentEntity> findAttachmentByNote(NoteEntity note, Integer status, 
 			Integer[] fileType);
+	
+	/**
+	 * 查询此目录下的附件
+	 * @param directoryId
+	 * @param firstResult
+	 * @param maxResult
+	 * @return
+	 */
+	public List<AttachmentEntity> findAttachmentsByDir(String directoryId,
+			int firstResult, int maxResult);
+	public long countAttachmentsByDir(String directoryId);
 }

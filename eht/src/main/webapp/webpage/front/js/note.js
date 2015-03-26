@@ -220,22 +220,51 @@ function saveNote(){
 
 // 保存条目，不刷新列表
 function saveNoteQuiet(){
-	noteEditor.sync("noteForm");
 	$("#divhiden").text(noteEditor.getContent());
+	/*for(var i = 0; i < $("#noteForm [name='content']").length; i++){
+		alert($("#noteForm [name='content']")[0].id);
+	}*/
 	AT.post($("#noteForm").attr("action"),$("#noteForm").serialize(), function(data){
 		//刷新当前条目id
 		$("#noteForm_id").val(data.id);
 		$("#noteForm_createuser").val(data.createUserId);
 		//显示&重置附件
 		
-		if($("#addCommentForm").length==0){
-			 var params = {'noteId':data.id};
-			 //显示评论
-			 AT.post(webRoot+"/commentController/front/findCommentByNote.dht",params,function(data){
-				 $("#comments_list").empty();
-				 $("#comments_list").append(data);
-			});
+		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
+		viewNotePageAndButton();
+		searchNotes(selectInfo.isDeleted,true);
+		$("#note_new").val("+ 新建条目");
+		$("input[name='noteTagId']").each(function(){
+			var node = zTree_Menu.getNodeByParam("id",$(this).val());
+				if(node!=null){
+					var params = {'id':node.id,'tid':node.tId};
+					AT.post(webRoot+"/tagController/front/showcount.dht",params,function(data){
+						$("#diyBtn_"+data.id).remove();
+						var aObj = $("#" + data.tId + '_a');
+						var editStr = "<span id='diyBtn_" +data.id+ "' >"+"("+data.total+")"+"</span>";
+						aObj.append(editStr);
+					},true);
+				}
+		  });
+		
+		
+		var parentNode = zTree_Menu.getNodeByParam("id","remenber_subject_"+$("#noteForm_subjectId").val());
+		if(parentNode!=null&&parentNode.open){
+				var nodes = parentNode.children;
+				for(var i=0;i<nodes.length;i++){
+					var params = {'userId':nodes[i].id,'subjectId':nodes[i].subjectId,'tid':nodes[i].tId};
+					AT.post(webRoot+"/noteController/front/showcount.dht",params,function(data){
+						$("#diyBtn_"+data.userId+"_"+data.subjectId).text("("+data.total+")");
+					},true);
+				}
 		}
+		 var params = {'noteId':data.id};
+		 //显示评论
+		 AT.post(webRoot+"/commentController/front/findCommentByNote.dht",params,function(data){
+			 $("#comments_list").empty();
+			 $("#comments_list").append(data);
+		});
+		
 	});
 } 
 

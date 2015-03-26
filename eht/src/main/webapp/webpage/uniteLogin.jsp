@@ -32,7 +32,10 @@
 	                </tr> 
 	                <tr>
 	                  <td>&nbsp;</td>
-	                  <td><input class="Button1" type="submit" name="button" id="button" value="绑定" /></td>
+	                  <td>
+	                  	<input class="Button1" type="submit" name="button" id="button" value="绑定" />
+	                  	<input class="Button1" type="button" onclick="closeDialog()" name="button" id="button" value="取消" />
+	                  </td>
 	                </tr>
 	              </table>
               </form>
@@ -66,6 +69,10 @@
 	function getVerifiCode(){
         document.getElementById("verifi_code").src ="${webRoot}/getVerifiCode.dht?r=" + new Date().getTime();
     }   
+	
+	function closeDialog(){
+		$.jBox.close();
+	}
 </script>
 </body>
 </html>
