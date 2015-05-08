@@ -358,6 +358,16 @@ public class DataSynchizeUtil {
 		String[] datasDelSort = datasDelSortEle.getTextTrim().split(",");
 		SynchDataCache.setDatasDeleteSort(datasDelSort);
 		
+		// 添加、更新时数据类型的同步顺序
+		Element mDatasSortEle = XmlUtil.getUniqueElement(dataTypeElement, "mobile_datasSort");
+		String[] mDatasSort = mDatasSortEle.getTextTrim().split(",");
+		SynchDataCache.setMobileDatasSort(mDatasSort);
+		
+		// 删除时数据类型的同步顺序
+		Element mDatasDelSortEle = XmlUtil.getUniqueElement(dataTypeElement, "mobile_datasDeleteSort");
+		String[] mDatasDelSort = mDatasDelSortEle.getTextTrim().split(",");
+		SynchDataCache.setMobileDatasDeleteSort(mDatasDelSort);
+		
 		Element stepsElement = XmlUtil.getUniqueElement(root, "steps");
 		List<?> stepEleList = XmlUtil.getElementsByNodeName(stepsElement, "step");
 		List<Step> stepList = new ArrayList<Step>();
@@ -505,7 +515,7 @@ public class DataSynchizeUtil {
 		String htmlPath = FilePathUtil.getNoteHtmlPath(note);
 		try {
 			File htmlFile = unZipNoteHtml(zipFile, htmlPath);
-			if(htmlFile.exists() && htmlFile.isFile()){
+			if(htmlFile != null && htmlFile.exists() && htmlFile.isFile()){
 				FileInputStream fis = new FileInputStream(htmlFile);
 				FileChannel fc = fis.getChannel();
 				long fileSize = fc.size();

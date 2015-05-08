@@ -194,7 +194,7 @@ public interface SynchLogServiceI extends CommonService{
 	 * @return
 	 * @throws Exception 
 	 */
-	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, long endTime, String dataClass, boolean isDeleteFilter, boolean saveLog) throws Exception;
+	public List<SynchLogEntity> findSynchLogsByTarget(String clientId, String userId, long timeStamp, long endTime, String dataClass, String[] dataTypes, boolean isDeleteFilter, boolean saveLog) throws Exception;
 	
 	/**
 	 * 日志保存到已同步表中

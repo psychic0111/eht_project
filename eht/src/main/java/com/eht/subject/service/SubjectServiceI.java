@@ -1,7 +1,9 @@
 package com.eht.subject.service;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -183,4 +185,5 @@ public interface SubjectServiceI extends CommonService{
 	 */
     public List<SubjectEntity> findUsersSubjectByType(String userId, int subjectType);
     
+    public File generateWordReport(Map<String, Object> dataMap);
 }

@@ -73,7 +73,7 @@
       <!-- Begin notes_list-->
       <div id="noteList_div" style="position:relative;top:0;left:0;padding-top: 0px;">
 			<div id="pageloading_search" style="display:block"></div>
-      		<div class="notes_list" id="noteListIframe" style="width:93%;padding-left:10px;padding-top:10px;padding-right:5px;height:100%"></div>
+      		<div class="notes_list" id="noteListIframe" style="width:93%;padding-left:10px;padding-top:10px;padding-right:5px;height:99%"></div>
       		<script type="text/javascript">$("#pageloading_search").show();</script>
       </div>
       <!-- End notes_list--> 

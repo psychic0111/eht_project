@@ -22,6 +22,12 @@
 <c:set var="imgPath" value="<%=imgPath%>" />
 <c:set var="webpagePath" value="<%=webpagePath%>" />
 <c:set var="uploadifyPath" value="<%=uploadifyPath%>" />
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <LINK href="${cssPath}/css.css" type=text/css rel=stylesheet>
 <LINK href="${cssPath}/common.css" type=text/css rel=stylesheet>
 <link rel="stylesheet" href="${cssPath}/zTreeStyle/zTreeStyle.css" type="text/css">
@@ -245,3 +251,6 @@ var sessionuserid = '${SESSION_USER_ATTRIBUTE.id}';
 	}
 	
 </script> 
+</head>
+<body></body>
+</html>

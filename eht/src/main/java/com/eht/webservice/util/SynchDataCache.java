@@ -49,6 +49,16 @@ public class SynchDataCache {
 	private static String[] datasDeleteSort = null;
 	
 	/**
+	 * 移动客户端获取同步数据类型的顺序 -- 添加、修改
+	 */
+	private static String[] mobileDatasSort = null;
+	
+	/**
+	 * 移动客户端获取同步数据类型的顺序 -- 删除
+	 */
+	private static String[] mobileDatasDeleteSort = null;
+	
+	/**
 	 * 客户端获取同步数据操作的顺序
 	 */
 	private static String[] actionSort = new String[]{DataSynchAction.TRUNCATE.toString(), DataSynchAction.DELETE.toString(), DataSynchAction.REQUEST.toString()};
@@ -119,5 +129,21 @@ public class SynchDataCache {
 
 	public static void setStepList(List<Step> stepList) {
 		SynchDataCache.stepList = stepList;
+	}
+
+	public static String[] getMobileDatasSort() {
+		return mobileDatasSort;
+	}
+
+	public static void setMobileDatasSort(String[] mobileDatasSort) {
+		SynchDataCache.mobileDatasSort = mobileDatasSort;
+	}
+
+	public static String[] getMobileDatasDeleteSort() {
+		return mobileDatasDeleteSort;
+	}
+
+	public static void setMobileDatasDeleteSort(String[] mobileDatasDeleteSort) {
+		SynchDataCache.mobileDatasDeleteSort = mobileDatasDeleteSort;
 	}
 }

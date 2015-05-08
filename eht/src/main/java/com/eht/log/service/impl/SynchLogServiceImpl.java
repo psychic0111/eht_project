@@ -2241,14 +2241,9 @@ public class SynchLogServiceImpl extends CommonServiceImpl implements
 	 */
 	@Override
 	public List<SynchLogEntity> findSynchLogsByTarget(String clientId,
-			String userId, long timeStamp, long endTime, String dataClass,
+			String userId, long timeStamp, long endTime, String dataClass, String[] dataTypes,
 			boolean filterDelete, boolean saveLog) throws Exception {
-		String[] dataTypes = SynchDataCache.getDatasSort();
-		if (!filterDelete) {
-			dataTypes = SynchDataCache.getReverseDatasSort();
-		}
-		// dc.add(Restrictions.eq("clientId",
-		// SynchConstants.CLIENT_DEFAULT_ID)); // web页面操作产生的操作日志
+
 		List<String> idList = findSynchedLogIds(clientId, userId);
 		List<SynchLogEntity> logList = null;
 

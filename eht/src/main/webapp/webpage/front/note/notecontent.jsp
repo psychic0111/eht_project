@@ -1,3 +1,4 @@
+<%@page import="com.eht.common.cache.DataCache"%>
 <%@page import="com.eht.common.util.AppRequstUtiles"%>
 <%@page import="com.eht.common.constant.ActionName"%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
@@ -67,7 +68,6 @@ li.over {background-color: #bcd4ec;}
 }
 
 .note_comment{
-	cursor:pointer;
 	background-color: #dcdcdc;
     color: #555;
     display: block;
@@ -75,6 +75,21 @@ li.over {background-color: #bcd4ec;}
     margin: 0 6px 6px 0;
     padding: 1px 12px;
     transition: all 100ms ease 0s;
+}
+#comments_div{
+	position:fixed;
+	width:40%;
+	height:70%;
+	border:solid 1px #DDD;
+	background:#FFF;
+	padding:0;
+	cursor:pointer;
+	display:none;
+	-webkit-box-shadow:0 5px 20px rgba(0, 0, 0, 0.3);
+	-moz-box-shadow:0 5px 20px rgba(0, 0, 0, 0.3);
+	box-shadow:0 5px 20px rgba(0, 0, 0, 0.3);
+	right:5px;
+	z-index:9999
 }
 
 -->
@@ -112,7 +127,7 @@ li.over {background-color: #bcd4ec;}
           <div class="left" style="margin-top:-5px;width:60%;">
           	<input id="noteTitleField" class="InputTxt3" type="text" value="${title}" name="title" style=" width:100%;line-height:29px;" maxlength="200">
           </div>
-          <div class="note_comment" onclick="toComment()"><a href="#">评论</a></div>
+          <div class="note_comment" id="commentbtndiv" onclick="toComment(this)"><a href="#">评论</a></div>
            <div class="clear"></div>
         </div> 
         <div class="title">
@@ -172,22 +187,16 @@ li.over {background-color: #bcd4ec;}
    	  	   <div class="clear"></div>
         </div>
         <div id="attMoreDIV" class="Edit_input" style="display: block;padding-left:10px"></div>
-        <div class="Edit_input">
-          <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;display:none;"></script>
+        <div id="noteeditor_div" class="Edit_input" style="overflow-y:hidden;overflow-x:hidden;">
+          <script id="note_editor" name="content" type="text/plain" style="width:100%;height:700px;"></script>
         </div>
-        <div id="parentHtmlViewDiv" style="width:100%;height:100%;border-top:1px solid #d9d9d9;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;overflow:auto;">
+        
+        <%-- <div id="parentHtmlViewDiv" style="width:100%;height:100%;border-top:1px solid #d9d9d9;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;overflow:auto;">
         	<div id="htmlViewDiv" style="height:300px;">
     		 	<iframe id="htmlViewFrame" src="${webRoot}/webpage/front/info.html" scrolling="no" frameborder="0" style="border:none;outline:0; frameborder:0; outline-style:none;outline-color:invert;outline-width:0px; min-width: 100%;height:100%;" >
    				</iframe>
     		</div>
-    		<!-- Begin comments-->
-	        <div class="comments" id="comments_div" style="width:90%;margin-left:50px;padding-top:50px;">
-	        	<%-- <div class="top" style="cursor:pointer;" ><img src="${imgPath}/comments1a.png" id="comment_img" onclick="togComment()" height="35px"/></div> --%>
-	        	<div class="comments_list" id="comments_list">
-	        	</div>
-	      	</div>
-		    <!-- End comments--> 
-        </div>
+        </div> --%>
       </div>
         
       <!-- End new_edit--> 
@@ -196,6 +205,13 @@ li.over {background-color: #bcd4ec;}
     <!-- End notes_new-->
     <div class="clear"></div>
 	</form>
+	<!-- Begin comments-->
+    <div class="comments" id="comments_div" style="">
+    	<%-- <div class="top" style="cursor:pointer;" ><img src="${imgPath}/comments1a.png" id="comment_img" onclick="togComment()" height="35px"/></div> --%>
+    	<div class="comments_list" id="comments_list">
+    	</div>
+  	</div>
+ 	<!-- End comments-->
 <div id="emailMsgDiv" style="font-size:14px;color: rgb(68, 68, 68);display:none;z-index:10001;background:#FFFFFF;border:1px solid rgb(213, 213, 213);width: 300px;position: absolute;top: 0px;left: 0px;">
     <ul style="display:none;" class="floattishi" id="flttishi" ></ul>
 	<input type="hidden" name="prevTrIndex" id="prevTrIndex" value="-1" />    
@@ -204,27 +220,84 @@ li.over {background-color: #bcd4ec;}
 
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/plugins/jquery.wresize.js"></script>
 <script>
-function reloadEditor(){
-	var hidden = false;
+function swithToolbar(toHide){
+	var editorId = $("div.edui-editor.edui-default").attr("id");
+	var editorToolbar = $("#" + editorId + "_toolbarbox");
+	if(typeof(toHide) == 'undefined'){
+		if(editorToolbar.is(":visible")){
+			editorToolbar.hide();
+			noteEditor.setHeight($("#right_index_mid").height() - 260 + 52);
+		}else{
+			editorToolbar.show();
+			noteEditor.setHeight($("#right_index_mid").height() - 264);
+		}
+	}else{
+		if(toHide == 1){
+			editorToolbar.hide();
+			noteEditor.setHeight($("#right_index_mid").height() - 260 + 52);
+		}else{
+			editorToolbar.show();
+			noteEditor.setHeight($("#right_index_mid").height() - 264);
+		}
+	}
+}
+/**
+ * toolbar:工具条数组  edit:是否编辑状态  isFirstInit：是否初次
+ */
+function reloadEditor(toolbar, edit, isFirstInit, eHeight){
+	/* var hidden = false;
 	var edui1=$(".edui-editor");
 	if(edui1.length>0 && edui1.is(":visible")){
-		
+		edui1.width($("#note_editor").width());
 	}else{
 		hidden = true;
-	}
+	} */
+	
 	if(noteEditor!=null){
+		if(!isFirstInit){
+			$("#divhiden").text(noteEditor.getContent());
+		}
 		noteEditor.destroy();
 	}
-	noteEditor = UE.getEditor('note_editor', {initialFrameWidth:editorWidth, initialFrameHeight:editorheight,autoHeightEnabled:false});
-	
-	if(hidden){
+	var tw = $("#treeMenu_td").width();
+	var rect = $("#treeMenu_td")[0].getBoundingClientRect();
+	var isVisible = !!(rect.bottom - rect.top);
+	if(isVisible){
+		tw = tw + 22;
+	}else{
+		tw = 0;
+	}
+	var ew = $("#page_mainer").width() - tw - 350 - 22;
+	var	eh = $("#page_mainer").height() - 277;
+	if(!!eHeight){
+		eh = eHeight;
+	}
+	noteEditor = UE.getEditor('note_editor', {initialFrameWidth : ew, initialFrameHeight: eh,autoHeightEnabled:false,autoFloatEnabled:false,toolbars:toolbar});
+	noteEditor.addListener("ready", function(){
+		//$("#noteeditor_div").height(eh);
+		if(isFirstInit){
+			AT.get(webRoot + '/noteController/front/readWelcome.dht',function(data){
+				noteEditor.setContent(data);
+			});
+		}else{
+			noteEditor.setContent($("#divhiden").text());
+		}
+		if(!edit){
+			var editorId = $("div.edui-editor.edui-default").attr("id");
+			$("#" + editorId + "_toolbarbox").hide();
+			noteEditor.setDisabled();
+		}else{
+			noteEditor.setEnabled();
+		}
+	});
+	/* if(hidden){
 		noteEditor.addListener("ready", function(){
 			noteEditor.hide();
 		});
-	}
+	} */
 }
 
-function setNoteEditorHeight(){
+/* function setNoteEditorHeight(){
 	editorheight = document.documentElement.clientHeight;
 	var frameHeight = editorheight - 278;
 	editorheight = frameHeight - $("#edui1_toolbarbox").outerHeight() - 54;
@@ -236,17 +309,15 @@ function setNoteEditorHeight(){
 		frameHeight = 35;
 	}
 	return {editorWidth : editorWidth, editorheight : editorheight, frameHeight : frameHeight};
-}
+} */
 
 $(document).ready(function() {
 	showLoading_edit(); 
-	var obj = setNoteEditorHeight();
-	noteEditor = UE.getEditor('note_editor', {initialFrameWidth:obj.editorWidth, initialFrameHeight:obj.editorheight,autoHeightEnabled:false});
-	noteEditor.addListener("ready", function(){
-		noteEditor.hide();
-	});
-	$("#parentHtmlViewDiv").height(obj.frameHeight);
-	$("#parentHtmlViewDiv").width(obj.editorWidth);
+	//var obj = setNoteEditorHeight();
+	reloadEditor(toolbars, false, true);
+	//$("#parentHtmlViewDiv").height(obj.frameHeight);
+	//$("#parentHtmlViewDiv").width(obj.editorWidth);
+	
 	//$("#notes_new").height($("#right_index").height()+100);
 	var downloadPath = webRoot+"/noteController/front/downloadNodeAttach.dht";
 	var upLoadPath =webRoot+"/noteController/front/uploadNodeAttach.dht";
@@ -258,6 +329,9 @@ $(document).ready(function() {
       	$("#selectTag").hide();
   	 }
   	hideLoading_edit();
+  	
+  	var top = $("#commentbtndiv").offset().top + $("#commentbtndiv").height() + 10;
+	$("#comments_div").css("top", top);
 });
 
 function toComment(){
@@ -276,21 +350,38 @@ function toComment(){
 }
 
 function toCommentDo(){
-	if($("#note_edit").hasClass("Button3")){
+		//if($("#comments_div").css("display") == "block") return;
+	var top = $("#commentbtndiv").offset().top + $("#commentbtndiv").height() + 10;
+	$("#comments_div").css("top", top);
+	$("#comments_div").show("fast");
+	swithToolbar(1);
+		
+	/* if($("#note_edit").hasClass("Button3")){
 		enableEditNote();
 	}
-	$("#pinglun").focus();
+	$("#pinglun").focus(); */
 }
 
 //窗口大小改变事件
 var resizeId;
 $(window).wresize(function(){
 	window.clearTimeout(resizeId);
-	resizeId = window.setTimeout('setNotePageHeight();', 500);
+	resizeId = window.setTimeout('resizeNoteEditor();', 1300);
 });
-function setNotePageHeight(){
-	var obj = setNoteEditorHeight();
-	$("#parentHtmlViewDiv").height(obj.frameHeight);
-	setHtmlDivHeight();
+
+function resizeNoteEditor(){
+	var et = $("#right_index_mid").height() - 202;
+	var edit = false;
+	
+	var editorId = $("div.edui-editor.edui-default").attr("id");
+	var editorToolbar = $("#" + editorId + "_toolbarbox");
+	
+	if(editorToolbar.is(":visible")){
+		var eth = $("#right_index_mid").height() - 260;
+		edit = true;
+		reloadEditor(toolbars, edit, false, eth);
+	}else{
+		reloadEditor(toolbars, edit, false, et);
+	}
 }
 </script>

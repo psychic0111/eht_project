@@ -4,7 +4,7 @@ function login(openId, openUser, openType){
 	var params = {"openId": openId, "type": openType, "openUser": openUser};
 	AT.post(url, params, function(data){
 		if($("#bind_loginForm", data).attr('action') != 'undefined' && typeof($("#bind_loginForm", data).attr('action')) != 'undefined'){
-			var html1 = "<div style='padding:10px;'><input type='radio' checked='checked' id='radio1' name='bindOpen' value='1'/>已有帐号<br/><input type='radio' id='radio2' name='bindOpen' value='0' style='margin-top:10px;'/>快去注册</div>";
+			var html1 = "<div style='padding:10px;'><input type='radio' checked='checked' id='radio1' name='bindOpen' value='1'/>绑定我的Dpaper帐号<br/><input type='radio' id='radio2' name='bindOpen' value='0' style='margin-top:10px;'/>还没有Dpaper帐号，先去注册一个</div>";
 			var content = {
 				    state1: {
 				        content: html1,
@@ -32,7 +32,7 @@ function login(openId, openUser, openType){
 				    }
 			};
 			var title = '欢迎使用' + openType + '登录, 请绑定您的DPaper帐号';
-			$.jBox.open(content, '<span style="font-size:14px;">' + title + '</span>', 420, 'auto');
+			$.jBox(content);
 		}else{
 			window.location = webRoot + "/indexController/front/index.dht";
 		}

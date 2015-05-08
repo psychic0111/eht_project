@@ -126,6 +126,15 @@ function loadMoreNotes(undir){
 			+ "&deleted=" + deleted;
 	AT.post(url, null, function(data){
 		var c = $("#contentListUl");
+		for(var i = 0; i < $(data).length; i++){
+			var obj = $($(data)[i]);
+			if(obj.hasClass("notip")){
+				return false;
+			}
+			if(obj.attr("id") == 'deleted'){
+				obj.remove();
+			}
+		}
 		c.append(data);
 	});
 	$("#note_pageNo").val(parseInt(pn) + 1);

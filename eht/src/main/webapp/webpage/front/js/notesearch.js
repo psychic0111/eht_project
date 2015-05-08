@@ -224,8 +224,9 @@ function viewNote(id,subjectId){
 	if(!!$("#easyDialogWrapper").attr("id")){
 		$("#easyDialogWrapper").remove();
 	}
-	
+	$('#comments_div').hide();
 	AT.post(webRoot+"/noteController/front/loadNote.dht?id=" + id+"&subjectId=" + subjectId, null,function(data) {
+		swithToolbar(1);
 		if (data['id'] == null || data['id'] == ''){
 			    $("#note_new").show();
 				$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));	
@@ -299,10 +300,12 @@ function viewNote(id,subjectId){
 					 $("#comments_list").append(data);
 				});
 			}
-			$("#divhiden").text(note.content);
+			/*$("#divhiden").text(note.content);
 			$("#htmlViewFrame").height(0);
 			$("#htmlViewFrame").contents().find('body').html(note.content);
-			setHtmlDivHeight();
+			setHtmlDivHeight();*/
+			
+			noteEditor.setContent(note.content);
 			$("#readpng_" + id).attr("src", imgPath+"/read.png");
 			$("#note_status_" + id + " span").text("已读");
 			var residential = data['residential'];// 条目位置
@@ -316,7 +319,7 @@ function viewNote(id,subjectId){
 	//标签控制----------数据获取-隐藏选择功能----------
 	spellTag(id); 
 	$("#comments_list").empty();
-	$("#comment_img").attr("src", imgPath+ "/comments1a.png");
+	//$("#comment_img").attr("src", imgPath+ "/comments1a.png");
 	setTimeout('hideLoading_edit()',100);
 	switchNote = false; // 点击节点不切换条目内容页
 }
@@ -486,7 +489,7 @@ function viewNotePageAndButton(){
 		$("#note_edit").show();
 		$("#deleteNote_btn").show();
 		//显示评论
-		$("#comments_div").show();
+		//$("#comments_div").show();
 	}
 	
 	//如果当前选中节点不属于任何专题，或者是回收站、标签节点，则不可以新建条目
@@ -510,10 +513,10 @@ function viewNotePageAndButton(){
 	
 	try{
 		// 内容不可编辑
-		noteEditor.hide();
-		$("#htmlViewDiv").show();
+		noteEditor.setDisabled();
+		/*$("#htmlViewDiv").show();
 		$("#parentHtmlViewDiv").show();
-		window.setTimeout('setHtmlDivHeight();', 400);
+		window.setTimeout('setHtmlDivHeight();', 400);*/
 	}catch(e){
 	}
 }
@@ -540,10 +543,10 @@ function setHtmlDivHeight(){
 function editNotePageAndButton(){
 	$("#noteTitleField").removeAttr("disabled");//标题可编辑
 	//内容可编辑
-	$("#note_editor").show();
-	noteEditor.show();
-	$("#htmlViewDiv").hide();
-	$("#parentHtmlViewDiv").hide();
+	//$("#note_editor").show();
+	noteEditor.setEnabled();
+	//$("#htmlViewDiv").hide();
+	//$("#parentHtmlViewDiv").hide();
 	
 	//展现保存按钮
 	$("#saveNote_btn").show();
@@ -619,6 +622,7 @@ function addNewNote() {
 function addNewNotedo() {
 	$("#selectDir").hide();
 	if ($("#note_new").val() != "- 撤消条目") {
+		swithToolbar(0);  //显示工具栏
 		var uuid = Math.uuid().replace(/\-/g,"");
 		noteEditor.setContent("");
 		editNotePageAndButton();
@@ -651,13 +655,13 @@ function addNewNotedo() {
 				$("#noteForm_subjectId").val(subjectNode.id);
 			}
 			
-	}else if(nodeSelected.dataType == "REMENBERCHILD"){
+		}else if(nodeSelected.dataType == "REMENBERCHILD"){
 			$("#noteForm_dirId").val("");
 			var subjectNode = zTree_Menu.getNodeByParam("id",  nodeSelected.branchId, null);
 			$("#noteSubjectName").text("/多人专题/"+subjectNode.name);
 			$("#noteForm_subjectId").val(subjectNode.id);
-	}else{
-		$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));
+		}else{
+			$("#noteSubjectName").text(recurParentName(selectInfo.curMenu,""));
 		}
 		//新建条目
 		/*$('#attachment').hide();*/
@@ -673,6 +677,7 @@ function addNewNotedo() {
 		$('#attachment').show();
 		$("#selectTag").show();
 	} else {
+		swithToolbar(1);  //隐藏工具栏
 		$("#note_new").val("+ 新建条目");
 		$("#noteTitleField").val("");
 		
@@ -714,7 +719,15 @@ function restoreNote(id){
 
 //判断条目是否是编辑状态
 function isNoteStats(){
-	var edui1=$(".edui-editor");
+	var isEdit = typeof($("#noteTitleField").attr("disabled")) == "undefined";
+	if(isEdit){
+		if($("#noteForm_id").val() != '' && $("#noteForm_id").val() != null){
+			saveNoteQuiet();
+		}
+	}
+	return false;
+	
+	/*var edui1=$(".edui-editor");
 	if(edui1.length>0){
 		if(edui1.is(":visible")){
 		   var uecontent=noteEditor.getContent();
@@ -726,7 +739,7 @@ function isNoteStats(){
 		   }
 		}
 	}
-	return false;
+	return false;*/
 }
 
 //----------------logging tree----------

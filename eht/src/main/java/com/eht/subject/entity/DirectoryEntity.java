@@ -64,6 +64,8 @@ public class DirectoryEntity implements java.io.Serializable {
 	/**树父ID*/
 	private String pId;
 	
+	private List<DirectoryEntity> childDirlist;
+	
 	private List<NoteEntity> noteEntitylist;
 	
 	private List<AttachmentEntity> attachmentEntitylist;
@@ -83,6 +85,8 @@ public class DirectoryEntity implements java.io.Serializable {
 	private String operation;
 	
 	private String className = DataType.DIRECTORY.toString();
+	
+	private String mark;
 	
 	@Transient
 	public java.lang.String getCreateUserId() {
@@ -382,6 +386,26 @@ public class DirectoryEntity implements java.io.Serializable {
 
 	public void setClassName(String className) {
 		this.className = className;
+	}
+
+	@Transient
+	@JsonIgnore
+	public List<DirectoryEntity> getChildDirlist() {
+		return childDirlist;
+	}
+
+	public void setChildDirlist(List<DirectoryEntity> childDirlist) {
+		this.childDirlist = childDirlist;
+	}
+	
+	@Transient
+	@JsonIgnore
+	public String getMark() {
+		return mark;
+	}
+
+	public void setMark(String mark) {
+		this.mark = mark;
 	}
 	
 }

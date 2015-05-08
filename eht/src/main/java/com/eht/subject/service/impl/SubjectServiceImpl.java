@@ -1,16 +1,17 @@
 package com.eht.subject.service.impl;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -19,7 +20,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,11 +29,9 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
-import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
@@ -43,8 +41,6 @@ import org.jeecgframework.core.util.SendMailUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.eht.common.annotation.RecordOperate;
 import com.eht.common.constant.ActionName;
@@ -55,7 +51,7 @@ import com.eht.common.enumeration.DataType;
 import com.eht.common.util.AppContextUtils;
 import com.eht.common.util.AppRequstUtiles;
 import com.eht.common.util.FilePathUtil;
-import com.eht.common.util.FileToolkit;
+import com.eht.common.util.SubjectToMht;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.group.entity.Group;
 import com.eht.group.service.GroupService;
@@ -91,6 +87,10 @@ import com.eht.template.entity.TemplateEntity;
 import com.eht.template.service.TemplateServiceI;
 import com.eht.user.entity.AccountEntity;
 import com.eht.user.service.AccountServiceI;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
 @Service("subjectService")
 @Transactional
@@ -649,14 +649,12 @@ public class SubjectServiceImpl extends CommonServiceImpl implements
 				rootDirectoryList.add(directoryEntity);
 			}
 		}
-		int title = 1;
 		for (DirectoryEntity directoryEntity : rootDirectoryList) {
 			if (directoryEntity.getDirName().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)){ 
-				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+". ",true,sortList);
+				setDirectorySort( directoryEntity, directoryList, noteEntitylist,"",true,sortList);
 			}else{
-				setDirectorySort( directoryEntity, directoryList, noteEntitylist,title+". ",false,sortList);
+				setDirectorySort( directoryEntity, directoryList, noteEntitylist,"",false,sortList);
 			}
-			title++;
 		}
 		return sortList;
 	}
@@ -1201,6 +1199,51 @@ private void setDirectorySort(DirectoryEntity directoryEntity,List<DirectoryEnti
 				removeList.add(directoryEntity);
 			}
 		}
+	}
+	
+	private Configuration configuration = null;
+
+	@Override
+	public File generateWordReport(Map<String, Object> dataMap) {
+		configuration = new Configuration();
+		configuration.setDefaultEncoding("utf-8");
+		
+		String pathPrefix = FilePathUtil.getWebRootPath() + "export/template";
+		File templateDir = new File(pathPrefix);
+		
+		Template t=null;
+		try {
+			configuration.setDirectoryForTemplateLoading(templateDir);
+			t = configuration.getTemplate("export.xml", "UTF-8");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//输出文档路径及名称
+		String reportPath = FilePathUtil.getWebRootPath() + "/export";
+		File outFile = new File(reportPath + File.separator + "export.doc");
+		Writer out = null;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile)));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+ 
+        try {
+			t.process(dataMap, out);
+		} catch (TemplateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+	        try {
+				out.flush();
+				out.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+        return outFile;
 	}
  
 }

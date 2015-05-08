@@ -76,14 +76,13 @@ function AnalyticEmotion(s,context) {
 			
 			var eTop = target.offset().top - target.height() * 5;
 			var eLeft = target.offset().left - 1;
-			
 			if($('#emotions .categorys')[0]){
-				$('#emotions').css({top: eTop, left: eLeft});
+				$('#emotions').css({top: 0, left: 0});
 				$('#emotions').toggle();
 				return;
 			}
-			$('body').append('<div id="emotions"></div>');
-			$('#emotions').css({top: eTop, left: eLeft});
+			$('#emdiv').append('<div id="emotions" style="z-index:99999;"></div>');
+			$('#emotions').css({top: 0, left: 0});
 			$('#emotions').html('<div>正在加载，请稍候...</div>');
 			$('#emotions').click(function(event){
 				event.stopPropagation();

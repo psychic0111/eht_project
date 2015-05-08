@@ -1181,7 +1181,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		
 		boolean filterDelete = false;  //只查询删除操作日志,过滤掉其它
 		logger.info("获取delete日志，[" + dataClass + "]" + timeStamp + " -- " + endTime);
-		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, filterDelete, true);
+		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, dataTypes, filterDelete, true);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
 			//从查询到的日志中确定当前的数据类型
@@ -1422,7 +1422,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 		}
 		
 		boolean isDeleteFilter = true;
-		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, isDeleteFilter, true);
+		List<SynchLogEntity> result = synchLogService.findSynchLogsByTarget(clientId, user.getId(), timeStamp, endTime, dataClass, dataTypes, isDeleteFilter, true);
 		// 如果存在需要同步的日志
 		if(result != null && !result.isEmpty()){
 			dataClass = result.get(0).getClassName();
@@ -1690,7 +1690,8 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 			}
 			try {
 				String[] actionSort = SynchDataCache.getActionSort();
-				
+				String[] rDataTypes = SynchDataCache.getReverseDatasSort();
+				String[] dataTypes = SynchDataCache.getDatasSort();
 				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成,查询同步过程中其它客户端是否有日志生成["+actionSort[0]+"]:" + sr.getBeginTimestamp() + " -- " + sr.getLastSynTimestamp());
 				List<SynchLogEntity> logList = synchLogService.findTruncSynchLogs(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString(), false);
 				logger.info(clientId + ",用户ID:" + user.getId() + "同步完成,查询同步过程中其它客户端是否有日志生成, 查询结果：" + logList);
@@ -1704,7 +1705,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}
 				
 				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成,查询同步过程中其它客户端是否有日志生成["+actionSort[1]+"]:" + sr.getBeginTimestamp() + " -- " + sr.getLastSynTimestamp());
-				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString(), false, false);
+				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.BATCHDATA.toString(), rDataTypes, false, false);
 				logger.info(clientId + ",用户ID:" + user.getId() + "同步完成,查询同步过程中其它客户端是否有日志生成, 查询结果：" + logList);
 				if(logList != null && logList.size() > 0){
 					SynchLogEntity log = logList.get(0);
@@ -1716,7 +1717,7 @@ public class DataSynchizeServiceImpl implements DataSynchizeService {
 				}
 				
 				logger.info(clientId + ",用户ID:[" + user.getId() + "]同步完成,查询同步过程中其它客户端是否有日志生成["+actionSort[2]+"]:" + sr.getBeginTimestamp() + " -- " + sr.getLastSynTimestamp());
-				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.ALL.toString(), true, false);
+				logList = synchLogService.findSynchLogsByTarget(clientId, user.getId(), sr.getBeginTimestamp(), sr.getLastSynTimestamp(), DataType.ALL.toString(), dataTypes, true, false);
 				logger.info(clientId + ",用户ID:" + user.getId() + "同步完成,查询同步过程中其它客户端是否有日志生成, 查询结果：" + logList);
 				if(logList != null && logList.size() > 0){
 					SynchLogEntity log = logList.get(0);

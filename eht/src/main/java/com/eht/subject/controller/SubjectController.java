@@ -1,5 +1,6 @@
 package com.eht.subject.controller;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,6 +44,7 @@ import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.AppRequstUtiles;
 import com.eht.common.util.SubjectToMht;
+import com.eht.common.util.TreeUtils;
 import com.eht.common.util.UUIDGenerator;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
@@ -60,6 +62,7 @@ import com.eht.subject.entity.ZipEntity;
 import com.eht.subject.service.ImportServiceI;
 import com.eht.subject.service.InviteMememberServiceI;
 import com.eht.subject.service.SubjectServiceI;
+import com.eht.system.bean.TreeData;
 import com.eht.template.entity.TemplateEntity;
 import com.eht.template.service.TemplateServiceI;
 import com.eht.user.entity.AccountEntity;
@@ -765,7 +768,7 @@ public class SubjectController extends BaseController {
 	 * @throws IOException
 	 */
 	@RequestMapping("/front/exportSujectmht.dht")
-	public ModelAndView exportSujectmht(HttpServletRequest request, HttpServletResponse response) {
+	public ModelAndView exportSujectmht123(HttpServletRequest request, HttpServletResponse response) {
 		response.setContentType("application/octet-stream;charset=utf-8");
 		response.setHeader("Content-Disposition", "attachment; filename=export.mht");
 		Writer out = null;
@@ -801,6 +804,58 @@ public class SubjectController extends BaseController {
 		return null;
 	}
 
+	/**
+	 * 前台导出报告
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping("/front/exportSujectWord.dht")
+	public ModelAndView exportSujectWord(HttpServletRequest request, HttpServletResponse response) {
+		
+		AccountEntity user = (AccountEntity) request.getSession(false).getAttribute(Constants.SESSION_USER_ATTRIBUTE);
+		String basePath = AppRequstUtiles.getAppUrl()+"/noteController/front/downloadNodeAttach.dht?id=";
+		SubjectMht  mht=subjectService.SubjectforMht(request.getParameter("id"),user);
+		SubjectToMht.subjectToMht(mht, request);
+		
+		List<DirectoryEntity> rootList = SubjectToMht.findRootDirectory(mht.getSortList());
+		for(DirectoryEntity parentDir : rootList){
+			SubjectToMht.parseDataStrut(mht.getSortList(), parentDir);
+		}
+		
+		Map<String, Object> map=new HashMap<String, Object>();
+		map.put("subject", mht.getSubjectEntity());
+		map.put("subjectNoteslist", mht.getSubjectNoteslist());
+		map.put("subjectdirlist", rootList);
+		map.put("basePath", basePath);
+		File reportFile = subjectService.generateWordReport(map);
+		
+		response.setContentType("application/octet-stream;charset=utf-8");
+		response.setHeader("Content-Disposition", "attachment; filename=export.doc");
+		OutputStream outputStream = null;
+		FileInputStream fis = null;
+		try {
+			outputStream = new BufferedOutputStream(response.getOutputStream());
+			fis = new FileInputStream(reportFile);
+			int length = fis.available();
+			byte[] b = new byte[length];
+			fis.read(b);
+			outputStream.write(b);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally{
+			try {
+				outputStream.flush();
+				outputStream.close();
+				fis.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		return null;
+	}
+	
 	/**
 	 * 前台导入专题页面
 	 * 

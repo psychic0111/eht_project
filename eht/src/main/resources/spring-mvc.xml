@@ -191,12 +191,26 @@
 	
 	<!-- CXF WebService配置 -->
 	<bean id="dataSynchizeService" class="com.eht.webservice.service.impl.DataSynchizeServiceImpl"/>
+	<bean id="dataMobileSynchizeService" class="com.eht.webservice.service.impl.DataMobileSynchizeServiceImpl"/>
 	<import resource="classpath:META-INF/cxf/cxf.xml" />
 	<import resource="classpath:META-INF/cxf/cxf-extension-soap.xml"/>
 	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
 	<jaxrs:server id="ehtServiceContainer" address="/v1">
 		<jaxrs:serviceBeans>
 			<ref bean="dataSynchizeService" />
+		</jaxrs:serviceBeans>
+		<jaxrs:extensionMappings>
+			<entry key="json" value="application/json" />
+			<entry key="xml" value="application/xml" />
+		</jaxrs:extensionMappings>
+
+		<jaxrs:languageMappings>
+			<entry key="en" value="en-gb" />
+		</jaxrs:languageMappings>
+	</jaxrs:server>
+	<jaxrs:server id="ehtMobileServiceContainer" address="/v2">
+		<jaxrs:serviceBeans>
+			<ref bean="dataMobileSynchizeService" />
 		</jaxrs:serviceBeans>
 		<jaxrs:extensionMappings>
 			<entry key="json" value="application/json" />

@@ -40,6 +40,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.eht.common.cache.DataCache;
 import com.eht.common.constant.Constants;
 import com.eht.common.page.PageResult;
 import com.eht.common.util.AppContextUtils;
@@ -121,6 +123,17 @@ public class NoteController extends BaseController {
 
 	public void setMessage(String message) {
 		this.message = message;
+	}
+	
+	/**
+	 * 读取欢迎信息
+	 * 
+	 * @return
+	 * @return
+	 */
+	@RequestMapping(value = "/front/readWelcome.dht", produces={"text/plain;charset=UTF-8"})
+	public @ResponseBody String removeAttach() {
+		return DataCache.readWelcome();
 	}
 
 	/**
@@ -697,7 +710,11 @@ public class NoteController extends BaseController {
 	
 	@RequestMapping(value = "/front/saveNote.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String saveNote(NoteEntity note, String[] noteTagId, HttpServletRequest request) throws IOException {
-		NoteEntity oldNote = noteService.getNote(note.getId());
+		
+		NoteEntity oldNote = null; 
+		if(note != null && !StringUtil.isEmpty(note.getId())){
+			oldNote = noteService.getNote(note.getId());
+		}
 		AccountEntity user = null;
 		Object obj = null;
 		HttpSession s = request.getSession(false);
@@ -919,26 +936,28 @@ public class NoteController extends BaseController {
 	 */
 	@RequestMapping(value = "/front/loadAttachment.dht", produces = { "application/json;charset=UTF-8" })
 	public @ResponseBody String loadAttachment(String id,String searchtype, HttpServletRequest request) {
-		NoteEntity note = noteService.getNote(id); 
 		Map<String, Object> map = new HashMap<String, Object>();
-		if(note!=null){
-			List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,searchtype);
-			note.setAttachmentEntitylist(attaList);
-			//是否有更多
-			String isMore = "false";
-			//查询附件，默认前七条。
-			if(attaList.size()>7&&!searchtype.equals("all")){
-				isMore="true";
-				attaList.remove(attaList.size()-1);
-			}
-			//显示附件  【更多】按钮。
-			if(searchtype!=null&&searchtype.equals("all")&&attaList.size()>0){
-				isMore="true";
-			}
-			map.put("attaList", attaList);
-			map.put("isMore", isMore);
-			}
-			return JsonUtil.map2json(map);
+		if(id != null && !id.equals("")){
+			NoteEntity note = noteService.getNote(id); 
+			if(note!=null){
+				List<AttachmentEntity> attaList = attachmentService.findAttachmentByNote(note.getId(), Constants.FILE_TYPE_NORMAL,searchtype);
+				note.setAttachmentEntitylist(attaList);
+				//是否有更多
+				String isMore = "false";
+				//查询附件，默认前七条。
+				if(attaList.size()>7&&!searchtype.equals("all")){
+					isMore="true";
+					attaList.remove(attaList.size()-1);
+				}
+				//显示附件  【更多】按钮。
+				if(searchtype!=null&&searchtype.equals("all")&&attaList.size()>0){
+					isMore="true";
+				}
+				map.put("attaList", attaList);
+				map.put("isMore", isMore);
+				}
+		}
+		return JsonUtil.map2json(map);
 
 	}
 

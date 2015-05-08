@@ -1,10 +1,10 @@
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
 <%@ page import="com.eht.subject.entity.SubjectEntity"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10"/>
+<!-- <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9"/> -->
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>DPaper</title>  
 <%@  include file="/webpage/front/include/front_common.jsp" %> 
@@ -509,17 +509,38 @@ function isDocumentFolder(node){
 	return false;
 }
 
+var eTHeight = null;//有工具栏编辑器高
+var eHeight = null; //无工具栏编辑器高
 function hideTreeMenu(){
 	$("#treeMenu_td").toggle();
 	var rect = $("#treeMenu_td")[0].getBoundingClientRect();
 	var isVisible = !!(rect.bottom - rect.top);
+	var tw = $("#treeMenu_td").width();
 	if(isVisible){
 		$("#hideTree_img").attr("src", "${imgPath}/button_fold.png");
+		tw = tw + 22;
 	}else{
 		$("#hideTree_img").attr("src", "${imgPath}/button_fold2.png");
+		tw = 0;
 	}
-	editorWidth = $("#notes_new").width(); 
-	reloadEditor();
+	$("#right_index").width($("#page_mainer").width() - tw - 12 - 350 - 11);
+	if(eHeight == null){
+		eHeight = $("#note_editor").height() - 2;
+	}
+	var edit = false;
+	
+	var editorId = $("div.edui-editor.edui-default").attr("id");
+	var editorToolbar = $("#" + editorId + "_toolbarbox");
+	
+	if(editorToolbar.is(":visible")){
+		if(eTHeight == null){
+			eTHeight = $("#note_editor").height() - 52;
+		}
+		edit = true;
+		reloadEditor(toolbars, edit, false, eTHeight);
+	}else{
+		reloadEditor(toolbars, edit, false, eHeight);
+	}
 }
 
 //隐藏条目内容页
@@ -546,7 +567,18 @@ function setWindowHeight(){
 	document.getElementById("mainTreeDiv").style.height = contentHeight + "px";
 	//$("#switchDiv").css("top", (contentHeight / 2) + "px");
 	$("#right_index_mid").height(contentHeight);
-	$("#noteList_div").height(contentHeight + 100);
+	//$("#noteList_div").height(contentHeight);
+	$("#noteList_div").height($("#right_index_mid").height() - 76 - 17);
+	
+	//编辑器DIV高度
+	var editorId = $("div.edui-editor.edui-default").attr("id");
+	var editorToolbar = $("#" + editorId + "_toolbarbox");
+	
+	if(editorToolbar.is(":visible")){
+		$("#note_editor").height(0);
+	}else{
+		$("#note_editor").height(0);
+	}
 }
 
 //打开页面 加载树
@@ -559,12 +591,11 @@ $(document).ready(function(){
 	
 //专题导出进度任务句柄
 var actionSchedule=null;
-
 //窗口大小改变事件
 var resizeTimeoutId;
 $(window).wresize(function(){
 	window.clearTimeout(resizeTimeoutId);
-    resizeTimeoutId = window.setTimeout('setWindowHeight();', 200);
+    resizeTimeoutId = window.setTimeout('setWindowHeight();', 300);
 });
 </script>
 </body>

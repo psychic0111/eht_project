@@ -35,22 +35,28 @@
    		  var inputText = $(this).text();
    		  $(this).html(AnalyticEmotion(inputText,context));
 	});
+	
+	function closeComment(){
+		$("#comments_div").hide();
+		$("#pinglun").val('');
+	}
 </script>
 <form action="${webRoot}/commentController/front/commentAdd.dht" method="post" id="addCommentForm" name="addCommentForm"> 
 <input type="hidden" name="noteId" id="noteId" value="${noteId}">
-<div style="margin-bottom:1px;padding-right:10px;width:100%;">
-   <div style="margin-top:-4px;width:80%;" class="left">
-     	<font color="#999999">选择最近@的人或直接输入加空格</font>
-     	<textarea style="width:100%;height:50px"  name="comment_content" cols="" rows="" id="pinglun"></textarea>
+<div id="emdiv" style="padding:10px;width:100%;">
+	<img style="float:right;margin-right:20px;" onclick="closeComment()" src="${imgPath}/34aL_046.png">
+   <div style="width:77%;" class="left">
+     	<span style="width:100%;"><font color="#999999">选择最近@的人或直接输入加空格</font></span>
+     	<textarea style="width:100%;height:100px;border:1px solid #d8d8d8;" name="comment_content" cols="" rows="" id="pinglun"></textarea>
    </div>
-   <div class="left"  style="margin-top:15px;margin-left:5px;width:17%;">
+   <div class="left"  style="margin-top:15px;margin-left:5px;width:10%;">
    		<input type="button" value="评论" class="Button5" style="height:53px;" onclick="addComment()">
    		<input type="button" value="表情" id="face" style="height:53px;" class="Button4">
    </div>
           <div class="clear"></div>
 </div>
 </form>
-<table width="97%" border="0" cellspacing="0" cellpadding="0" style="border:0px;background-color:#f3f3f3;">
+<table width="97%" border="0" cellspacing="0" cellpadding="0" style="border:0px;background-color:#f3f3f3;margin-left:5px;">
 <c:forEach items="${commentEntityList}" var="commentEntity">
      <tr>
        <td style="border:0px;" width="35" align="center">
@@ -58,7 +64,7 @@
        </td>
        <td style="border:0px;" style="word-break:break-all;word-wrap:break-word">
        		<span class="Font2"><strong>${commentEntity.accountCreateUser.username}</strong></span><br />
-       		<div class="commentcontent" style="font-size:13px;">${commentEntity.content}</div>
+       		<div class="commentcontent" style="font-size:13px;"><c:out value="${commentEntity.content}"></c:out></div>
          	<span class="Font1"> <fmt:formatDate value ="${commentEntity.createTime}" pattern="yyyy-MM-dd HH:mm" /></span>
        </td>
        <td style="border:0px;" width="80" align="center">

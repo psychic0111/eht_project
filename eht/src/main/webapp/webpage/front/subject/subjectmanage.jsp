@@ -110,6 +110,9 @@ $(document).ready(function(){
 	}else{
 		$("#subject_import").attr("class", "Button3");
 	}
+	var h = $("#mainTreeDiv").height() - 28 - 25;
+	$("#subjects_div").height(h);
+	$("#subject_list").height(h);
 });
 
 function toSujectList(subjectType){

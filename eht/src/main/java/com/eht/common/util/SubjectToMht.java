@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
+import com.eht.common.constant.Constants;
 import com.eht.note.entity.AttachmentEntity;
 import com.eht.note.entity.NoteEntity;
 import com.eht.subject.entity.DirectoryEntity;
@@ -65,10 +66,17 @@ public class SubjectToMht {
 		List<NoteEntity> list = subjectMht.getSubjectNoteslist();
 		for (NoteEntity noteEntity : list) {
 			String content = noteEntity.getContent();
+			if(!StringUtil.isValidateString(content)){
+				content = "";
+			}
+			if(!StringUtil.isValidateString(noteEntity.getPlaintext())){
+				noteEntity.setPlaintext("");
+			}
 			List<MhtImg> listImg = new ArrayList<MhtImg>();
 			String contentMht=HtmlParser.repleceHtmlImg(content, listImg, webpath);
 			noteEntity.setContentMht(StringUtil.encode2HtmlUnicode(contentMht));
 			subjectMht.addMhtImg(listImg);
+			
 			noteEntity.setTitleMht(StringUtil.encode2HtmlUnicode(noteEntity.getTitle()));
 			List<AttachmentEntity> attachmentlist=noteEntity.getAttachmentEntitylist();
 			if(attachmentlist!=null){
@@ -90,11 +98,20 @@ public class SubjectToMht {
 			if(dirnotelist!=null){
 			for (NoteEntity noteEntity : dirnotelist) {
 				String content = noteEntity.getContent();
+				
+				if(!StringUtil.isValidateString(content)){
+					content = "";
+				}
+				if(!StringUtil.isValidateString(noteEntity.getPlaintext())){
+					noteEntity.setPlaintext("");
+				}
 				List<MhtImg> listImg = new ArrayList<MhtImg>();
-				noteEntity.setTitleMht(StringUtil.encode2HtmlUnicode(noteEntity.getTitle()));
 				String contentMht=HtmlParser.repleceHtmlImg(content, listImg, webpath);
 				noteEntity.setContentMht(StringUtil.encode2HtmlUnicode(contentMht));
 				subjectMht.addMhtImg(listImg);
+				
+				noteEntity.setTitleMht(StringUtil.encode2HtmlUnicode(noteEntity.getTitle()));
+				
 				List<AttachmentEntity> attachmentlist=noteEntity.getAttachmentEntitylist();
 				if(attachmentlist!=null){
 					for (AttachmentEntity attachmentEntity : attachmentlist) {
@@ -107,6 +124,55 @@ public class SubjectToMht {
 
 	}
 	
+	private static boolean isLeafDir(List<DirectoryEntity> dirList, DirectoryEntity directory){
+		for(DirectoryEntity dir : dirList){
+			if(dir.getParentId() != null && !"".equals(dir.getParentId())){
+				if(dir.getParentId().equals(directory.getId())){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * 找出根目录
+	 * @param dirList
+	 * @return
+	 */
+	public static List<DirectoryEntity> findRootDirectory(List<DirectoryEntity> dirList){
+		List<DirectoryEntity> rootList = new ArrayList<DirectoryEntity>();
+		for(DirectoryEntity dir : dirList){
+			if(dir.getDirName().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)){
+				dir.setMark(Constants.SUBJECT_DOCUMENT_DIRNAME);
+			}
+			if (dir.getParentId() == null || dir.getParentId().equals("")) {
+				rootList.add(dir);
+			}
+		}
+		return rootList;
+	}
+	
+	/**
+	 * 构建树形目录
+	 * @param dirList
+	 * @param parentDir
+	 */
+	public static void parseDataStrut(List<DirectoryEntity> dirList, DirectoryEntity parentDir){
+		List<DirectoryEntity> children = new ArrayList<DirectoryEntity>();
+		for(DirectoryEntity dir : dirList){
+			if (dir.getParentId() != null && dir.getParentId().equals(parentDir.getId())) {
+				if (!isLeafDir(dirList, dir)) {
+					parseDataStrut(dirList, dir);
+				}
+				if(parentDir.getMark() != null && parentDir.getMark().equals(Constants.SUBJECT_DOCUMENT_DIRNAME)){
+					dir.setMark(Constants.SUBJECT_DOCUMENT_DIRNAME);
+				}
+				children.add(dir);
+			}
+		}
+		parentDir.setChildDirlist(children);
+	}
 	
 	private static String getFileName(String path) {
 		path = path.replace("\\", "/");

@@ -1,3 +1,12 @@
+var toolbars = [['source', 'bold', 'italic', 'underline','fontborder', 'strikethrough', /* 'pasteplain',*/ '|',
+	      			'forecolor', 'backcolor', 'insertorderedlist','insertunorderedlist', 'selectall', 'cleardoc', '|',
+	                 'customstyle', 'paragraph', 'fontfamily', 'fontsize', '|',
+	                  'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|', 
+	     			 'link', 'unlink',  'imagenone', 'imageleft', 'imageright', 'imagecenter', '|',
+	                  'insertimage', 'emotion', 'background', '|',
+	                  'horizontal', 'spechars', '|',
+	                  'inserttable', 'deletetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols']
+                ];
 var followNodeId='';
 var msgPeriod = 30000;
 var periodId = null;
@@ -126,18 +135,20 @@ function togComment(){
 //编辑条目按钮事件
 function enableEditNote(){
 	if($("#note_edit").hasClass("Button4")){
-		var source=noteEditor.queryCommandState( 'source' );
+		/*var source=noteEditor.queryCommandState( 'source' ); //是否为源码编辑模式
 		if(source==1){
 			noteEditor.execCommand( 'source');
-		}
-		noteEditor.setContent($("#divhiden").text());
-		$("#htmlViewFrame").contents().find('body').html("");
+		}*/
+		//noteEditor.setContent($("#divhiden").text());
+		//$("#htmlViewFrame").contents().find('body').html("");
+		swithToolbar(0);
 		$("#selectDir").show();
 		editNotePageAndButton();
 	}else if($("#note_edit").hasClass("Button3")){
 		$("#selectDir").hide();
-		$("#divhiden").text(noteEditor.getContent());
-		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
+		//$("#divhiden").text(noteEditor.getContent());
+		//$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
+		swithToolbar(1);
 		viewNotePageAndButton();
 		/*$("#tagSelectNode").empty();
 		$("input[name='noteTagId']").remove();
@@ -179,7 +190,7 @@ function saveNote(){
 		$("#noteForm_createuser").val(data.createUserId);
 		//显示&重置附件
 		
-		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
+		//$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
 		viewNotePageAndButton();
 		searchNotes(selectInfo.isDeleted,true);
 		$("#note_new").val("+ 新建条目");
@@ -220,7 +231,7 @@ function saveNote(){
 
 // 保存条目，不刷新列表
 function saveNoteQuiet(){
-	$("#divhiden").text(noteEditor.getContent());
+	//$("#divhiden").text(noteEditor.getContent());
 	/*for(var i = 0; i < $("#noteForm [name='content']").length; i++){
 		alert($("#noteForm [name='content']")[0].id);
 	}*/
@@ -232,7 +243,7 @@ function saveNoteQuiet(){
 		
 		$("#htmlViewFrame").contents().find('body').html($("#divhiden").text());
 		viewNotePageAndButton();
-		searchNotes(selectInfo.isDeleted,true);
+		//searchNotes(selectInfo.isDeleted,true);
 		$("#note_new").val("+ 新建条目");
 		$("input[name='noteTagId']").each(function(){
 			var node = zTree_Menu.getNodeByParam("id",$(this).val());
@@ -329,7 +340,7 @@ function deleteNote(){
 	    }
 	    return true;
 	}; 
-	$.jBox.confirm("您确定删除？", "提示", submit, { buttons: { '确定': true, '取消': false} })
+	$.jBox.confirm("您确定删除？", "提示", submit, { buttons: { '确定': true, '取消': false} });
 }
 
 //清除当前条目信息

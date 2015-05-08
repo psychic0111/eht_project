@@ -10,7 +10,7 @@
 <!-- QQ第三方登录JS导入 -->
 <script type="text/javascript" src="http://qzonestyle.gtimg.cn/qzone/openapi/qc_loader.js" data-appid="101190840" data-redirecturi="http://idpaper.las.ac.cn" charset="utf-8"></script>
 <!-- Sina第三方登录JS导入 -->
-<script  type="text/javascript" src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=398741386&debug=true"  charset="utf-8"></script>
+<script  type="text/javascript" src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js?appkey=398741386"  charset="utf-8"></script>
 <script type="text/javascript" charset="utf-8" src="${frontPath}/js/login.js"></script>
 <script type="text/javascript">
 if(top != window){
